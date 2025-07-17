@@ -1,0 +1,11 @@
+# Development Environment Variables for Quenty
+# Copy this file to terraform.tfvars and update the values
+
+# Database Configuration
+db_password = "dev_password_change_me"
+
+# Optional SSL Certificate for development (leave empty for HTTP only)
+# ssl_certificate_arn = ""
+
+# Optional domain name for development
+# domain_name = "dev.quenty.local"
