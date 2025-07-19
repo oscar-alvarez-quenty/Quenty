@@ -11,7 +11,7 @@ from datetime import datetime
 from enum import Enum
 from dataclasses import dataclass
 from src.domain.entities.wallet import Wallet
-from src.domain.entities.microcredit import Microcredit, MicrocreditStatus
+from src.domain.entities.microcredit import Microcredit, MicrocreditStatus, PaymentStatus
 from src.domain.value_objects.customer_id import CustomerId
 
 
@@ -31,21 +31,6 @@ class PaymentMethod(Enum):
     PSE = "pse"
     WALLET = "wallet"
 
-class PaymentStatus(Enum):
-    """Estados de procesamiento de pagos.
-    
-    Attributes:
-        PENDING: Pago pendiente de procesamiento
-        PROCESSING: Pago en proceso
-        COMPLETED: Pago completado exitosamente
-        FAILED: Pago fallido
-        REFUNDED: Pago reembolsado
-    """
-    PENDING = "pending"
-    PROCESSING = "processing"
-    COMPLETED = "completed"
-    FAILED = "failed"
-    REFUNDED = "refunded"
 
 @dataclass
 class PaymentResult:
