@@ -1,508 +1,825 @@
-from fastapi import FastAPI, HTTPException, Query
-from pydantic import BaseModel, Field
-from pydantic_settings import BaseSettings
-import structlog
+from fastapi import FastAPI, HTTPException, Depends, Query, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, update, and_, or_, func
+from sqlalchemy.orm import selectinload
 from typing import Optional, List, Dict, Any
-import consul
 from datetime import datetime, date, timedelta
-from enum import Enum
+from decimal import Decimal
+import structlog
+import consul
+import requests
+import os
+
+from .database import get_db, init_db, close_db
+from .models import (
+    Return, ReturnItem, InspectionReport, ReturnStatusHistory, DisposalRecord, 
+    ReturnMetrics, ReturnStatus, ReturnReason, ReturnType, DisposalMethod, InspectionResult
+)
+from .schemas import (
+    ReturnCreate, ReturnUpdate, ReturnResponse, ReturnItemResponse, PaginatedReturns,
+    StatusUpdate, ReturnApproval, ReturnRejection, PickupSchedule,
+    InspectionReportCreate, InspectionReportResponse, PaginatedInspections,
+    ReturnProcessing, ReturnProcessingResponse, DisposalRecordCreate, DisposalRecordResponse, PaginatedDisposals,
+    ReturnsSummary, DispositionInventory, BatchProcessRequest, BatchProcessResponse,
+    HealthCheck, ErrorResponse
+)
+
+# Configure logging
+structlog.configure(
+    processors=[
+        structlog.stdlib.filter_by_level,
+        structlog.stdlib.add_logger_name,
+        structlog.stdlib.add_log_level,
+        structlog.stdlib.PositionalArgumentsFormatter(),
+        structlog.processors.StackInfoRenderer(),
+        structlog.processors.format_exc_info,
+        structlog.processors.UnicodeDecoder(),
+        structlog.processors.JSONRenderer()
+    ],
+    context_class=dict,
+    logger_factory=structlog.stdlib.LoggerFactory(),
+    cache_logger_on_first_use=True,
+)
 
 logger = structlog.get_logger()
 
-class Settings(BaseSettings):
-    service_name: str = "reverse-logistics-service"
-    database_url: str = "postgresql+asyncpg://reverse_logistics:reverse_logistics_pass@reverse-logistics-db:5432/reverse_logistics_db"
-    redis_url: str = "redis://redis:6379/7"
-    consul_host: str = "consul"
-    consul_port: int = 8500
-
-settings = Settings()
+# Settings
+AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL", "http://auth-service:8009")
+CONSUL_HOST = os.getenv("CONSUL_HOST", "consul")
+CONSUL_PORT = int(os.getenv("CONSUL_PORT", "8500"))
+SERVICE_NAME = "reverse-logistics-service"
 
 app = FastAPI(
-    title="Reverse Logistics Service",
-    description="Microservice for returns, exchanges, and reverse logistics management",
-    version="2.0.0"
+    title="Quenty Reverse Logistics Service",
+    description="Comprehensive returns, exchanges, and reverse logistics management microservice with tracking, inspection, and disposal capabilities",
+    version="2.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc"
 )
 
-# Enums
-class ReturnStatus(str, Enum):
-    REQUESTED = "requested"
-    APPROVED = "approved"
-    REJECTED = "rejected"
-    PICKUP_SCHEDULED = "pickup_scheduled"
-    PICKED_UP = "picked_up"
-    IN_TRANSIT = "in_transit"
-    RECEIVED = "received"
-    INSPECTED = "inspected"
-    PROCESSED = "processed"
-    REFUNDED = "refunded"
-    EXCHANGED = "exchanged"
-    DISPOSED = "disposed"
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-class ReturnReason(str, Enum):
-    DAMAGED = "damaged"
-    DEFECTIVE = "defective"
-    WRONG_ITEM = "wrong_item"
-    NOT_AS_DESCRIBED = "not_as_described"
-    SIZE_ISSUE = "size_issue"
-    CHANGE_OF_MIND = "change_of_mind"
-    DUPLICATE_ORDER = "duplicate_order"
-    LATE_DELIVERY = "late_delivery"
-    QUALITY_ISSUE = "quality_issue"
-    OTHER = "other"
+# Security
+security = HTTPBearer()
 
-class ReturnType(str, Enum):
-    RETURN = "return"
-    EXCHANGE = "exchange"
-    REPAIR = "repair"
-    WARRANTY_CLAIM = "warranty_claim"
-
-class DisposalMethod(str, Enum):
-    RESELL = "resell"
-    REFURBISH = "refurbish"
-    DONATE = "donate"
-    RECYCLE = "recycle"
-    DESTROY = "destroy"
-
-class InspectionResult(str, Enum):
-    EXCELLENT = "excellent"
-    GOOD = "good"
-    FAIR = "fair"
-    POOR = "poor"
-    DAMAGED = "damaged"
-    UNUSABLE = "unusable"
-
-# Pydantic models
-class ReturnRequest(BaseModel):
-    original_order_id: str
-    customer_id: str
-    return_type: ReturnType
-    return_reason: ReturnReason
-    items: List[Dict[str, Any]]  # item_id, quantity, reason_details
-    description: str
-    photos: Optional[List[str]] = None  # URLs to photos
-    preferred_resolution: str  # "refund", "exchange", "store_credit"
-    return_address: Optional[str] = None  # If different from delivery address
-
-class ReturnResponse(BaseModel):
-    return_id: str
-    original_order_id: str
-    customer_id: str
-    return_type: ReturnType
-    status: ReturnStatus
-    return_reason: ReturnReason
-    items: List[Dict[str, Any]]
-    description: str
-    preferred_resolution: str
-    return_authorization_number: str
-    estimated_refund_amount: float
-    pickup_address: Optional[str] = None
-    return_shipping_cost: float
-    estimated_pickup_date: Optional[date] = None
-    estimated_processing_time: str
-    created_at: datetime
-    updated_at: datetime
-    expires_at: datetime
-
-class InspectionReport(BaseModel):
-    return_id: str
-    item_id: str
-    inspector_id: str
-    inspection_date: datetime
-    condition: InspectionResult
-    photos: List[str]
-    notes: str
-    resale_value: Optional[float] = None
-    recommended_action: str
-    defects_found: List[str]
-
-class ReturnProcessing(BaseModel):
-    processing_action: str  # "approve_full_refund", "approve_partial_refund", "approve_exchange", "reject"
-    refund_amount: Optional[float] = None
-    exchange_item_id: Optional[str] = None
-    processing_notes: str
-    requires_customer_action: bool = False
-    customer_action_required: Optional[str] = None
-
-class DisposalRecord(BaseModel):
-    return_id: str
-    item_id: str
-    disposal_method: DisposalMethod
-    disposal_date: date
-    disposal_value: float
-    disposal_cost: float
-    disposal_partner: Optional[str] = None
-    environmental_impact: Optional[Dict[str, str]] = None
-
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy", "service": settings.service_name}
-
-@app.post("/api/v1/returns", response_model=ReturnResponse)
-async def create_return_request(return_request: ReturnRequest):
-    # Mock implementation
-    return_id = f"RET-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
-    authorization_number = f"RMA{return_id}"
-    
-    # Calculate estimated refund based on return reason
-    refund_multiplier = {
-        ReturnReason.DAMAGED: 1.0,
-        ReturnReason.DEFECTIVE: 1.0,
-        ReturnReason.WRONG_ITEM: 1.0,
-        ReturnReason.NOT_AS_DESCRIBED: 1.0,
-        ReturnReason.CHANGE_OF_MIND: 0.9,  # 10% restocking fee
-        ReturnReason.SIZE_ISSUE: 0.95,
-        ReturnReason.OTHER: 0.95
-    }
-    
-    # Mock original order value
-    original_value = 1500.0
-    estimated_refund = original_value * refund_multiplier.get(return_request.return_reason, 0.9)
-    
-    # Calculate return shipping cost
-    return_shipping_cost = 0.0 if return_request.return_reason in [
-        ReturnReason.DAMAGED, ReturnReason.DEFECTIVE, ReturnReason.WRONG_ITEM
-    ] else 50.0
-    
-    return ReturnResponse(
-        return_id=return_id,
-        original_order_id=return_request.original_order_id,
-        customer_id=return_request.customer_id,
-        return_type=return_request.return_type,
-        status=ReturnStatus.REQUESTED,
-        return_reason=return_request.return_reason,
-        items=return_request.items,
-        description=return_request.description,
-        preferred_resolution=return_request.preferred_resolution,
-        return_authorization_number=authorization_number,
-        estimated_refund_amount=estimated_refund,
-        return_shipping_cost=return_shipping_cost,
-        estimated_pickup_date=date.today() + timedelta(days=2),
-        estimated_processing_time="3-5 business days",
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow(),
-        expires_at=datetime.utcnow() + timedelta(days=30)
-    )
-
-@app.get("/api/v1/returns/{return_id}", response_model=ReturnResponse)
-async def get_return(return_id: str):
-    # Mock implementation
-    if return_id.startswith("RET-"):
-        return ReturnResponse(
-            return_id=return_id,
-            original_order_id="ORD-20250120001",
-            customer_id="CUST-001",
-            return_type=ReturnType.RETURN,
-            status=ReturnStatus.INSPECTED,
-            return_reason=ReturnReason.DEFECTIVE,
-            items=[
-                {
-                    "item_id": "ITEM-001",
-                    "quantity": 1,
-                    "reason_details": "Screen not working properly"
-                }
-            ],
-            description="The device screen is flickering and unresponsive",
-            preferred_resolution="refund",
-            return_authorization_number=f"RMA{return_id}",
-            estimated_refund_amount=1500.0,
-            pickup_address="123 Customer St, Mexico City",
-            return_shipping_cost=0.0,
-            estimated_pickup_date=date.today() - timedelta(days=3),
-            estimated_processing_time="3-5 business days",
-            created_at=datetime.utcnow() - timedelta(days=5),
-            updated_at=datetime.utcnow(),
-            expires_at=datetime.utcnow() + timedelta(days=25)
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Validate JWT token with auth service"""
+    try:
+        headers = {"Authorization": f"Bearer {credentials.credentials}"}
+        response = requests.get(f"{AUTH_SERVICE_URL}/api/v1/profile", headers=headers, timeout=5)
+        
+        if response.status_code != 200:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid authentication credentials"
+            )
+        
+        return response.json()
+    except requests.RequestException:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Authentication service unavailable"
         )
-    else:
-        raise HTTPException(status_code=404, detail="Return not found")
 
-@app.get("/api/v1/returns")
-async def list_returns(
-    customer_id: Optional[str] = None,
-    status: Optional[ReturnStatus] = None,
-    return_type: Optional[ReturnType] = None,
-    return_reason: Optional[ReturnReason] = None,
-    date_from: Optional[date] = None,
-    date_to: Optional[date] = None,
-    limit: int = Query(default=20, le=100),
-    offset: int = Query(default=0, ge=0)
-):
-    # Mock implementation
-    returns = [
-        {
-            "return_id": "RET-20250122001",
-            "original_order_id": "ORD-20250120001",
-            "customer_id": "CUST-001",
-            "status": "inspected",
-            "return_reason": "defective",
-            "estimated_refund_amount": 1500.0,
-            "created_at": (datetime.utcnow() - timedelta(days=2)).isoformat()
-        },
-        {
-            "return_id": "RET-20250121001",
-            "original_order_id": "ORD-20250118001",
-            "customer_id": "CUST-002",
-            "status": "processed",
-            "return_reason": "change_of_mind",
-            "estimated_refund_amount": 675.0,
-            "created_at": (datetime.utcnow() - timedelta(days=4)).isoformat()
-        }
-    ]
-    return {
-        "returns": returns,
-        "total": len(returns),
-        "limit": limit,
-        "offset": offset
-    }
-
-@app.put("/api/v1/returns/{return_id}/approve")
-async def approve_return(return_id: str, approval_notes: Optional[str] = None):
-    # Mock implementation
-    return {
-        "return_id": return_id,
-        "status": ReturnStatus.APPROVED,
-        "approved_at": datetime.utcnow(),
-        "approval_notes": approval_notes,
-        "next_steps": "Return shipping label will be emailed to customer",
-        "pickup_scheduled_for": (date.today() + timedelta(days=2)).isoformat()
-    }
-
-@app.put("/api/v1/returns/{return_id}/reject")
-async def reject_return(return_id: str, rejection_reason: str):
-    # Mock implementation
-    return {
-        "return_id": return_id,
-        "status": ReturnStatus.REJECTED,
-        "rejected_at": datetime.utcnow(),
-        "rejection_reason": rejection_reason,
-        "appeal_deadline": (date.today() + timedelta(days=7)).isoformat()
-    }
-
-@app.post("/api/v1/returns/{return_id}/schedule-pickup")
-async def schedule_return_pickup(return_id: str, pickup_date: date, time_window: str):
-    # Mock implementation
-    return {
-        "return_id": return_id,
-        "status": ReturnStatus.PICKUP_SCHEDULED,
-        "pickup_date": pickup_date.isoformat(),
-        "time_window": time_window,
-        "pickup_id": f"PU-{return_id}",
-        "tracking_number": f"QTYRET{return_id}",
-        "scheduled_at": datetime.utcnow()
-    }
-
-@app.post("/api/v1/returns/{return_id}/inspection")
-async def create_inspection_report(return_id: str, inspection: InspectionReport):
-    # Mock implementation
-    return {
-        "return_id": return_id,
-        "inspection_id": f"INSP-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
-        "inspection_completed": True,
-        "overall_condition": inspection.condition,
-        "recommended_action": inspection.recommended_action,
-        "status": ReturnStatus.INSPECTED,
-        "processing_recommendation": "approve_full_refund" if inspection.condition in [
-            InspectionResult.EXCELLENT, InspectionResult.GOOD
-        ] else "approve_partial_refund"
-    }
-
-@app.post("/api/v1/returns/{return_id}/process")
-async def process_return(return_id: str, processing: ReturnProcessing):
-    # Mock implementation
-    status_mapping = {
-        "approve_full_refund": ReturnStatus.REFUNDED,
-        "approve_partial_refund": ReturnStatus.REFUNDED,
-        "approve_exchange": ReturnStatus.EXCHANGED,
-        "reject": ReturnStatus.REJECTED
-    }
+def require_permissions(permissions: List[str]):
+    """Decorator to require specific permissions"""
+    async def permission_checker(current_user: dict = Depends(get_current_user)):
+        user_permissions = current_user.get("permissions", [])
+        
+        # Superusers have all permissions
+        if "*" in user_permissions:
+            return current_user
+            
+        # Check if user has required permissions
+        if not any(perm in user_permissions for perm in permissions + ["returns:*"]):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient permissions"
+            )
+        
+        return current_user
     
-    return {
-        "return_id": return_id,
-        "processing_action": processing.processing_action,
-        "status": status_mapping.get(processing.processing_action, ReturnStatus.PROCESSED),
-        "refund_amount": processing.refund_amount,
-        "exchange_item_id": processing.exchange_item_id,
-        "processed_at": datetime.utcnow(),
-        "processing_notes": processing.processing_notes,
-        "expected_refund_time": "3-5 business days" if "refund" in processing.processing_action else None
-    }
+    return permission_checker
 
-@app.get("/api/v1/returns/{return_id}/tracking")
-async def track_return(return_id: str):
-    # Mock implementation
-    return {
-        "return_id": return_id,
-        "tracking_number": f"QTYRET{return_id}",
-        "current_status": ReturnStatus.IN_TRANSIT,
-        "current_location": "Return Processing Center",
-        "events": [
-            {
-                "timestamp": (datetime.utcnow() - timedelta(days=3)).isoformat(),
-                "status": "pickup_scheduled",
-                "location": "Customer Address",
-                "description": "Return pickup scheduled"
-            },
-            {
-                "timestamp": (datetime.utcnow() - timedelta(days=2)).isoformat(),
-                "status": "picked_up",
-                "location": "Customer Address",
-                "description": "Package picked up from customer"
-            },
-            {
-                "timestamp": (datetime.utcnow() - timedelta(days=1)).isoformat(),
-                "status": "in_transit",
-                "location": "Distribution Center",
-                "description": "Return package in transit to processing center"
-            },
-            {
-                "timestamp": datetime.utcnow().isoformat(),
-                "status": "received",
-                "location": "Return Processing Center",
-                "description": "Package received at processing center"
-            }
-        ],
-        "estimated_processing_completion": (datetime.utcnow() + timedelta(days=2)).isoformat(),
-        "last_updated": datetime.utcnow()
-    }
+@app.on_event("startup")
+async def startup_event():
+    """Initialize the application"""
+    try:
+        await init_db()
+        await register_with_consul()
+        logger.info("Reverse logistics service started successfully")
+    except Exception as e:
+        logger.error("Failed to start reverse logistics service", error=str(e))
+        raise
 
-@app.post("/api/v1/returns/{return_id}/dispose")
-async def dispose_returned_item(return_id: str, disposal: DisposalRecord):
-    # Mock implementation
-    return {
-        "return_id": return_id,
-        "disposal_id": f"DISP-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
-        "disposal_method": disposal.disposal_method,
-        "disposal_completed": True,
-        "disposal_value": disposal.disposal_value,
-        "disposal_cost": disposal.disposal_cost,
-        "net_recovery": disposal.disposal_value - disposal.disposal_cost,
-        "environmental_impact": disposal.environmental_impact,
-        "completed_at": datetime.utcnow()
-    }
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup on shutdown"""
+    try:
+        await deregister_from_consul()
+        await close_db()
+        logger.info("Reverse logistics service shutdown successfully")
+    except Exception as e:
+        logger.error("Error during shutdown", error=str(e))
 
-@app.get("/api/v1/returns/analytics/summary")
-async def get_returns_summary(
-    date_from: date = Query(...),
-    date_to: date = Query(...)
-):
-    # Mock implementation
-    return {
-        "period": {
-            "from": date_from.isoformat(),
-            "to": date_to.isoformat()
-        },
-        "total_returns": 245,
-        "return_rate": 8.5,  # percentage
-        "returns_by_reason": {
-            "defective": 45,
-            "damaged": 38,
-            "change_of_mind": 52,
-            "wrong_item": 25,
-            "not_as_described": 35,
-            "other": 50
-        },
-        "returns_by_status": {
-            "processed": 189,
-            "in_process": 34,
-            "pending": 22
-        },
-        "financial_impact": {
-            "total_refunds_issued": 125000.50,
-            "total_processing_costs": 8750.25,
-            "recovery_value": 45600.75,
-            "net_cost": 88149.00
-        },
-        "processing_metrics": {
-            "average_processing_time_days": 4.2,
-            "customer_satisfaction_score": 4.1,
-            "first_call_resolution_rate": 78.5
-        }
-    }
-
-@app.get("/api/v1/returns/inventory/disposition")
-async def get_disposition_inventory():
-    # Mock implementation
-    return {
-        "pending_disposition": [
-            {
-                "return_id": "RET-20250120001",
-                "item_id": "ITEM-001",
-                "condition": "good",
-                "estimated_value": 750.0,
-                "recommendation": "resell",
-                "days_in_inventory": 5
-            },
-            {
-                "return_id": "RET-20250118001",
-                "item_id": "ITEM-002",
-                "condition": "damaged",
-                "estimated_value": 100.0,
-                "recommendation": "recycle",
-                "days_in_inventory": 12
-            }
-        ],
-        "disposition_options": {
-            "resell": {"count": 15, "estimated_value": 12500.0},
-            "refurbish": {"count": 8, "estimated_value": 4200.0},
-            "donate": {"count": 3, "estimated_value": 450.0},
-            "recycle": {"count": 5, "estimated_value": 125.0},
-            "destroy": {"count": 2, "estimated_value": 0.0}
-        }
-    }
-
-@app.post("/api/v1/returns/batch-process")
-async def batch_process_returns(return_ids: List[str], processing_action: str):
-    # Mock implementation
-    processed_returns = []
-    for return_id in return_ids:
-        processed_returns.append({
-            "return_id": return_id,
-            "action": processing_action,
-            "status": "completed",
-            "processed_at": datetime.utcnow()
-        })
-    
-    return {
-        "batch_id": f"BATCH-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
-        "processed_count": len(processed_returns),
-        "processing_action": processing_action,
-        "results": processed_returns,
-        "batch_completed_at": datetime.utcnow()
-    }
-
-# Service Discovery Registration
 async def register_with_consul():
-    c = consul.Consul(host=settings.consul_host, port=settings.consul_port)
+    """Register service with Consul"""
+    c = consul.Consul(host=CONSUL_HOST, port=CONSUL_PORT)
     try:
         c.agent.service.register(
-            name=settings.service_name,
-            service_id=f"{settings.service_name}-1",
+            name=SERVICE_NAME,
+            service_id=f"{SERVICE_NAME}-1",
             address="reverse-logistics-service",
             port=8007,
             check=consul.Check.http(
                 url="http://reverse-logistics-service:8007/health",
                 interval="10s",
                 timeout="5s"
-            )
+            ),
+            tags=["returns", "logistics", "reverse", "v2"]
         )
-        logger.info(f"Registered {settings.service_name} with Consul")
+        logger.info(f"Registered {SERVICE_NAME} with Consul")
     except Exception as e:
         logger.error(f"Failed to register with Consul: {str(e)}")
 
-@app.on_event("startup")
-async def startup_event():
-    await register_with_consul()
-    logger.info(f"{settings.service_name} started")
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    c = consul.Consul(host=settings.consul_host, port=settings.consul_port)
+async def deregister_from_consul():
+    """Deregister service from Consul"""
+    c = consul.Consul(host=CONSUL_HOST, port=CONSUL_PORT)
     try:
-        c.agent.service.deregister(f"{settings.service_name}-1")
-        logger.info(f"Deregistered {settings.service_name} from Consul")
+        c.agent.service.deregister(f"{SERVICE_NAME}-1")
+        logger.info(f"Deregistered {SERVICE_NAME} from Consul")
     except Exception as e:
         logger.error(f"Failed to deregister from Consul: {str(e)}")
+
+@app.get("/health", response_model=HealthCheck)
+async def health_check():
+    """Health check endpoint"""
+    return HealthCheck(
+        status="healthy",
+        service=SERVICE_NAME,
+        version="2.0.0",
+        timestamp=datetime.utcnow(),
+        dependencies={
+            "database": "healthy",
+            "auth_service": "healthy"
+        }
+    )
+
+@app.post("/api/v1/returns", response_model=ReturnResponse)
+async def create_return_request(
+    return_request: ReturnCreate,
+    current_user: dict = Depends(require_permissions(["returns:create"])),
+    db: AsyncSession = Depends(get_db)
+):
+    """Create a new return request"""
+    try:
+        # Calculate refund multipliers based on return reason
+        refund_multiplier = {
+            ReturnReason.DAMAGED: 1.0,
+            ReturnReason.DEFECTIVE: 1.0,
+            ReturnReason.WRONG_ITEM: 1.0,
+            ReturnReason.NOT_AS_DESCRIBED: 1.0,
+            ReturnReason.CHANGE_OF_MIND: 0.9,  # 10% restocking fee
+            ReturnReason.SIZE_ISSUE: 0.95,
+            ReturnReason.OTHER: 0.95
+        }
+        
+        # Mock original order value (in a real system, fetch from order service)
+        original_value = Decimal("1500.0")
+        estimated_refund = original_value * Decimal(str(refund_multiplier.get(return_request.return_reason, 0.9)))
+        
+        # Calculate return shipping cost
+        return_shipping_cost = Decimal("0.0") if return_request.return_reason in [
+            ReturnReason.DAMAGED, ReturnReason.DEFECTIVE, ReturnReason.WRONG_ITEM
+        ] else Decimal("50.0")
+        
+        # Create return record
+        return_record = Return(
+            original_order_id=return_request.original_order_id,
+            customer_id=return_request.customer_id,
+            return_type=return_request.return_type,
+            return_reason=return_request.return_reason,
+            description=return_request.description,
+            preferred_resolution=return_request.preferred_resolution,
+            original_order_value=original_value,
+            estimated_refund_amount=estimated_refund,
+            return_shipping_cost=return_shipping_cost,
+            pickup_address=return_request.return_address,
+            photos=return_request.photos or [],
+            estimated_pickup_date=date.today() + timedelta(days=2),
+            estimated_processing_time="3-5 business days",
+            expires_at=datetime.utcnow() + timedelta(days=30),
+            created_by=str(current_user["id"])
+        )
+        
+        # Generate authorization number
+        return_record.return_authorization_number = f"RMA{return_record.return_id}"
+        
+        db.add(return_record)
+        await db.flush()
+        await db.refresh(return_record)
+        
+        # Add return items
+        for item_data in return_request.items:
+            return_item = ReturnItem(
+                return_id=return_record.id,
+                **item_data.dict()
+            )
+            db.add(return_item)
+        
+        # Add status history
+        status_history = ReturnStatusHistory(
+            return_id=return_record.id,
+            new_status=ReturnStatus.REQUESTED,
+            status_reason="Return request created",
+            changed_by=str(current_user["id"])
+        )
+        db.add(status_history)
+        
+        await db.commit()
+        
+        # Reload with items
+        stmt = select(Return).options(selectinload(Return.items)).where(Return.id == return_record.id)
+        result = await db.execute(stmt)
+        return_with_items = result.scalar_one()
+        
+        logger.info("Return created", return_id=return_record.return_id)
+        return ReturnResponse.model_validate(return_with_items)
+        
+    except Exception as e:
+        logger.error("Create return error", error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create return request"
+        )
+
+@app.get("/api/v1/returns/{return_id}", response_model=ReturnResponse)
+async def get_return(
+    return_id: str,
+    current_user: dict = Depends(require_permissions(["returns:read"])),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get return by ID"""
+    try:
+        stmt = select(Return).options(
+            selectinload(Return.items)
+        ).where(Return.return_id == return_id)
+        result = await db.execute(stmt)
+        return_record = result.scalar_one_or_none()
+        
+        if not return_record:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Return not found"
+            )
+        
+        return ReturnResponse.model_validate(return_record)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Get return error", return_id=return_id, error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve return"
+        )
+
+@app.get("/api/v1/returns", response_model=PaginatedReturns)
+async def list_returns(
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    customer_id: Optional[str] = None,
+    status: Optional[ReturnStatus] = None,
+    return_type: Optional[ReturnType] = None,
+    return_reason: Optional[ReturnReason] = None,
+    date_from: Optional[date] = None,
+    date_to: Optional[date] = None,
+    search: Optional[str] = None,
+    current_user: dict = Depends(require_permissions(["returns:read"])),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get paginated list of returns"""
+    try:
+        # Build query
+        stmt = select(Return).options(selectinload(Return.items))
+        
+        # Apply filters
+        filters = []
+        if customer_id:
+            filters.append(Return.customer_id == customer_id)
+        if status:
+            filters.append(Return.status == status)
+        if return_type:
+            filters.append(Return.return_type == return_type)
+        if return_reason:
+            filters.append(Return.return_reason == return_reason)
+        if date_from:
+            filters.append(Return.created_at >= datetime.combine(date_from, datetime.min.time()))
+        if date_to:
+            filters.append(Return.created_at <= datetime.combine(date_to, datetime.max.time()))
+        if search:
+            search_filter = or_(
+                Return.return_id.ilike(f"%{search}%"),
+                Return.original_order_id.ilike(f"%{search}%"),
+                Return.return_authorization_number.ilike(f"%{search}%"),
+                Return.description.ilike(f"%{search}%")
+            )
+            filters.append(search_filter)
+        
+        if filters:
+            stmt = stmt.where(and_(*filters))
+        
+        # Get total count
+        count_stmt = select(func.count(Return.id))
+        if filters:
+            count_stmt = count_stmt.where(and_(*filters))
+        
+        count_result = await db.execute(count_stmt)
+        total = count_result.scalar()
+        
+        # Apply pagination and ordering
+        stmt = stmt.order_by(Return.created_at.desc()).offset(offset).limit(limit)
+        
+        result = await db.execute(stmt)
+        returns = result.scalars().all()
+        
+        return PaginatedReturns(
+            returns=[ReturnResponse.model_validate(return_record) for return_record in returns],
+            total=total,
+            limit=limit,
+            offset=offset,
+            has_next=offset + limit < total,
+            has_previous=offset > 0
+        )
+        
+    except Exception as e:
+        logger.error("List returns error", error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve returns"
+        )
+
+@app.put("/api/v1/returns/{return_id}/approve")
+async def approve_return(
+    return_id: str,
+    approval: ReturnApproval,
+    current_user: dict = Depends(require_permissions(["returns:approve"])),
+    db: AsyncSession = Depends(get_db)
+):
+    """Approve return request"""
+    try:
+        stmt = select(Return).where(Return.return_id == return_id)
+        result = await db.execute(stmt)
+        return_record = result.scalar_one_or_none()
+        
+        if not return_record:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Return not found"
+            )
+        
+        if return_record.status != ReturnStatus.REQUESTED:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Return cannot be approved in current status"
+            )
+        
+        # Update return status
+        return_record.status = ReturnStatus.APPROVED
+        return_record.approval_notes = approval.approval_notes
+        return_record.approved_at = datetime.utcnow()
+        return_record.estimated_pickup_date = approval.estimated_pickup_date or date.today() + timedelta(days=2)
+        if approval.pickup_address:
+            return_record.pickup_address = approval.pickup_address
+        return_record.updated_at = datetime.utcnow()
+        
+        # Add status history
+        status_history = ReturnStatusHistory(
+            return_id=return_record.id,
+            previous_status=ReturnStatus.REQUESTED,
+            new_status=ReturnStatus.APPROVED,
+            status_reason="Return approved by administrator",
+            notes=approval.approval_notes,
+            changed_by=str(current_user["id"])
+        )
+        db.add(status_history)
+        
+        await db.commit()
+        
+        logger.info("Return approved", return_id=return_id)
+        
+        return {
+            "return_id": return_id,
+            "status": ReturnStatus.APPROVED,
+            "approved_at": return_record.approved_at,
+            "approval_notes": approval.approval_notes,
+            "next_steps": "Return shipping label will be emailed to customer",
+            "pickup_scheduled_for": return_record.estimated_pickup_date.isoformat() if return_record.estimated_pickup_date else None
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Approve return error", return_id=return_id, error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to approve return"
+        )
+
+@app.put("/api/v1/returns/{return_id}/reject")
+async def reject_return(
+    return_id: str,
+    rejection: ReturnRejection,
+    current_user: dict = Depends(require_permissions(["returns:approve"])),
+    db: AsyncSession = Depends(get_db)
+):
+    """Reject return request"""
+    try:
+        stmt = select(Return).where(Return.return_id == return_id)
+        result = await db.execute(stmt)
+        return_record = result.scalar_one_or_none()
+        
+        if not return_record:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Return not found"
+            )
+        
+        if return_record.status not in [ReturnStatus.REQUESTED, ReturnStatus.INSPECTED]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Return cannot be rejected in current status"
+            )
+        
+        # Update return status
+        return_record.status = ReturnStatus.REJECTED
+        return_record.rejection_reason = rejection.rejection_reason
+        return_record.rejected_at = datetime.utcnow()
+        return_record.processing_notes = rejection.detailed_explanation
+        return_record.updated_at = datetime.utcnow()
+        
+        # Add status history
+        status_history = ReturnStatusHistory(
+            return_id=return_record.id,
+            previous_status=return_record.status,
+            new_status=ReturnStatus.REJECTED,
+            status_reason=rejection.rejection_reason,
+            notes=rejection.detailed_explanation,
+            changed_by=str(current_user["id"])
+        )
+        db.add(status_history)
+        
+        await db.commit()
+        
+        logger.info("Return rejected", return_id=return_id, reason=rejection.rejection_reason)
+        
+        return {
+            "return_id": return_id,
+            "status": ReturnStatus.REJECTED,
+            "rejected_at": return_record.rejected_at,
+            "rejection_reason": rejection.rejection_reason,
+            "detailed_explanation": rejection.detailed_explanation,
+            "appeal_available": rejection.appeal_available,
+            "appeal_deadline": (date.today() + timedelta(days=7)).isoformat() if rejection.appeal_available else None
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Reject return error", return_id=return_id, error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to reject return"
+        )
+
+@app.post("/api/v1/returns/{return_id}/schedule-pickup")
+async def schedule_return_pickup(
+    return_id: str,
+    pickup: PickupSchedule,
+    current_user: dict = Depends(require_permissions(["returns:schedule"])),
+    db: AsyncSession = Depends(get_db)
+):
+    """Schedule pickup for approved return"""
+    try:
+        stmt = select(Return).where(Return.return_id == return_id)
+        result = await db.execute(stmt)
+        return_record = result.scalar_one_or_none()
+        
+        if not return_record:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Return not found"
+            )
+        
+        if return_record.status != ReturnStatus.APPROVED:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Return must be approved before scheduling pickup"
+            )
+        
+        # Update return with pickup details
+        return_record.status = ReturnStatus.PICKUP_SCHEDULED
+        return_record.estimated_pickup_date = pickup.pickup_date
+        if pickup.pickup_address:
+            return_record.pickup_address = pickup.pickup_address
+        return_record.tracking_number = f"QTYRET{return_record.return_id}"
+        return_record.carrier = "Quenty Logistics"
+        return_record.updated_at = datetime.utcnow()
+        
+        # Add status history
+        status_history = ReturnStatusHistory(
+            return_id=return_record.id,
+            previous_status=ReturnStatus.APPROVED,
+            new_status=ReturnStatus.PICKUP_SCHEDULED,
+            status_reason="Pickup scheduled",
+            notes=f"Time window: {pickup.time_window}. {pickup.special_instructions or ''}",
+            tracking_number=return_record.tracking_number,
+            carrier="Quenty Logistics",
+            changed_by=str(current_user["id"])
+        )
+        db.add(status_history)
+        
+        await db.commit()
+        
+        logger.info("Pickup scheduled", return_id=return_id, pickup_date=pickup.pickup_date)
+        
+        return {
+            "return_id": return_id,
+            "status": ReturnStatus.PICKUP_SCHEDULED,
+            "pickup_date": pickup.pickup_date.isoformat(),
+            "time_window": pickup.time_window,
+            "pickup_id": f"PU-{return_record.return_id}",
+            "tracking_number": return_record.tracking_number,
+            "carrier": "Quenty Logistics",
+            "special_instructions": pickup.special_instructions,
+            "scheduled_at": datetime.utcnow()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Schedule pickup error", return_id=return_id, error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to schedule pickup"
+        )
+
+@app.post("/api/v1/returns/{return_id}/inspection", response_model=InspectionReportResponse)
+async def create_inspection_report(
+    return_id: str,
+    inspection: InspectionReportCreate,
+    current_user: dict = Depends(require_permissions(["returns:inspect"])),
+    db: AsyncSession = Depends(get_db)
+):
+    """Create inspection report for returned item"""
+    try:
+        # Verify return exists and is in correct status
+        return_stmt = select(Return).where(Return.return_id == return_id)
+        return_result = await db.execute(return_stmt)
+        return_record = return_result.scalar_one_or_none()
+        
+        if not return_record:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Return not found"
+            )
+        
+        if return_record.status not in [ReturnStatus.RECEIVED]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Return must be received before inspection"
+            )
+        
+        # Create inspection report
+        inspection_report = InspectionReport(
+            return_id=return_record.id,
+            inspector_name=current_user.get("full_name", "Inspector"),
+            original_value=return_record.original_order_value,
+            **inspection.dict()
+        )
+        
+        # Calculate net recovery value
+        inspection_report.net_recovery = (inspection_report.resale_value or Decimal("0")) - (inspection_report.refurbishment_cost or Decimal("0"))
+        
+        db.add(inspection_report)
+        await db.flush()
+        await db.refresh(inspection_report)
+        
+        # Update return status to inspected
+        return_record.status = ReturnStatus.INSPECTED
+        return_record.updated_at = datetime.utcnow()
+        
+        # Add status history
+        status_history = ReturnStatusHistory(
+            return_id=return_record.id,
+            previous_status=ReturnStatus.RECEIVED,
+            new_status=ReturnStatus.INSPECTED,
+            status_reason="Item inspection completed",
+            notes=f"Overall condition: {inspection.overall_condition}",
+            changed_by=str(current_user["id"])
+        )
+        db.add(status_history)
+        
+        await db.commit()
+        
+        logger.info("Inspection report created", 
+                   return_id=return_id, 
+                   inspection_id=inspection_report.inspection_id,
+                   condition=inspection.overall_condition)
+        
+        return InspectionReportResponse.model_validate(inspection_report)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Create inspection error", return_id=return_id, error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create inspection report"
+        )
+
+@app.post("/api/v1/returns/{return_id}/process", response_model=ReturnProcessingResponse)
+async def process_return(
+    return_id: str,
+    processing: ReturnProcessing,
+    current_user: dict = Depends(require_permissions(["returns:process"])),
+    db: AsyncSession = Depends(get_db)
+):
+    """Process inspected return"""
+    try:
+        stmt = select(Return).where(Return.return_id == return_id)
+        result = await db.execute(stmt)
+        return_record = result.scalar_one_or_none()
+        
+        if not return_record:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Return not found"
+            )
+        
+        if return_record.status != ReturnStatus.INSPECTED:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Return must be inspected before processing"
+            )
+        
+        # Map processing actions to statuses
+        status_mapping = {
+            "approve_full_refund": ReturnStatus.REFUNDED,
+            "approve_partial_refund": ReturnStatus.REFUNDED,
+            "approve_exchange": ReturnStatus.EXCHANGED,
+            "reject": ReturnStatus.REJECTED
+        }
+        
+        new_status = status_mapping.get(processing.processing_action, ReturnStatus.PROCESSED)
+        
+        # Update return record
+        return_record.status = new_status
+        return_record.actual_refund_amount = processing.refund_amount
+        return_record.processing_fee = processing.processing_fee or Decimal("0")
+        return_record.processing_notes = processing.processing_notes
+        return_record.requires_customer_action = processing.requires_customer_action
+        return_record.customer_action_required = processing.customer_action_required
+        return_record.processed_at = datetime.utcnow()
+        return_record.processed_by = str(current_user["id"])
+        return_record.updated_at = datetime.utcnow()
+        
+        # Add status history
+        status_history = ReturnStatusHistory(
+            return_id=return_record.id,
+            previous_status=ReturnStatus.INSPECTED,
+            new_status=new_status,
+            status_reason=f"Processing action: {processing.processing_action}",
+            notes=processing.processing_notes,
+            changed_by=str(current_user["id"])
+        )
+        db.add(status_history)
+        
+        await db.commit()
+        
+        logger.info("Return processed", 
+                   return_id=return_id, 
+                   action=processing.processing_action,
+                   new_status=new_status)
+        
+        return ReturnProcessingResponse(
+            return_id=return_id,
+            processing_action=processing.processing_action,
+            status=new_status,
+            refund_amount=processing.refund_amount,
+            exchange_item_id=processing.exchange_item_id,
+            exchange_quantity=processing.exchange_quantity,
+            processing_fee=processing.processing_fee,
+            processed_at=return_record.processed_at,
+            processing_notes=processing.processing_notes,
+            expected_refund_time="3-5 business days" if "refund" in processing.processing_action else None,
+            requires_customer_action=processing.requires_customer_action,
+            customer_action_required=processing.customer_action_required
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Process return error", return_id=return_id, error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to process return"
+        )
+
+@app.get("/api/v1/returns/{return_id}/tracking")
+async def track_return(
+    return_id: str,
+    current_user: dict = Depends(require_permissions(["returns:read"])),
+    db: AsyncSession = Depends(get_db)
+):
+    """Track return progress"""
+    try:
+        # Get return record
+        return_stmt = select(Return).where(Return.return_id == return_id)
+        return_result = await db.execute(return_stmt)
+        return_record = return_result.scalar_one_or_none()
+        
+        if not return_record:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Return not found"
+            )
+        
+        # Get status history
+        history_stmt = select(ReturnStatusHistory).where(
+            ReturnStatusHistory.return_id == return_record.id
+        ).order_by(ReturnStatusHistory.changed_at)
+        history_result = await db.execute(history_stmt)
+        status_events = history_result.scalars().all()
+        
+        # Build tracking events
+        events = []
+        for event in status_events:
+            events.append({
+                "timestamp": event.changed_at.isoformat(),
+                "status": event.new_status,
+                "location": event.location or "Processing Center",
+                "description": event.status_reason or "Status updated",
+                "notes": event.notes,
+                "tracking_number": event.tracking_number,
+                "carrier": event.carrier
+            })
+        
+        # Determine current location based on status
+        location_mapping = {
+            ReturnStatus.REQUESTED: "Request Submitted",
+            ReturnStatus.APPROVED: "Approval Center",
+            ReturnStatus.PICKUP_SCHEDULED: "Customer Address",
+            ReturnStatus.PICKED_UP: "In Transit",
+            ReturnStatus.IN_TRANSIT: "Distribution Center",
+            ReturnStatus.RECEIVED: "Return Processing Center",
+            ReturnStatus.INSPECTED: "Quality Control",
+            ReturnStatus.PROCESSED: "Processing Complete",
+            ReturnStatus.REFUNDED: "Refund Processed",
+            ReturnStatus.EXCHANGED: "Exchange Processed",
+            ReturnStatus.DISPOSED: "Disposal Complete"
+        }
+        
+        current_location = location_mapping.get(return_record.status, "Processing Center")
+        
+        # Calculate estimated completion
+        estimated_completion = None
+        if return_record.status in [ReturnStatus.RECEIVED, ReturnStatus.INSPECTED]:
+            estimated_completion = datetime.utcnow() + timedelta(days=2)
+        
+        return {
+            "return_id": return_id,
+            "tracking_number": return_record.tracking_number or f"QTYRET{return_id}",
+            "current_status": return_record.status,
+            "current_location": current_location,
+            "carrier": return_record.carrier,
+            "events": events,
+            "estimated_processing_completion": estimated_completion.isoformat() if estimated_completion else None,
+            "last_updated": return_record.updated_at
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Track return error", return_id=return_id, error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to track return"
+        )
+
+# Additional endpoints can be implemented as needed
+# - Disposal record management
+# - Analytics and summary reports
+# - Batch processing operations
 
 if __name__ == "__main__":
     import uvicorn

@@ -1,7 +1,7 @@
 import os
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
-from models import Base
+from .models import Base
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://order:order_pass@localhost:5432/order_db")
 

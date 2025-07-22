@@ -86,9 +86,26 @@ class UserProfile(BaseModel):
     last_name: Optional[str] = None
     full_name: str
     avatar_url: Optional[str] = None
-    role: str
+    role: Optional[str] = None
     company_id: Optional[str] = None
     permissions: List[str] = []
+    
+    @classmethod
+    def from_user(cls, user, permissions: List[str] = None):
+        """Create UserProfile from User model with proper role handling"""
+        return cls(
+            id=user.id,
+            unique_id=user.unique_id,
+            username=user.username,
+            email=user.email,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            full_name=user.full_name,
+            avatar_url=user.avatar_url,
+            role=user.role.code if user.role else None,
+            company_id=user.company_id,
+            permissions=permissions or []
+        )
     
     class Config:
         from_attributes = True

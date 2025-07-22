@@ -1,15 +1,21 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.pool import NullPool
-from .config import settings
+import os
 import structlog
 
 logger = structlog.get_logger()
 
+# Database configuration
+DATABASE_URL = os.getenv(
+    "DATABASE_URL", 
+    "postgresql+asyncpg://reverse:reverse_pass@reverse-logistics-db:5432/reverse_logistics_db"
+)
+
 # Create async engine
 engine = create_async_engine(
-    settings.database_url,
-    echo=settings.debug,
+    DATABASE_URL,
+    echo=bool(os.getenv("DEBUG", False)),
     poolclass=NullPool,
     pool_pre_ping=True,
 )

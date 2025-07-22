@@ -24,7 +24,8 @@ from .schemas import (
 from .security import (
     authenticate_user, get_password_hash, generate_jwt_token, decode_jwt_token,
     get_current_user, get_user_permissions, create_user_session, get_user_session,
-    create_password_reset_token, verify_password_reset_token
+    create_password_reset_token, verify_password_reset_token, require_permissions,
+    revoke_user_session, SecurityMiddleware, verify_password
 )
 from .oauth import oauth_service
 
@@ -68,15 +69,76 @@ app.add_middleware(
 # Security instance
 security = HTTPBearer()
 
+async def create_initial_admin_user():
+    """Create initial admin user if configured and no users exist"""
+    if not all([settings.initial_admin_username, settings.initial_admin_password, settings.initial_admin_email]):
+        return
+    
+    db_gen = get_db()
+    db = await db_gen.__anext__()
+    
+    try:
+        # Check if any users exist
+        result = await db.execute(select(func.count(User.id)))
+        user_count = result.scalar()
+        
+        if user_count > 0:
+            logger.info("Users already exist, skipping initial admin creation")
+            return
+            
+        # Get superuser role
+        role_result = await db.execute(select(Role).where(Role.code == "superuser"))
+        superuser_role = role_result.scalar_one_or_none()
+        
+        if not superuser_role:
+            logger.error("Superuser role not found, cannot create initial admin")
+            return
+        
+        # Create initial admin user
+        hashed_password = get_password_hash(settings.initial_admin_password)
+        admin_user = User(
+            username=settings.initial_admin_username,
+            email=settings.initial_admin_email,
+            first_name=settings.initial_admin_first_name,
+            last_name=settings.initial_admin_last_name,
+            password_hash=hashed_password,
+            role_id=superuser_role.id,
+            is_superuser=True,
+            is_active=True,
+            is_verified=True,
+            email_verified=True,
+            unique_id=str(uuid.uuid4())
+        )
+        
+        db.add(admin_user)
+        await db.commit()
+        await db.refresh(admin_user)
+        
+        logger.info(
+            "Initial admin user created successfully",
+            username=settings.initial_admin_username,
+            email=settings.initial_admin_email
+        )
+        
+    except Exception as e:
+        logger.error("Failed to create initial admin user", error=str(e))
+        await db.rollback()
+    finally:
+        await db.close()
+
 @app.on_event("startup")
 async def startup_event():
     """Initialize the application"""
     try:
         await init_db()
-        logger.info("Auth service started successfully")
         
         # Initialize default roles and permissions if needed
         await initialize_default_data()
+        
+        # Create initial admin user if configured
+        await create_initial_admin_user()
+        
+        logger.info("Auth service started successfully")
         
     except Exception as e:
         logger.error("Failed to start auth service", error=str(e))
@@ -205,11 +267,13 @@ async def login(
         refresh_session = await create_user_session(db, user, request, "refresh", refresh_expires)
         
         # Generate JWT tokens
+        print(f"DEBUG MAIN: About to generate access token with JTI: {access_session.jti}")
         access_token = generate_jwt_token({
             "sub": str(user.id),
             "jti": access_session.jti,
             "type": "access"
         }, access_expires)
+        print(f"DEBUG MAIN: Generated access token: {access_token[:50]}...")
         
         refresh_token = generate_jwt_token({
             "sub": str(user.id),
@@ -220,11 +284,14 @@ async def login(
         # Log successful login
         await log_audit_event(db, user, "login", "authentication", str(user.id), request, "success")
         
+        # Get user permissions for profile
+        permissions = await get_user_permissions(db, user)
+        
         return TokenResponse(
             access_token=access_token,
             refresh_token=refresh_token,
             expires_in=int(access_expires.total_seconds()),
-            user=UserProfile.from_orm(user)
+            user=UserProfile.from_user(user, permissions)
         )
         
     except HTTPException:
@@ -263,8 +330,8 @@ async def refresh_token(
                 detail="Invalid refresh token"
             )
         
-        # Get user
-        stmt = select(User).where(User.id == int(user_id))
+        # Get user with eager loading of role relationship
+        stmt = select(User).options(selectinload(User.role)).where(User.id == int(user_id))
         result = await db.execute(stmt)
         user = result.scalar_one_or_none()
         
@@ -285,11 +352,14 @@ async def refresh_token(
             "type": "access"
         }, access_expires)
         
+        # Get user permissions for profile
+        permissions = await get_user_permissions(db, user)
+        
         return TokenResponse(
             access_token=access_token,
             refresh_token=refresh_data.refresh_token,  # Keep same refresh token
             expires_in=int(access_expires.total_seconds()),
-            user=UserProfile.from_orm(user)
+            user=UserProfile.from_user(user, permissions)
         )
         
     except HTTPException:
@@ -388,11 +458,14 @@ async def oauth_callback(
         # Log successful OAuth login
         await log_audit_event(db, user, f"oauth_login_{provider}", "authentication", str(user.id), request, "success")
         
+        # Get user permissions for profile
+        permissions = await get_user_permissions(db, user)
+        
         return TokenResponse(
             access_token=access_token,
             refresh_token=refresh_token,
             expires_in=int(access_expires.total_seconds()),
-            user=UserProfile.from_orm(user)
+            user=UserProfile.from_user(user, permissions)
         )
         
     except Exception as e:
@@ -417,7 +490,7 @@ async def get_users(
     """Get paginated list of users"""
     try:
         # Build query
-        stmt = select(User).options(selectinload(User.company))
+        stmt = select(User).options(selectinload(User.company), selectinload(User.role))
         
         # Apply filters
         filters = []
@@ -484,7 +557,7 @@ async def get_user(
                 detail="Insufficient permissions"
             )
         
-        stmt = select(User).options(selectinload(User.company)).where(User.id == user_id)
+        stmt = select(User).options(selectinload(User.company), selectinload(User.role)).where(User.id == user_id)
         result = await db.execute(stmt)
         user = result.scalar_one_or_none()
         
@@ -587,7 +660,7 @@ async def update_user(
             )
         
         # Get user
-        stmt = select(User).where(User.id == user_id)
+        stmt = select(User).options(selectinload(User.role)).where(User.id == user_id)
         result = await db.execute(stmt)
         user = result.scalar_one_or_none()
         
@@ -631,7 +704,7 @@ async def delete_user(
     """Delete user (soft delete by deactivating)"""
     try:
         # Get user
-        stmt = select(User).where(User.id == user_id)
+        stmt = select(User).options(selectinload(User.role)).where(User.id == user_id)
         result = await db.execute(stmt)
         user = result.scalar_one_or_none()
         
@@ -671,11 +744,8 @@ async def get_profile(
     # Get user permissions from role and additional permissions
     permissions = await get_user_permissions(db, current_user)
     
-    # Create user profile dict and add permissions
-    profile_data = UserProfile.from_orm(current_user).dict()
-    profile_data['permissions'] = permissions
-    
-    return profile_data
+    # Create user profile using the from_user method
+    return UserProfile.from_user(current_user, permissions)
 
 @app.put("/api/v1/profile", response_model=UserProfile)
 async def update_profile(
@@ -701,7 +771,10 @@ async def update_profile(
         # Log profile update
         await log_audit_event(db, current_user, "update_profile", "profile", str(current_user.id), request, "success")
         
-        return UserProfile.from_orm(current_user)
+        # Get user permissions for profile
+        permissions = await get_user_permissions(db, current_user)
+        
+        return UserProfile.from_user(current_user, permissions)
         
     except Exception as e:
         logger.error("Update profile error", user_id=current_user.id, error=str(e))
@@ -727,7 +800,6 @@ async def change_password(
                 detail="OAuth users cannot change password"
             )
         
-        from .security import verify_password
         if not verify_password(password_data.current_password, current_user.password_hash):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,

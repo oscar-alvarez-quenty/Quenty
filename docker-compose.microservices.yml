@@ -20,7 +20,9 @@ services:
       - ANALYTICS_SERVICE_URL=http://analytics-service:8006
       - REVERSE_LOGISTICS_SERVICE_URL=http://reverse-logistics-service:8007
       - FRANCHISE_SERVICE_URL=http://franchise-service:8008
+      - AUTH_SERVICE_URL=http://auth-service:8009
     depends_on:
+      - auth-service
       - customer-service
       - order-service
       - pickup-service
@@ -29,6 +31,46 @@ services:
       - analytics-service
       - reverse-logistics-service
       - franchise-service
+    networks:
+      - quenty-network
+    restart: unless-stopped
+
+  # Auth Service
+  auth-service:
+    build:
+      context: ./microservices/auth-service
+      dockerfile: Dockerfile
+    container_name: quenty-auth-service
+    environment:
+      - SERVICE_NAME=auth-service
+      - DATABASE_URL=postgresql+asyncpg://auth:auth_pass@auth-db:5432/auth_db
+      - REDIS_URL=redis://redis:6379/0
+      - LOG_LEVEL=INFO
+      - JWT_SECRET_KEY=your-secret-key-change-this-in-production
+      - JWT_ALGORITHM=HS256
+      - JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30
+      - JWT_REFRESH_TOKEN_EXPIRE_DAYS=7
+      - INITIAL_ADMIN_USERNAME=admin
+      - INITIAL_ADMIN_PASSWORD=AdminPassword123
+      - INITIAL_ADMIN_EMAIL=admin@quenty.com
+      - INITIAL_ADMIN_FIRST_NAME=System
+      - INITIAL_ADMIN_LAST_NAME=Administrator
+    depends_on:
+      - auth-db
+      - redis
+    networks:
+      - quenty-network
+    restart: unless-stopped
+
+  auth-db:
+    image: postgres:15-alpine
+    container_name: quenty-auth-db
+    environment:
+      - POSTGRES_USER=auth
+      - POSTGRES_PASSWORD=auth_pass
+      - POSTGRES_DB=auth_db
+    volumes:
+      - auth-db-data:/var/lib/postgresql/data
     networks:
       - quenty-network
     restart: unless-stopped
@@ -44,6 +86,7 @@ services:
       - DATABASE_URL=postgresql+asyncpg://customer:customer_pass@customer-db:5432/customer_db
       - REDIS_URL=redis://redis:6379/1
       - LOG_LEVEL=INFO
+      - AUTH_SERVICE_URL=http://auth-service:8009
     depends_on:
       - customer-db
       - redis
@@ -75,6 +118,7 @@ services:
       - DATABASE_URL=postgresql+asyncpg://order:order_pass@order-db:5432/order_db
       - REDIS_URL=redis://redis:6379/2
       - LOG_LEVEL=INFO
+      - AUTH_SERVICE_URL=http://auth-service:8009
       - CUSTOMER_SERVICE_URL=http://customer-service:8001
       - SHIPPING_SERVICE_URL=http://international-shipping-service:8004
     depends_on:
@@ -108,6 +152,7 @@ services:
       - DATABASE_URL=postgresql+asyncpg://pickup:pickup_pass@pickup-db:5432/pickup_db
       - REDIS_URL=redis://redis:6379/3
       - LOG_LEVEL=INFO
+      - AUTH_SERVICE_URL=http://auth-service:8009
       - ORDER_SERVICE_URL=http://order-service:8002
     depends_on:
       - pickup-db
@@ -140,6 +185,7 @@ services:
       - DATABASE_URL=postgresql+asyncpg://intlship:intlship_pass@intl-shipping-db:5432/intl_shipping_db
       - REDIS_URL=redis://redis:6379/4
       - LOG_LEVEL=INFO
+      - AUTH_SERVICE_URL=http://auth-service:8009
       - CUSTOMER_SERVICE_URL=http://customer-service:8001
     depends_on:
       - intl-shipping-db
@@ -172,6 +218,7 @@ services:
       - DATABASE_URL=postgresql+asyncpg://credit:credit_pass@microcredit-db:5432/microcredit_db
       - REDIS_URL=redis://redis:6379/5
       - LOG_LEVEL=INFO
+      - AUTH_SERVICE_URL=http://auth-service:8009
       - CUSTOMER_SERVICE_URL=http://customer-service:8001
     depends_on:
       - microcredit-db
@@ -204,6 +251,7 @@ services:
       - DATABASE_URL=postgresql+asyncpg://analytics:analytics_pass@analytics-db:5432/analytics_db
       - REDIS_URL=redis://redis:6379/6
       - LOG_LEVEL=INFO
+      - AUTH_SERVICE_URL=http://auth-service:8009
       - READ_REPLICA_URLS=postgresql+asyncpg://analytics:analytics_pass@customer-db:5432/customer_db,postgresql+asyncpg://analytics:analytics_pass@order-db:5432/order_db
     depends_on:
       - analytics-db
@@ -236,6 +284,7 @@ services:
       - DATABASE_URL=postgresql+asyncpg://reverse:reverse_pass@reverse-logistics-db:5432/reverse_logistics_db
       - REDIS_URL=redis://redis:6379/7
       - LOG_LEVEL=INFO
+      - AUTH_SERVICE_URL=http://auth-service:8009
       - ORDER_SERVICE_URL=http://order-service:8002
       - CUSTOMER_SERVICE_URL=http://customer-service:8001
     depends_on:
@@ -269,6 +318,7 @@ services:
       - DATABASE_URL=postgresql+asyncpg://franchise:franchise_pass@franchise-db:5432/franchise_db
       - REDIS_URL=redis://redis:6379/8
       - LOG_LEVEL=INFO
+      - AUTH_SERVICE_URL=http://auth-service:8009
     depends_on:
       - franchise-db
       - redis
@@ -391,6 +441,7 @@ services:
 
 volumes:
   # Database volumes
+  auth-db-data:
   customer-db-data:
   order-db-data:
   pickup-db-data:

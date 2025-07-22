@@ -56,15 +56,9 @@ async def get_user_permissions(db: AsyncSession, user: User) -> list[str]:
     """Get all permissions for a user including role-based permissions"""
     permissions = set()
     
-    # Add role-based permissions
-    if user.role:
-        # Load role with permissions
-        stmt = select(Role).where(Role.id == user.role_id)
-        result = await db.execute(stmt)
-        role = result.scalar_one_or_none()
-        
-        if role and role.permissions:
-            permissions.update(role.permissions)
+    # Add role-based permissions (role should already be loaded via selectinload)
+    if user.role and user.role.permissions:
+        permissions.update(user.role.permissions)
     
     # Add additional user-specific permissions
     if user.additional_permissions:
@@ -83,9 +77,11 @@ def generate_jwt_token(data: Dict[str, Any], expires_delta: Optional[timedelta] 
     
     to_encode.update({
         "exp": expire,
-        "iat": datetime.utcnow(),
-        "jti": str(uuid.uuid4())  # JWT ID for tracking
+        "iat": datetime.utcnow() - timedelta(seconds=30)  # Set iat 30 seconds in the past to avoid timing issues
     })
+    
+    # Debug: Print JTI being used in token (should always be provided by caller now)
+    print(f"DEBUG: Generating JWT token with JTI: {to_encode.get('jti', 'NOT_PROVIDED')}")
     
     encoded_jwt = jwt.encode(to_encode, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
     return encoded_jwt
@@ -109,8 +105,8 @@ def decode_jwt_token(token: str) -> Dict[str, Any]:
 async def authenticate_user(db: AsyncSession, username_or_email: str, password: str) -> Optional[User]:
     """Authenticate a user with username/email and password"""
     try:
-        # Find user by username or email
-        stmt = select(User).where(
+        # Find user by username or email with eager loading of role relationship
+        stmt = select(User).options(selectinload(User.role)).where(
             (User.username == username_or_email) | 
             (User.email == username_or_email)
         )
@@ -149,7 +145,7 @@ async def authenticate_user(db: AsyncSession, username_or_email: str, password: 
         # Update last login
         stmt = update(User).where(User.id == user.id).values(last_login=datetime.utcnow())
         await db.execute(stmt)
-        await db.commit()
+        # Let the parent transaction handle the commit
         
         logger.info("User authenticated successfully", user_id=user.id)
         return user
@@ -173,7 +169,7 @@ async def increment_failed_login_attempts(db: AsyncSession, user: User):
         locked_until=locked_until
     )
     await db.execute(stmt)
-    await db.commit()
+    # Let the parent transaction handle the commit
 
 async def reset_failed_login_attempts(db: AsyncSession, user: User):
     """Reset failed login attempts"""
@@ -182,7 +178,7 @@ async def reset_failed_login_attempts(db: AsyncSession, user: User):
         locked_until=None
     )
     await db.execute(stmt)
-    await db.commit()
+    # Let the parent transaction handle the commit
 
 async def create_user_session(
     db: AsyncSession, 
@@ -218,8 +214,12 @@ async def create_user_session(
     )
     
     db.add(session)
-    await db.commit()
+    # Let the parent transaction handle the commit
+    await db.flush()  # Flush to get the ID without committing
     await db.refresh(session)
+    
+    # Debug: Print created session JTI
+    print(f"DEBUG: Created session with JTI: {session.jti}, ID: {session.id}")
     
     return session
 
@@ -236,7 +236,7 @@ async def revoke_user_session(db: AsyncSession, session: UserSession):
         revoked_at=datetime.utcnow()
     )
     await db.execute(stmt)
-    await db.commit()
+    # Let the parent transaction handle the commit
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
@@ -257,8 +257,8 @@ async def get_current_user(
         if not session or session.is_expired:
             raise AuthenticationError("Session expired or invalid")
         
-        # Get user
-        stmt = select(User).where(User.id == int(user_id))
+        # Get user with eager loading of role relationship
+        stmt = select(User).options(selectinload(User.role)).where(User.id == int(user_id))
         result = await db.execute(stmt)
         user = result.scalar_one_or_none()
         
@@ -273,7 +273,7 @@ async def get_current_user(
             last_activity=datetime.utcnow()
         )
         await db.execute(stmt)
-        await db.commit()
+        # Let the parent transaction handle the commit
         
         return user
         
@@ -298,17 +298,26 @@ async def get_current_superuser(current_user: User = Depends(get_current_user)) 
 
 def require_permissions(permissions: list[str]):
     """Decorator factory to require specific permissions"""
-    def permission_checker(current_user: User = Depends(get_current_user)) -> User:
-        user_permissions = set(current_user.permissions or [])
-        required_permissions = set(permissions)
-        
+    async def permission_checker(
+        current_user: User = Depends(get_current_user),
+        db: AsyncSession = Depends(get_db)
+    ) -> User:
         # Superusers have all permissions
         if current_user.is_superuser:
             return current_user
         
+        # Get user permissions
+        user_permissions = await get_user_permissions(db, current_user)
+        user_permissions_set = set(user_permissions)
+        required_permissions = set(permissions)
+        
+        # Check for wildcard permission
+        if "*" in user_permissions_set:
+            return current_user
+        
         # Check if user has required permissions
-        if not required_permissions.issubset(user_permissions):
-            missing_perms = required_permissions - user_permissions
+        if not required_permissions.issubset(user_permissions_set):
+            missing_perms = required_permissions - user_permissions_set
             raise AuthorizationError(f"Missing permissions: {', '.join(missing_perms)}")
         
         return current_user
@@ -318,7 +327,8 @@ def require_permissions(permissions: list[str]):
 def require_roles(roles: list[str]):
     """Decorator factory to require specific roles"""
     def role_checker(current_user: User = Depends(get_current_user)) -> User:
-        if current_user.role not in roles:
+        user_role = current_user.role.code if current_user.role else None
+        if user_role not in roles:
             raise AuthorizationError(f"Required roles: {', '.join(roles)}")
         return current_user
     
@@ -349,7 +359,8 @@ async def create_password_reset_token(db: AsyncSession, user: User) -> str:
     )
     
     db.add(reset_token)
-    await db.commit()
+    # Let the parent transaction handle the commit
+    await db.flush()  # Flush to get the ID without committing
     
     return token
 

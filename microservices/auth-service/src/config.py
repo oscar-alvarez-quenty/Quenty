@@ -51,6 +51,13 @@ class Settings(BaseSettings):
     # Logging
     log_level: str = "INFO"
     
+    # Initial Admin User (for bootstrapping)
+    initial_admin_username: Optional[str] = None
+    initial_admin_password: Optional[str] = None
+    initial_admin_email: Optional[str] = None
+    initial_admin_first_name: Optional[str] = "System"
+    initial_admin_last_name: Optional[str] = "Administrator"
+    
     class Config:
         env_file = ".env"
         case_sensitive = False

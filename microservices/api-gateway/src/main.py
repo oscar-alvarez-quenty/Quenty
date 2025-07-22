@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     analytics_service_url: str = "http://analytics-service:8006"
     reverse_logistics_service_url: str = "http://reverse-logistics-service:8007"
     franchise_service_url: str = "http://franchise-service:8008"
+    auth_service_url: str = "http://auth-service:8009"
     consul_host: str = "consul"
     consul_port: int = 8500
     
@@ -50,6 +51,7 @@ service_registry = {
     "analytics": settings.analytics_service_url,
     "reverse-logistics": settings.reverse_logistics_service_url,
     "franchise": settings.franchise_service_url,
+    "auth": settings.auth_service_url,
 }
 
 # Circuit breaker decorator
@@ -88,6 +90,55 @@ async def check_all_services():
         except:
             health_status[service_name] = "unreachable"
     return health_status
+
+# Authentication endpoints
+@app.post("/api/v1/auth/login")
+async def login(request: Request):
+    body = await request.json()
+    return await resilient_request("auth", "/api/v1/auth/login", method="POST", json=body)
+
+@app.post("/api/v1/auth/register")
+async def register(request: Request):
+    body = await request.json()
+    return await resilient_request("auth", "/api/v1/users", method="POST", json=body)
+
+@app.post("/api/v1/auth/refresh")
+async def refresh_token(request: Request):
+    body = await request.json()
+    return await resilient_request("auth", "/api/v1/auth/refresh", method="POST", json=body)
+
+@app.post("/api/v1/auth/logout")
+async def logout(request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("auth", "/api/v1/auth/logout", method="POST", headers=headers)
+
+@app.post("/api/v1/auth/change-password")
+async def change_password(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("auth", "/api/v1/auth/change-password", method="POST", json=body, headers=headers)
+
+@app.get("/api/v1/profile")
+async def get_profile(request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("auth", "/api/v1/profile", headers=headers)
+
+@app.put("/api/v1/profile")
+async def update_profile(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("auth", "/api/v1/profile", method="PUT", json=body, headers=headers)
+
+# OAuth endpoints
+@app.get("/api/v1/auth/{provider}/login")
+async def oauth_login(provider: str, redirect_uri: str = None):
+    params = {"redirect_uri": redirect_uri} if redirect_uri else {}
+    return await resilient_request("auth", f"/api/v1/auth/{provider}/login", params=params)
+
+@app.get("/api/v1/auth/{provider}/callback")
+async def oauth_callback(provider: str, request: Request):
+    params = dict(request.query_params)
+    return await resilient_request("auth", f"/api/v1/auth/{provider}/callback", params=params)
 
 # Customer endpoints
 @app.get("/api/v1/customers/{customer_id}")

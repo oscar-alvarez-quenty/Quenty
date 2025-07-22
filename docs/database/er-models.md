@@ -2,74 +2,203 @@
 
 ## Overview
 
-This document provides comprehensive entity relationship diagrams for the Quenty microservices platform, showing the data models and relationships within each service and across service boundaries.
+This document provides comprehensive entity relationship diagrams for the Quenty microservices platform, showing the data models and relationships within each of the 9 specialized services and across service boundaries.
 
-## General System Entity Relationship Diagram
+## Complete System Entity Relationship Diagram
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           QUENTY PLATFORM - COMPLETE ERD                   │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│  ┌─────────────────┐      ┌─────────────────┐      ┌─────────────────┐     │
-│  │ CUSTOMER SERVICE│      │  ORDER SERVICE  │      │ SHIPPING SERVICE│     │
-│  │                 │      │                 │      │                 │     │
-│  │ ┌─────────────┐ │      │ ┌─────────────┐ │      │ ┌─────────────┐ │     │
-│  │ │   Users     │ │      │ │  Products   │ │      │ │ Manifests   │ │     │
-│  │ │             │ │      │ │             │ │      │ │             │ │     │
-│  │ │ id (PK)     │ │  ┌───┼─┤ id (PK)     │ │  ┌───┼─┤ id (PK)     │ │     │
-│  │ │ unique_id   │ │  │   │ │ sku         │ │  │   │ │ unique_id   │ │     │
-│  │ │ username    │ │  │   │ │ name        │ │  │   │ │ status      │ │     │
-│  │ │ email       │ │  │   │ │ price       │ │  │   │ │ company_id  │ │     │
-│  │ │ company_id  │◄─┼──┼───┼─┤ company_id  │ │  │   │ │ created_by  │ │     │
-│  │ └─────────────┘ │  │   │ └─────────────┘ │  │   │ └─────────────┘ │     │
-│  │       │         │  │   │       │         │  │   │       │         │     │
-│  │       │         │  │   │       │         │  │   │       │         │     │
-│  │ ┌─────▼───────┐ │  │   │ ┌─────▼───────┐ │  │   │ ┌─────▼───────┐ │     │
-│  │ │ Companies   │ │  │   │ │ Inventory   │ │  │   │ │ManifestItems│ │     │
-│  │ │             │ │  │   │ │   Items     │ │  │   │ │             │ │     │
-│  │ │ id (PK)     │ │  │   │ │             │ │  │   │ │ id (PK)     │ │     │
-│  │ │ company_id  │ │  │   │ │ id (PK)     │ │  │   │ │ manifest_id │ │     │
-│  │ │ name        │ │  │   │ │ product_id  │◄─┼───┼──┤ product_id  │ │     │
-│  │ │ business_n  │ │  │   │ │ quantity    │ │  │   │ │ description │ │     │
-│  │ └─────────────┘ │  │   │ └─────────────┘ │  │   │ └─────────────┘ │     │
-│  │                 │  │   │                 │  │   │                 │     │
-│  │ ┌─────────────┐ │  │   │ ┌─────────────┐ │  │   │ ┌─────────────┐ │     │
-│  │ │DocumentTypes│ │  │   │ │   Orders    │ │  │   │ │ShippingRates│ │     │
-│  │ │             │ │  │   │ │             │ │  │   │ │             │ │     │
-│  │ │ id (PK)     │ │  │   │ │ id (PK)     │ │  │   │ │ id (PK)     │ │     │
-│  │ │ name        │ │  │   │ │ order_number│ │  │   │ │ manifest_id │ │     │
-│  │ │ code        │ │  │   │ │ customer_id │◄─┼───┼──┤ carrier_name│ │     │
-│  │ └─────────────┘ │  │   │ │ company_id  │ │  │   │ │ total_cost  │ │     │
-│  └─────────────────┘  │   │ └─────────────┘ │  │   │ └─────────────┘ │     │
-│                       │   │       │         │  │   │                 │     │
-│                       │   │       │         │  │   │ ┌─────────────┐ │     │
-│                       │   │ ┌─────▼───────┐ │  │   │ │  Countries  │ │     │
-│                       │   │ │ OrderItems  │ │  │   │ │             │ │     │
-│                       │   │ │             │ │  │   │ │ id (PK)     │ │     │
-│                       │   │ │ id (PK)     │ │  │   │ │ name        │ │     │
-│                       │   │ │ order_id    │ │  │   │ │ iso_code    │ │     │
-│                       └───┼─┤ product_id  │ │  │   │ │ zone        │ │     │
-│                           │ │ quantity    │ │  │   │ └─────────────┘ │     │
-│                           │ └─────────────┘ │  │   │                 │     │
-│                           │                 │  │   │ ┌─────────────┐ │     │
-│                           │ ┌─────────────┐ │  │   │ │  Carriers   │ │     │
-│                           │ │StockMovement│ │  │   │ │             │ │     │
-│                           │ │             │ │  │   │ │ id (PK)     │ │     │
-│                           │ │ id (PK)     │ │  │   │ │ name        │ │     │
-│                           │ │ product_id  │ │  │   │ │ code        │ │     │
-│                           │ │ movement_ty │ │  │   │ │ api_endpoint│ │     │
-│                           │ │ quantity    │ │  │   │ └─────────────┘ │     │
-│                           │ └─────────────┘ │  │   │                 │     │
-│                           └─────────────────┘  │   └─────────────────┘     │
-│                                                │                           │
-│  Cross-Service Relationships:                  │                           │
-│  - Users.company_id → Products.company_id      │                           │
-│  - Orders.customer_id → Users.unique_id        │                           │
-│  - ManifestItems.product_id → Products.id      │                           │
-│  - Manifests.company_id → Companies.company_id │                           │
-│  - Manifests.created_by → Users.unique_id      │                           │
-└─────────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                    QUENTY PLATFORM - COMPLETE ERD                                              │
+│                                      9 Microservices Architecture                                              │
+├─────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                                                 │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐                          │
+│  │   AUTH SERVICE  │  │CUSTOMER SERVICE │  │ ORDER SERVICE   │  │ SHIPPING SERVICE│                          │
+│  │   Port: 8009    │  │   Port: 8001    │  │   Port: 8002    │  │   Port: 8004    │                          │
+│  │                 │  │                 │  │                 │  │                 │                          │
+│  │ ┌─────────────┐ │  │ ┌─────────────┐ │  │ ┌─────────────┐ │  │ ┌─────────────┐ │                          │
+│  │ │   Users     │ │  │ │   Users     │ │  │ │  Products   │ │  │ │ Manifests   │ │                          │
+│  │ │             │◄┼──┼─┤             │ │  │ │             │ │  │ │             │ │                          │
+│  │ │ id (PK)     │ │  │ │ id (PK)     │ │  │ │ id (PK)     │ │  │ │ id (PK)     │ │                          │
+│  │ │ user_id     │ │  │ │ unique_id   │ │  │ │ sku         │ │  │ │ unique_id   │ │                          │
+│  │ │ email       │ │  │ │ username    │ │  │ │ name        │ │  │ │ status      │ │                          │
+│  │ │ is_active   │ │  │ │ company_id  │◄─┼──┼─┤ company_id  │ │  │ │ company_id◄─┼─┐                        │
+│  │ └─────────────┘ │  │ └─────────────┘ │  │ └─────────────┘ │  │ └─────────────┘ │ │                        │
+│  │       │         │  │       │         │  │       │         │  │       │         │ │                        │
+│  │ ┌─────▼───────┐ │  │ ┌─────▼───────┐ │  │ ┌─────▼───────┐ │  │ ┌─────▼───────┐ │ │                        │
+│  │ │   Roles     │ │  │ │ Companies   │ │  │ │ Inventory   │ │  │ │ManifestItems│ │ │                        │
+│  │ │             │ │  │ │             │ │  │ │   Items     │ │  │ │             │ │ │                        │
+│  │ │ id (PK)     │ │  │ │ id (PK)     │ │  │ │ id (PK)     │ │  │ │ id (PK)     │ │ │                        │
+│  │ │ name        │ │  │ │ company_id  │ │  │ │ product_id  │◄─┼──┼─┤ product_id  │ │ │                        │
+│  │ └─────────────┘ │  │ │ name        │ │  │ │ quantity    │ │  │ │ description │ │ │                        │
+│  │       │         │  │ └─────────────┘ │  │ └─────────────┘ │  │ └─────────────┘ │ │                        │
+│  │ ┌─────▼───────┐ │  │                 │  │                 │  │                 │ │                        │
+│  │ │Permissions  │ │  │ ┌─────────────┐ │  │ ┌─────────────┐ │  │ ┌─────────────┐ │ │                        │
+│  │ │             │ │  │ │DocumentTypes│ │  │ │   Orders    │ │  │ │ShippingRates│ │ │                        │
+│  │ │ id (PK)     │ │  │ │             │ │  │ │             │ │  │ │             │ │ │                        │
+│  │ │ name        │ │  │ │ id (PK)     │ │  │ │ id (PK)     │ │  │ │ id (PK)     │ │ │                        │
+│  │ │ resource    │ │  │ │ name        │ │  │ │ order_number│ │  │ │ manifest_id │ │ │                        │
+│  │ │ action      │ │  │ │ code        │ │  │ │ customer_id │◄─┼──┼─┤ carrier_name│ │ │                        │
+│  │ └─────────────┘ │  │ └─────────────┘ │  │ │ company_id  │ │  │ │ total_cost  │ │ │                        │
+│  └─────────────────┘  └─────────────────┘  │ └─────────────┘ │  │ └─────────────┘ │ │                        │
+│                                             │       │         │  │                 │ │                        │
+│                                             │ ┌─────▼───────┐ │  │ ┌─────────────┐ │ │                        │
+│                                             │ │ OrderItems  │ │  │ │  Countries  │ │ │                        │
+│                                             │ │             │ │  │ │             │ │ │                        │
+│                                             │ │ id (PK)     │ │  │ │ id (PK)     │ │ │                        │
+│                                             │ │ order_id    │ │  │ │ name        │ │ │                        │
+│                                             │ │ product_id  │ │  │ │ iso_code    │ │ │                        │
+│                                             │ │ quantity    │ │  │ │ zone        │ │ │                        │
+│                                             │ └─────────────┘ │  │ └─────────────┘ │ │                        │
+│                                             └─────────────────┘  └─────────────────┘ │                        │
+│                                                                                       │                        │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐ │                        │
+│  │ PICKUP SERVICE  │  │ANALYTICS SERVICE│  │REV. LOGISTICS   │  │FRANCHISE SERVICE│ │                        │
+│  │   Port: 8005    │  │   Port: 8006    │  │   Port: 8007    │  │   Port: 8008    │ │                        │
+│  │                 │  │                 │  │                 │  │                 │ │                        │
+│  │ ┌─────────────┐ │  │ ┌─────────────┐ │  │ ┌─────────────┐ │  │ ┌─────────────┐ │ │                        │
+│  │ │   Pickups   │ │  │ │  Metrics    │ │  │ │  Returns    │ │  │ │ Franchises  │ │ │                        │
+│  │ │             │ │  │ │             │ │  │ │             │ │  │ │             │ │ │                        │
+│  │ │ id (PK)     │ │  │ │ id (PK)     │ │  │ │ id (PK)     │ │  │ │ id (PK)     │ │ │                        │
+│  │ │ pickup_id   │ │  │ │ metric_id   │ │  │ │ return_id   │ │  │ │ franchise_id│ │ │                        │
+│  │ │ customer_id │◄─┼──┼─┤ metric_type │ │  │ │ order_id    │◄─┼──┼─┤ franchisee  │ │ │                        │
+│  │ │ pickup_type │ │  │ │ value       │ │  │ │ customer_id │ │  │ │ territory_cd│◄┼─┼────────────────┐       │
+│  │ └─────────────┘ │  │ │ tags        │ │  │ │ status      │ │  │ └─────────────┘ │ │                │       │
+│  │       │         │  │ └─────────────┘ │  │ └─────────────┘ │  │       │         │ │                │       │
+│  │ ┌─────▼───────┐ │  │       │         │  │       │         │  │ ┌─────▼───────┐ │ │                │       │
+│  │ │PickupRoutes │ │  │ ┌─────▼───────┐ │  │ ┌─────▼───────┐ │  │ │Territories  │ │ │◄───────────────┘       │
+│  │ │             │ │  │ │Dashboards   │ │  │ │ReturnItems  │ │  │ │             │ │ │                        │
+│  │ │ id (PK)     │ │  │ │             │ │  │ │             │ │  │ │ id (PK)     │ │ │                        │
+│  │ │ route_id    │ │  │ │ id (PK)     │ │  │ │ id (PK)     │ │  │ │territory_cd │ │ │                        │
+│  │ │ driver_id   │ │  │ │dashboard_id │ │  │ │return_id    │ │  │ │ name        │ │ │                        │
+│  │ └─────────────┘ │  │ │ widgets     │ │  │ │ item_id     │ │  │ │ status      │ │ │                        │
+│  │       │         │  │ └─────────────┘ │  │ └─────────────┘ │  │ └─────────────┘ │ │                        │
+│  │ ┌─────▼───────┐ │  │       │         │  │       │         │  │       │         │ │                        │
+│  │ │PickupPkgs   │ │  │ ┌─────▼───────┐ │  │ ┌─────▼───────┐ │  │ ┌─────▼───────┐ │ │                        │
+│  │ │             │ │  │ │  Reports    │ │  │ │Inspections  │ │  │ │Performance  │ │ │                        │
+│  │ │ id (PK)     │ │  │ │             │ │  │ │             │ │  │ │             │ │ │                        │
+│  │ │ pickup_id   │ │  │ │ id (PK)     │ │  │ │ id (PK)     │ │  │ │ id (PK)     │ │ │                        │
+│  │ │ tracking_no │ │  │ │ report_id   │ │  │ │inspection_id│ │  │ │performance_d│ │ │                        │
+│  │ └─────────────┘ │  │ │ status      │ │  │ │ return_id   │ │  │ │ revenue     │ │ │                        │
+│  └─────────────────┘  │ └─────────────┘ │  │ │ condition   │ │  │ │ score       │ │ │                        │
+│                       └─────────────────┘  │ └─────────────┘ │  │ └─────────────┘ │ │                        │
+│                                            └─────────────────┘  └─────────────────┘ │                        │
+│                                                                                      │                        │
+│  ┌─────────────────┐                                                                 │                        │
+│  │MICROCREDIT SVC  │                                                                 │                        │
+│  │   Port: 8005*   │                                                                 │                        │
+│  │                 │                                                                 │                        │
+│  │ ┌─────────────┐ │                                                                 │                        │
+│  │ │CreditApps   │ │                                                                 │                        │
+│  │ │             │ │                                                                 │                        │
+│  │ │ id (PK)     │ │                                                                 │                        │
+│  │ │app_id       │ │                                                                 │                        │
+│  │ │customer_id  │◄┼─────────────────────────────────────────────────────────────────┘                        │
+│  │ │status       │ │                                                                                          │
+│  │ └─────────────┘ │                                                                                          │
+│  │       │         │                                                                                          │
+│  │ ┌─────▼───────┐ │                                                                                          │
+│  │ │   Loans     │ │                                                                                          │
+│  │ │             │ │                                                                                          │
+│  │ │ id (PK)     │ │                                                                                          │
+│  │ │ loan_id     │ │                                                                                          │
+│  │ │ customer_id │ │                                                                                          │
+│  │ │ amount      │ │                                                                                          │
+│  │ └─────────────┘ │                                                                                          │
+│  │       │         │                                                                                          │
+│  │ ┌─────▼───────┐ │                                                                                          │
+│  │ │CreditScores │ │                                                                                          │
+│  │ │             │ │                                                                                          │
+│  │ │ id (PK)     │ │                                                                                          │
+│  │ │ score_id    │ │                                                                                          │
+│  │ │ customer_id │ │                                                                                          │
+│  │ │ score       │ │                                                                                          │
+│  │ └─────────────┘ │                                                                                          │
+│  └─────────────────┘                                                                                          │
+│                                                                                                                │
+│  Cross-Service Relationships (Logical References):                                                            │
+│  - Auth.users.user_id ←→ Customer.users.unique_id (Authentication)                                           │
+│  - Customer.users.unique_id → Orders.customer_id                                                             │
+│  - Customer.companies.company_id → Products.company_id                                                       │
+│  - Orders.order_number → Returns.original_order_id                                                           │
+│  - Products.id → ManifestItems.product_id                                                                    │
+│  - Customer.users.unique_id → Pickups.customer_id                                                            │
+│  - Customer.users.unique_id → Returns.customer_id                                                            │
+│  - Customer.users.unique_id → CreditApps.customer_id                                                         │
+│  - All Services → Analytics.metrics (Performance Data)                                                       │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+## Auth Service ERD
+
+### Database Schema: auth_db
+
+```
+┌─────────────────────────────────────────────────┐
+│                AUTH SERVICE ERD                 │
+├─────────────────────────────────────────────────┤
+│                                                 │
+│  ┌─────────────────┐         ┌─────────────────┐│
+│  │     Users       │         │     Roles       ││
+│  │                 │         │                 ││
+│  │ id (PK)         │         │ id (PK)         ││
+│  │ user_id (UK)    │         │ role_id (UK)    ││
+│  │ username (UK)   │         │ name (UK)       ││
+│  │ email (UK)      │         │ description     ││
+│  │ password_hash   │         │ is_active       ││
+│  │ first_name      │         │ is_system_role  ││
+│  │ last_name       │         │ created_at      ││
+│  │ phone           │         │ updated_at      ││
+│  │ is_active       │         └─────────────────┘│
+│  │ is_verified     │                  │          │
+│  │ created_at      │                  │          │
+│  │ updated_at      │                  │          │
+│  │ last_login      │                  │          │
+│  └─────────┬───────┘                  │          │
+│            │                          │          │
+│            │         ┌────────────────▼──────────┐│
+│            │         │        UserRoles          ││
+│            │         │                           ││
+│            │         │ id (PK)                   ││
+│            └─────────┤ user_id (FK)              ││
+│                      │ role_id (FK)              ││
+│                      │ assigned_at               ││
+│                      │ assigned_by               ││
+│                      └───────────┬───────────────┘│
+│                                  │                │
+│  ┌─────────────────┐             │                │
+│  │  RefreshTokens  │             │                │
+│  │                 │             │                │
+│  │ id (PK)         │             │                │
+│  │ user_id (FK)    │◄────────────┘                │
+│  │ token_hash      │                              │
+│  │ expires_at      │              ┌───────────────┐│
+│  │ is_revoked      │              │ Permissions   ││
+│  │ created_at      │              │               ││
+│  └─────────────────┘              │ id (PK)       ││
+│                                   │ permission_id ││
+│                                   │ name (UK)     ││
+│  ┌─────────────────┐              │ resource      ││
+│  │ RolePermissions │              │ action        ││
+│  │                 │              │ description   ││
+│  │ id (PK)         │              │ is_active     ││
+│  │ role_id (FK)    │              │ created_at    ││
+│  │ permission_id◄──┼──────────────┤               ││
+│  │ assigned_at     │              └───────────────┘│
+│  └─────────────────┘                              │
+│                                                   │
+│  Relationships:                                   │
+│  - Users (1) → UserRoles (M) ← Roles (1)          │
+│  - Users (1) → RefreshTokens (M)                  │
+│  - Roles (1) → RolePermissions (M) ← Permissions  │
+│  - RBAC: Users inherit permissions through roles  │
+│                                                   │
+│  Indexes:                                         │
+│  - users.user_id, username, email (unique)       │
+│  - roles.role_id, name (unique)                   │
+│  - permissions.permission_id, name (unique)       │
+│  - user_roles(user_id, role_id) composite         │
+└─────────────────────────────────────────────────┘
 ```
 
 ## Customer Service ERD
@@ -78,7 +207,7 @@ This document provides comprehensive entity relationship diagrams for the Quenty
 
 ```
 ┌─────────────────────────────────────────────────┐
-│                CUSTOMER SERVICE ERD             │
+│               CUSTOMER SERVICE ERD              │
 ├─────────────────────────────────────────────────┤
 │                                                 │
 │  ┌─────────────────┐         ┌─────────────────┐│
@@ -110,6 +239,10 @@ This document provides comprehensive entity relationship diagrams for the Quenty
 │  Relationships:                                 │
 │  - Companies (1) → Users (M)                    │
 │  - Users.company_id references Companies.id     │
+│                                                 │
+│  External References (Cross-Service):           │
+│  - Users.unique_id → Auth Service users         │
+│  - Companies.company_id → All business services │
 │                                                 │
 │  Indexes:                                       │
 │  - users.unique_id (unique)                     │
@@ -143,7 +276,7 @@ This document provides comprehensive entity relationship diagrams for the Quenty
 │  │ weight          │    │    │ batch_number    │                       │
 │  │ dimensions      │    │    │ expiry_date     │                       │
 │  │ active          │    │    │ created_at      │                       │
-│  │ company_id      │    │    │ updated_at      │                       │
+│  │ company_id ─────┼────┼────┤ updated_at      │                       │
 │  │ created_at      │    │    └─────────────────┘                       │
 │  │ updated_at      │    │                                              │
 │  └─────────┬───────┘    │    ┌─────────────────┐                       │
@@ -179,8 +312,8 @@ This document provides comprehensive entity relationship diagrams for the Quenty
 │                      │ status          │                               │
 │                      │ total_amount    │                               │
 │                      │ currency        │                               │
-│                      │ customer_id     │ ──────► References User       │
-│                      │ company_id      │ ──────► References Company    │
+│                      │ customer_id ────┼──────► Customer Service      │
+│                      │ company_id ─────┼──────► Customer Service      │
 │                      │ created_at      │                               │
 │                      │ updated_at      │                               │
 │                      └─────────────────┘                               │
@@ -194,14 +327,14 @@ This document provides comprehensive entity relationship diagrams for the Quenty
 │  Cross-Service References:                                             │
 │  - Orders.customer_id → Customer Service (Users.unique_id)             │
 │  - Orders.company_id → Customer Service (Companies.company_id)         │
+│  - Products.id → Shipping Service (ManifestItems.product_id)           │
+│  - Orders.order_number → Reverse Logistics (Returns.original_order_id) │
 │                                                                        │
-│  Indexes:                                                              │
-│  - products.sku (unique)                                               │
-│  - products.company_id (index)                                         │
-│  - orders.order_number (unique)                                        │
-│  - orders.customer_id (index)                                          │
-│  - stock_movements.product_id (index)                                  │
-│  - stock_movements.created_at (index)                                  │
+│  Business Rules:                                                       │
+│  - Products must belong to a company                                   │
+│  - Orders must have valid customer and company                         │
+│  - Inventory is decremented on order confirmation                      │
+│  - Stock movements track all inventory changes                         │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -226,14 +359,16 @@ This document provides comprehensive entity relationship diagrams for the Quenty
 │  │ currency        │    │    │ value           │                            │
 │  │ origin_country  │    │    │ hs_code         │                            │
 │  │ destination_cty │    │    │ country_origin  │                            │
-│  │ shipping_zone   │    │    │ product_id      │ ──────► References Product │
+│  │ shipping_zone   │    │    │ product_id ─────┼──────► Order Service       │
 │  │ estimated_deliv │    │    │ created_at      │                            │
 │  │ tracking_number │    │    └─────────────────┘                            │
-│  │ company_id      │    │                                                   │
-│  │ created_by      │    │    ┌─────────────────┐                            │
-│  │ created_at      │    │    │ ShippingRates   │                            │
-│  │ updated_at      │    │    │                 │                            │
-│  └─────────┬───────┘    └────┤ id (PK)         │                            │
+│  │ company_id ─────┼────┼────────────────────────────► Customer Service     │
+│  │ created_by ─────┼────┼────────────────────────────► Customer Service     │
+│  │ created_at      │    │                                                   │
+│  │ updated_at      │    │    ┌─────────────────┐                            │
+│  └─────────┬───────┘    │    │ ShippingRates   │                            │
+│            │            │    │                 │                            │
+│            │            └────┤ id (PK)         │                            │
 │            │                 │ manifest_id (FK)│                            │
 │            │                 │ carrier_name    │                            │
 │            │                 │ service_type    │                            │
@@ -265,207 +400,677 @@ This document provides comprehensive entity relationship diagrams for the Quenty
 │  Relationships:                                                             │
 │  - Manifests (1) → ManifestItems (M)                                        │
 │  - Manifests (1) → ShippingRates (M)                                        │
+│  - Countries provide zone configuration                                     │
+│  - Carriers provide shipping services                                       │
 │                                                                             │
 │  Cross-Service References:                                                  │
 │  - Manifests.company_id → Customer Service (Companies.company_id)           │
 │  - Manifests.created_by → Customer Service (Users.unique_id)                │
 │  - ManifestItems.product_id → Order Service (Products.id)                  │
 │                                                                             │
-│  Indexes:                                                                   │
-│  - manifests.unique_id (unique)                                             │
-│  - manifests.tracking_number (unique)                                       │
-│  - manifests.company_id (index)                                             │
-│  - manifest_items.manifest_id (index)                                       │
-│  - countries.iso_code (unique)                                              │
-│  - shipping_carriers.code (unique)                                          │
+│  Business Rules:                                                            │
+│  - Manifests aggregate multiple items for shipping                          │
+│  - Shipping rates calculated based on weight, volume, and destination       │
+│  - Country zones determine shipping availability and pricing                │
+│  - Carriers provide real-time rate and tracking integration                 │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-## Cross-Service Data Relationships
+## Pickup Service ERD
 
-### Service Communication and Data Flow
+### Database Schema: pickup_db
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                     CROSS-SERVICE RELATIONSHIPS                            │
+│                           PICKUP SERVICE ERD                               │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
-│  Customer Service                Order Service              Shipping Service │
-│  ┌─────────────────┐             ┌─────────────────┐        ┌─────────────────┐
-│  │   Companies     │             │    Products     │        │   Manifests     │
-│  │                 │             │                 │        │                 │
-│  │ company_id ─────┼─────────────┼──→ company_id   │        │ company_id ◄────┤
-│  │ name            │             │ name            │        │ unique_id       │
-│  │ active          │             │ price           │        │ status          │
-│  └─────────────────┘             │ active          │        │ created_by ◄────┤
-│                                  └──────┬──────────┘        └─────────────────┘
-│  ┌─────────────────┐                     │                          │         │
-│  │     Users       │                     │                          │         │
-│  │                 │                     │                  ┌───────▼───────┐ │
-│  │ unique_id ──────┼─────────────────────┼──────────────────┤ManifestItems   │ │
-│  │ username        │                     │                  │                │ │
-│  │ email           │             ┌───────▼───────┐          │ product_id ◄───┤ │
-│  │ company_id ─────┤             │   Orders      │          │ description    │ │
-│  └─────────────────┘             │               │          │ quantity       │ │
-│                                  │ customer_id ◄─┤          │ weight         │ │
-│                                  │ company_id ◄──┤          │ value          │ │
-│                                  │ order_number  │          └─────────────────┘ │
-│                                  │ status        │                             │
-│                                  └───────┬───────┘                             │
-│                                          │                                     │
-│                                  ┌───────▼───────┐                             │
-│                                  │  OrderItems   │                             │
-│                                  │               │                             │
-│                                  │ product_id ◄──┤                             │
-│                                  │ quantity      │                             │
-│                                  │ unit_price    │                             │
-│                                  └─────────────────┘                             │
+│  ┌─────────────────┐         ┌─────────────────┐                            │
+│  │   Pickups       │         │ PickupPackages  │                            │
+│  │                 │         │                 │                            │
+│  │ id (PK)         │◄────────┤ id (PK)         │                            │
+│  │ pickup_id (UK)  │    │    │ pickup_id (FK)  │                            │
+│  │ customer_id ────┼────┼────┤ package_ref     │                            │
+│  │ pickup_type     │    │    │ description     │                            │
+│  │ status          │    │    │ category        │                            │
+│  │ pickup_date     │    │    │ weight_kg       │                            │
+│  │ time_window_st  │    │    │ dimensions      │                            │
+│  │ time_window_end │    │    │ is_fragile      │                            │
+│  │ pickup_address  │    │    │ tracking_number │                            │
+│  │ contact_name    │    │    │ order_id ───────┼──────► Order Service       │
+│  │ contact_phone   │    │    │ created_at      │                            │
+│  │ package_count   │    │    └─────────────────┘                            │
+│  │ estimated_wt_kg │    │                                                   │
+│  │ actual_weight   │    │    ┌─────────────────┐                            │
+│  │ assigned_driver │    │    │ PickupAttempts  │                            │
+│  │ pickup_cost     │    │    │                 │                            │
+│  │ created_at      │    └────┤ id (PK)         │                            │
+│  └─────────┬───────┘         │ pickup_id (FK)  │                            │
+│            │                 │ attempt_number  │                            │
+│            │                 │ attempted_at    │                            │
+│            │                 │ driver_id       │                            │
+│            │                 │ attempt_status  │                            │
+│  ┌─────────▼───────┐         │ failure_reason  │                            │
+│  │ PickupRoutes    │         │ reschedule_date │                            │
+│  │                 │         │ driver_notes    │                            │
+│  │ id (PK)         │         │ attempt_photos  │                            │
+│  │ route_id (UK)   │         │ gps_coordinates │                            │
+│  │ driver_id       │         │ created_at      │                            │
+│  │ route_name      │         └─────────────────┘                            │
+│  │ route_date      │                                                        │
+│  │ status          │         ┌─────────────────┐                            │
+│  │ vehicle_type    │         │ PickupCapacity  │                            │
+│  │ total_distance  │         │                 │                            │
+│  │ total_pickups   │         │ id (PK)         │                            │
+│  │ completed_pckps │         │ postal_code     │                            │
+│  │ optimized_wpts  │         │ pickup_date     │                            │
+│  │ route_start_tm  │         │ time_slot_start │                            │
+│  │ route_end_time  │         │ time_slot_end   │                            │
+│  │ created_at      │         │ max_capacity    │                            │
+│  └─────────────────┘         │ current_booking │                            │
+│                              │ special_event   │                            │
+│                              │ created_at      │                            │
+│  ┌─────────────────┐         └─────────────────┘                            │
+│  │   Drivers       │                                                        │
+│  │                 │         ┌─────────────────┐                            │
+│  │ id (PK)         │         │  PickupZones    │                            │
+│  │ driver_id (UK)  │         │                 │                            │
+│  │ user_id ────────┼─────────┤ id (PK)         │                            │
+│  │ license_number  │         │ zone_id (UK)    │                            │
+│  │ license_expiry  │         │ zone_name       │                            │
+│  │ vehicle_type    │         │ postal_codes    │                            │
+│  │ vehicle_plate   │         │ boundaries      │                            │
+│  │ is_active       │         │ service_avail   │                            │
+│  │ current_zone    │         │ pickup_fee      │                            │
+│  │ total_pickups   │         │ express_fee     │                            │
+│  │ success_rate    │         │ service_hours   │                            │
+│  │ avg_rating      │         │ slot_duration   │                            │
+│  │ created_at      │         │ created_at      │                            │
+│  └─────────────────┘         └─────────────────┘                            │
+│                                                                             │
+│  Relationships:                                                             │
+│  - Pickups (1) → PickupPackages (M)                                         │
+│  - Pickups (1) → PickupAttempts (M)                                         │
+│  - Pickups (M) → PickupRoutes (1)                                           │
+│  - Drivers manage routes and perform pickups                                │
+│  - Zones define service areas and capacity                                  │
+│                                                                             │
+│  Cross-Service References:                                                  │
+│  - Pickups.customer_id → Customer Service (Users.unique_id)                 │
+│  - PickupPackages.order_id → Order Service (Orders.order_number)           │
+│  - Drivers.user_id → Auth Service (Users.user_id)                           │
+│                                                                             │
+│  Business Rules:                                                            │
+│  - Pickups must be scheduled within service zone hours                      │
+│  - Routes optimize multiple pickups for efficiency                          │
+│  - Capacity management prevents overbooking                                 │
+│  - Failed attempts trigger rescheduling workflow                            │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+## Analytics Service ERD
+
+### Database Schema: analytics_db
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          ANALYTICS SERVICE ERD                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌─────────────────┐         ┌─────────────────┐                            │
+│  │    Metrics      │         │   Dashboards    │                            │
+│  │                 │         │                 │                            │
+│  │ id (PK)         │         │ id (PK)         │                            │
+│  │ metric_id (UK)  │         │ dashboard_id(UK)│                            │
+│  │ metric_type     │         │ name            │                            │
+│  │ name            │         │ description     │                            │
+│  │ description     │         │ dashboard_type  │                            │
+│  │ value           │         │ widgets         │                            │
+│  │ unit            │         │ layout          │                            │
+│  │ tags (JSONB)    │         │ filters         │                            │
+│  │ timestamp       │         │ refresh_interval│                            │
+│  │ period          │         │ owner_id ───────┼──────► Auth Service        │
+│  │ source_service  │         │ is_public       │                            │
+│  │ source_entity   │         │ allowed_users   │                            │
+│  │ entity_type     │         │ allowed_roles   │                            │
+│  │ created_at      │         │ is_active       │                            │
+│  └─────────────────┘         │ created_at      │                            │
+│           │                  │ updated_at      │                            │
+│           │                  └─────────────────┘                            │
+│           │                                                                 │
+│           │                  ┌─────────────────┐                            │
+│           │                  │    Reports      │                            │
+│           │                  │                 │                            │
+│           │                  │ id (PK)         │                            │
+│           │                  │ report_id (UK)  │                            │
+│           │                  │ name            │                            │
+│           │                  │ description     │                            │
+│           │                  │ report_type     │                            │
+│           │                  │ format          │                            │
+│           │                  │ parameters      │                            │
+│           │                  │ filters         │                            │
+│           │                  │ date_range      │                            │
+│           │                  │ status          │                            │
+│           │                  │ progress_pct    │                            │
+│           │                  │ file_url        │                            │
+│           │                  │ file_size       │                            │
+│           │                  │ is_scheduled    │                            │
+│           │                  │ schedule_expr   │                            │
+│           │                  │ next_run        │                            │
+│           │                  │ requested_by ───┼──────► Auth Service        │
+│           │                  │ created_at      │                            │
+│           │                  │ completed_at    │                            │
+│           │                  │ expires_at      │                            │
+│           │                  └─────────────────┘                            │
+│           │                                                                 │
+│           │                  ┌─────────────────┐                            │
+│           └──────────────────┤     Alerts      │                            │
+│                              │                 │                            │
+│                              │ id (PK)         │                            │
+│                              │ alert_id (UK)   │                            │
+│                              │ name            │                            │
+│                              │ description     │                            │
+│                              │ metric_type     │                            │
+│                              │ condition_expr  │                            │
+│                              │ threshold_value │                            │
+│                              │ comparison_op   │                            │
+│                              │ time_window     │                            │
+│                              │ notification_ch │                            │
+│                              │ recipients      │                            │
+│                              │ is_active       │                            │
+│                              │ last_triggered  │                            │
+│                              │ trigger_count   │                            │
+│                              │ created_by ─────┼──────► Auth Service        │
+│                              │ created_at      │                            │
+│                              │ updated_at      │                            │
+│                              └─────────────────┘                            │
+│                                                                             │
+│  Data Flow:                                                                 │
+│  - All services send metrics to Analytics Service                           │
+│  - Metrics feed into dashboards, reports, and alerts                        │
+│  - Dashboards provide real-time business intelligence                       │
+│  - Reports generate scheduled/on-demand business reports                     │
+│  - Alerts trigger notifications based on thresholds                         │
+│                                                                             │
+│  Time-Series Design:                                                        │
+│  - Metrics table partitioned by created_at (monthly)                        │
+│  - Tags stored as JSONB for flexible filtering                              │
+│  - Composite indexes on (metric_type, timestamp)                            │
+│  - GIN indexes on tags for complex queries                                  │
+│                                                                             │
+│  Cross-Service Integration:                                                 │
+│  - Receives metrics from all 8 other services                              │
+│  - User context from Auth Service for dashboards/reports                    │
+│  - Provides business intelligence across entire platform                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+## Reverse Logistics Service ERD
+
+### Database Schema: reverse_logistics_db
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                      REVERSE LOGISTICS SERVICE ERD                         │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌─────────────────┐         ┌─────────────────┐                            │
+│  │    Returns      │         │  ReturnItems    │                            │
+│  │                 │         │                 │                            │
+│  │ id (PK)         │◄────────┤ id (PK)         │                            │
+│  │ return_id (UK)  │    │    │ return_item_id  │                            │
+│  │ original_order_id───┼────┤ return_id (FK)  │                            │
+│  │ customer_id ────┼────┼────┤ item_id ────────┼──────► Order Service       │
+│  │ return_type     │    │    │ item_name       │                            │
+│  │ return_reason   │    │    │ sku             │                            │
+│  │ status          │    │    │ quantity        │                            │
+│  │ description     │    │    │ unit_price      │                            │
+│  │ preferred_res   │    │    │ return_reason   │                            │
+│  │ rma_number      │    │    │ reason_details  │                            │
+│  │ order_value     │    │    │ condition_recv  │                            │
+│  │ est_refund_amt  │    │    │ photos          │                            │
+│  │ actual_refund   │    │    │ inspection_res  │                            │
+│  │ shipping_cost   │    │    │ resale_value    │                            │
+│  │ processing_fee  │    │    │ refund_eligible │                            │
+│  │ pickup_address  │    │    │ refund_amount   │                            │
+│  │ tracking_number │    │    │ exchange_item   │                            │
+│  │ carrier         │    │    │ created_at      │                            │
+│  │ pickup_dates    │    │    │ updated_at      │                            │
+│  │ expires_at      │    │    └─────────────────┘                            │
+│  │ approval_notes  │    │                                                   │
+│  │ photos          │    │    ┌─────────────────┐                            │
+│  │ created_by ─────┼────┼────┤InspectionReports│                            │
+│  │ processed_by    │    │    │                 │                            │
+│  │ created_at      │    └────┤ id (PK)         │                            │
+│  │ updated_at      │         │ inspection_id   │                            │
+│  └─────────────────┘         │ return_id (FK)  │                            │
+│                              │ item_id         │                            │
+│                              │ inspector_id ───┼──────► Auth Service        │
+│  ┌─────────────────┐         │ inspector_name  │                            │
+│  │ReturnStatusHist │         │ inspection_date │                            │
+│  │                 │         │ overall_cond    │                            │
+│  │ id (PK)         │         │ functional_stat │                            │
+│  │ return_id (FK)  │         │ cosmetic_cond   │                            │
+│  │ status          │         │ completeness    │                            │
+│  │ status_date     │         │ defects_found   │                            │
+│  │ changed_by      │         │ photos          │                            │
+│  │ notes           │         │ notes           │                            │
+│  │ created_at      │         │ original_value  │                            │
+│  └─────────────────┘         │ market_value    │                            │
+│                              │ resale_value    │                            │
+│                              │ salvage_value   │                            │
+│  ┌─────────────────┐         │ recommended_act │                            │
+│  │DisposalRecords  │         │ disposition_rec │                            │
+│  │                 │         │ repair_cost     │                            │
+│  │ id (PK)         │         │ refurb_cost     │                            │
+│  │ return_id (FK)  │         │ created_at      │                            │
+│  │ item_id         │         │ updated_at      │                            │
+│  │ disposition     │         └─────────────────┘                            │
+│  │ disposal_method │                                                        │
+│  │ recovery_value  │                                                        │
+│  │ environmental   │         ┌─────────────────┐                            │
+│  │ disposal_date   │         │ ReturnMetrics   │                            │
+│  │ disposed_by     │         │                 │                            │
+│  │ created_at      │         │ id (PK)         │                            │
+│  └─────────────────┘         │ metric_date     │                            │
+│                              │ total_returns   │                            │
+│                              │ processed_ret   │                            │
+│                              │ refund_rate     │                            │
+│                              │ avg_proc_time   │                            │
+│                              │ recovery_rate   │                            │
+│                              │ customer_sat    │                            │
+│                              │ created_at      │                            │
+│                              └─────────────────┘                            │
+│                                                                             │
+│  Relationships:                                                             │
+│  - Returns (1) → ReturnItems (M)                                            │
+│  - Returns (1) → InspectionReports (M)                                      │
+│  - Returns (1) → ReturnStatusHistory (M)                                    │
+│  - Returns (1) → DisposalRecords (M)                                        │
+│                                                                             │
+│  Cross-Service References:                                                  │
+│  - Returns.original_order_id → Order Service (Orders.order_number)          │
+│  - Returns.customer_id → Customer Service (Users.unique_id)                 │
+│  - ReturnItems.item_id → Order Service (Products.id)                       │
+│  - InspectionReports.inspector_id → Auth Service (Users.user_id)            │
+│                                                                             │
+│  Business Rules:                                                            │
+│  - Returns require valid original order                                     │
+│  - Inspection determines refund eligibility and amount                      │
+│  - Items can be refunded, exchanged, or disposed                           │
+│  - Environmental tracking for sustainability compliance                     │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+## Franchise Service ERD
+
+### Database Schema: franchise_db
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         FRANCHISE SERVICE ERD                              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌─────────────────┐         ┌─────────────────┐                            │
+│  │  Franchises     │         │  Territories    │                            │
+│  │                 │         │                 │                            │
+│  │ id (PK)         │         │ id (PK)         │                            │
+│  │ franchise_id(UK)│         │ territory_code  │◄───────┐                   │
+│  │ name            │         │ name            │        │                   │
+│  │ franchisee_name │         │ description     │        │                   │
+│  │ email           │         │ country         │        │                   │
+│  │ phone           │         │ state           │        │                   │
+│  │ address         │         │ region          │        │                   │
+│  │ city            │         │ boundaries      │        │                   │
+│  │ state           │         │ area_size       │        │                   │
+│  │ country         │         │ population      │        │                   │
+│  │ postal_code     │         │ market_potential│        │                   │
+│  │ business_license│         │ competition_lev │        │                   │
+│  │ tax_id          │         │ average_income  │        │                   │
+│  │ territory_code──┼─────────┤ demographic_data│        │                   │
+│  │ contract_dates  │         │ status          │        │                   │
+│  │ contract_terms  │         │ reserved_until  │        │                   │
+│  │ status          │         │ reserved_by     │        │                   │
+│  │ opening_date    │         │ is_active       │        │                   │
+│  │ operational_hrs │         │ created_at      │        │                   │
+│  │ services_offered│         │ updated_at      │        │                   │
+│  │ equipment_list  │         └─────────────────┘        │                   │
+│  │ fees_structure  │                                    │                   │
+│  │ is_active       │                                    │                   │
+│  │ created_at      │                                    │                   │
+│  │ updated_at      │                                    │                   │
+│  └─────────┬───────┘                                    │                   │
+│            │                                            │                   │
+│            │         ┌─────────────────┐                │                   │
+│            │         │FranchiseContract│                │                   │
+│            │         │                 │                │                   │
+│            │         │ id (PK)         │                │                   │
+│            │         │ franchise_id(FK)│                │                   │
+│            │         │ contract_type   │                │                   │
+│            │         │ start_date      │                │                   │
+│            │         │ end_date        │                │                   │
+│            │         │ terms_conditions│                │                   │
+│            │         │ renewal_terms   │                │                   │
+│            │         │ fee_structure   │                │                   │
+│            │         │ performance_req │                │                   │
+│            │         │ signed_date     │                │                   │
+│            │         │ status          │                │                   │
+│            │         │ created_at      │                │                   │
+│            │         └─────────────────┘                │                   │
+│            │                                            │                   │
+│            │         ┌─────────────────┐                │                   │
+│            │         │FranchisePayments│                │                   │
+│            │         │                 │                │                   │
+│            │         │ id (PK)         │                │                   │
+│            │         │ franchise_id(FK)│                │                   │
+│            │         │ payment_type    │                │                   │
+│            │         │ amount          │                │                   │
+│            │         │ due_date        │                │                   │
+│            │         │ paid_date       │                │                   │
+│            │         │ payment_method  │                │                   │
+│            │         │ transaction_id  │                │                   │
+│            │         │ status          │                │                   │
+│            │         │ created_at      │                │                   │
+│            │         └─────────────────┘                │                   │
+│            │                                            │                   │
+│            │         ┌─────────────────┐                │                   │
+│            └─────────┤FranchisePerform │                │                   │
+│                      │                 │                │                   │
+│                      │ id (PK)         │                │                   │
+│                      │ performance_id  │                │                   │
+│                      │ franchise_id(FK)│                │                   │
+│                      │ period_type     │                │                   │
+│                      │ period_start    │                │                   │
+│                      │ period_end      │                │                   │
+│                      │ revenue         │                │                   │
+│                      │ costs           │                │                   │
+│                      │ profit          │                │                   │
+│                      │ royalties_paid  │                │                   │
+│                      │ orders_count    │                │                   │
+│                      │ customers_served│                │                   │
+│                      │ avg_order_value │                │                   │
+│                      │ cust_sat_score  │                │                   │
+│                      │ performance_scr │                │                   │
+│                      │ ranking         │                │                   │
+│                      │ improvement_are │                │                   │
+│                      │ calculated_at   │                │                   │
+│                      │ created_at      │                │                   │
+│                      └─────────────────┘                │                   │
+│                                                         │                   │
+│  ┌─────────────────┐                                    │                   │
+│  │FranchiseAudit   │                                    │                   │
+│  │                 │                                    │                   │
+│  │ id (PK)         │                                    │                   │
+│  │ franchise_id(FK)│───────────────────────────────────┘                   │
+│  │ audit_type      │                                                        │
+│  │ audit_date      │                                                        │
+│  │ auditor_id ─────┼──────► Auth Service                                    │
+│  │ findings        │                                                        │
+│  │ compliance_score│                                                        │
+│  │ action_items    │                                                        │
+│  │ follow_up_date  │                                                        │
+│  │ status          │                                                        │
+│  │ created_at      │                                                        │
+│  └─────────────────┘                                                        │
+│                                                                             │
+│  Relationships:                                                             │
+│  - Franchises (1) → Territories (1)                                         │
+│  - Franchises (1) → FranchiseContracts (M)                                  │
+│  - Franchises (1) → FranchisePayments (M)                                   │
+│  - Franchises (1) → FranchisePerformance (M)                                │
+│  - Franchises (1) → FranchiseAudit (M)                                      │
+│                                                                             │
+│  Cross-Service References:                                                  │
+│  - Territory assignment affects order routing                               │
+│  - Performance metrics fed from Order and Analytics services                │
+│  - Audit functions integrate with Auth service for auditor identity         │
+│                                                                             │
+│  Business Rules:                                                            │
+│  - One franchise per territory (exclusive assignment)                       │
+│  - Performance tracking drives fee structures and rankings                  │
+│  - Contract lifecycle management with renewal processes                     │
+│  - Territory availability managed through reservation system                │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+## Microcredit Service ERD
+
+### Database Schema: microcredit_db
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        MICROCREDIT SERVICE ERD                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌─────────────────┐         ┌─────────────────┐                            │
+│  │CreditApplications│        │     Loans       │                            │
+│  │                 │         │                 │                            │
+│  │ id (PK)         │◄────────┤ id (PK)         │                            │
+│  │ application_id  │    │    │ loan_id (UK)    │                            │
+│  │ customer_id ────┼────┼────┤ application_id  │                            │
+│  │ customer_type   │    │    │ customer_id     │                            │
+│  │ requested_amt   │    │    │ principal_amt   │                            │
+│  │ requested_term  │    │    │ interest_rate   │                            │
+│  │ purpose         │    │    │ term_months     │                            │
+│  │ monthly_income  │    │    │ monthly_payment │                            │
+│  │ employment_stat │    │    │ status          │                            │
+│  │ employment_dur  │    │    │ disbursement_dt │                            │
+│  │ existing_debts  │    │    │ maturity_date   │                            │
+│  │ credit_score    │    │    │ total_amt_due   │                            │
+│  │ risk_category   │    │    │ amount_paid     │                            │
+│  │ approved_amount │    │    │ outstanding_bal │                            │
+│  │ approved_term   │    │    │ next_payment_dt │                            │
+│  │ interest_rate   │    │    │ payments_made   │                            │
+│  │ status          │    │    │ days_past_due   │                            │
+│  │ decision_reason │    │    │ collection_stat │                            │
+│  │ processed_by    │    │    │ restructured    │                            │
+│  │ decision_date   │    │    │ created_at      │                            │
+│  │ documents_sub   │    │    │ updated_at      │                            │
+│  │ verification    │    │    │ closed_at       │                            │
+│  │ created_at      │    │    └─────────────────┘                            │
+│  │ expires_at      │    │              │                                    │
+│  └─────────────────┘    │              │                                    │
+│            │            │              │                                    │
+│            │            │              │                                    │
+│  ┌─────────▼───────┐    │    ┌─────────▼───────┐                            │
+│  │  CreditChecks   │    │    │  LoanPayments   │                            │
+│  │                 │    │    │                 │                            │
+│  │ id (PK)         │    │    │ id (PK)         │                            │
+│  │ application_id  │    │    │ payment_id (UK) │                            │
+│  │ check_type      │    │    │ loan_id (FK)    │                            │
+│  │ check_date      │    │    │ payment_amount  │                            │
+│  │ bureau_name     │    │    │ principal_amt   │                            │
+│  │ credit_score    │    │    │ interest_amount │                            │
+│  │ payment_history │    │    │ late_fee_amount │                            │
+│  │ debt_to_income  │    │    │ payment_date    │                            │
+│  │ employment_ver  │    │    │ payment_method  │                            │
+│  │ income_ver      │    │    │ payment_ref     │                            │
+│  │ risk_factors    │    │    │ payment_status  │                            │
+│  │ recommendations │    │    │ remaining_bal   │                            │
+│  │ created_at      │    │    │ created_at      │                            │
+│  └─────────────────┘    │    └─────────────────┘                            │
+│                         │                                                   │
+│                         │    ┌─────────────────┐                            │
+│                         │    │ PaymentSchedule │                            │
+│                         │    │                 │                            │
+│                         │    │ id (PK)         │                            │
+│                         │    │ loan_id (FK)    │                            │
+│                         │    │ payment_number  │                            │
+│                         │    │ due_date        │                            │
+│                         │    │ payment_amount  │                            │
+│                         │    │ principal_amt   │                            │
+│                         │    │ interest_amount │                            │
+│                         │    │ remaining_bal   │                            │
+│                         │    │ status          │                            │
+│                         │    │ paid_date       │                            │
+│                         │    │ created_at      │                            │
+│                         │    └─────────────────┘                            │
+│                         │                                                   │
+│  ┌─────────────────┐    │                                                   │
+│  │  CreditScores   │    │                                                   │
+│  │                 │    │                                                   │
+│  │ id (PK)         │    │                                                   │
+│  │ score_id (UK)   │    │                                                   │
+│  │ customer_id ────┼────┘                                                   │
+│  │ score           │                                                        │
+│  │ score_date      │                                                        │
+│  │ score_version   │                                                        │
+│  │ payment_hist_sc │         ┌─────────────────┐                            │
+│  │ credit_util_sc  │         │  CollectionLog  │                            │
+│  │ length_hist_sc  │         │                 │                            │
+│  │ credit_mix_sc   │         │ id (PK)         │                            │
+│  │ new_credit_sc   │         │ loan_id (FK)    │                            │
+│  │ risk_category   │         │ collection_date │                            │
+│  │ default_prob    │         │ collection_type │                            │
+│  │ recommended_lmt │         │ contact_method  │                            │
+│  │ positive_facts  │         │ outcome         │                            │
+│  │ negative_facts  │         │ next_action     │                            │
+│  │ improvement_sug │         │ notes           │                            │
+│  │ previous_score  │         │ agent_id ───────┼──────► Auth Service        │
+│  │ score_change    │         │ created_at      │                            │
+│  │ calculated_by   │         └─────────────────┘                            │
+│  │ created_at      │                                                        │
+│  └─────────────────┘                                                        │
+│                                                                             │
+│  Relationships:                                                             │
+│  - CreditApplications (1) → Loans (1)                                       │
+│  - CreditApplications (1) → CreditChecks (M)                                │
+│  - Loans (1) → LoanPayments (M)                                             │
+│  - Loans (1) → PaymentSchedule (M)                                          │
+│  - Loans (1) → CollectionLog (M)                                            │
+│  - Customers (1) → CreditScores (M)                                         │
+│                                                                             │
+│  Cross-Service References:                                                  │
+│  - CreditApplications.customer_id → Customer Service (Users.unique_id)      │
+│  - CollectionLog.agent_id → Auth Service (Users.user_id)                    │
+│  - Credit decisions influence customer creditworthiness                     │
+│                                                                             │
+│  Business Rules:                                                            │
+│  - Credit applications require thorough underwriting                        │
+│  - Loan disbursement only after approval and agreement signing              │
+│  - Payment schedules auto-generated based on loan terms                     │
+│  - Credit scores updated with payment history and external data             │
+│  - Collection activities logged for regulatory compliance                   │
+│                                                                             │
+│  Financial Calculations:                                                    │
+│  - Interest calculations based on reducing balance method                   │
+│  - Late fees applied based on days past due                                │
+│  - Credit scoring algorithm considers multiple factors                      │
+│  - Risk-based pricing for interest rates                                   │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+## Cross-Service Data Flow and Integration Patterns
+
+### Service Communication Matrix
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                     CROSS-SERVICE DATA RELATIONSHIPS                       │
+├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │  Data Flow Patterns:                                                        │
 │                                                                             │
-│  1. User Registration Flow:                                                 │
-│     Users → Companies (company validation)                                  │
+│  1. Authentication Flow (Auth → All Services):                             │
+│     Auth.users.user_id ←→ All Services (JWT token validation)              │
 │                                                                             │
-│  2. Order Creation Flow:                                                    │
-│     Customer Service (user/company) → Order Service (create order)          │
-│     Order Service → Customer Service (validate customer)                    │
+│  2. Customer/Company References:                                            │
+│     Customer.users.unique_id → Orders, Pickups, Returns, Microcredit       │
+│     Customer.companies.company_id → Orders, Shipping, Franchises           │
 │                                                                             │
-│  3. Shipping Manifest Flow:                                                 │
-│     Order Service (products) → Shipping Service (manifest items)           │
-│     Customer Service (company/user) → Shipping Service (manifest header)   │
+│  3. Order-Related Flow:                                                     │
+│     Orders.order_number → Returns.original_order_id                        │
+│     Orders.products.id → Shipping.manifest_items.product_id                │
+│     Orders.order_number → Pickups.packages.order_id                        │
 │                                                                             │
-│  4. Cross-Service Validation:                                               │
-│     - All services validate company_id with Customer Service                │
-│     - Shipping Service validates product details with Order Service        │
-│     - Order Service validates customer_id with Customer Service            │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
-## Data Consistency Patterns
-
-### Event-Driven Consistency
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                        EVENT-DRIVEN DATA CONSISTENCY                       │
-├─────────────────────────────────────────────────────────────────────────────┤
+│  4. Analytics Integration (All → Analytics):                               │
+│     All Services → Analytics.metrics (Performance data)                    │
+│     All Services → Analytics.alerts (Threshold monitoring)                 │
 │                                                                             │
-│  Event Types and Data Propagation:                                         │
+│  5. Franchise Operations:                                                   │
+│     Franchises.territory_code → Order routing logic                        │
+│     Franchises.performance ← Order/Analytics data                          │
 │                                                                             │
-│  ┌─────────────────┐                                                        │
-│  │ Customer Events │                                                        │
-│  │                 │                                                        │
-│  │ • user.created  │ ──→ Order Service (cache user info)                   │
-│  │ • user.updated  │ ──→ Shipping Service (update manifest owner)          │
-│  │ • company.created│ ──→ All services (company validation cache)          │
-│  │ • company.deact │ ──→ All services (disable company operations)         │
-│  └─────────────────┘                                                        │
+│  Event-Driven Consistency Patterns:                                        │
 │                                                                             │
-│  ┌─────────────────┐                                                        │
-│  │  Order Events   │                                                        │
-│  │                 │                                                        │
-│  │ • order.created │ ──→ Shipping Service (prepare manifest)               │
-│  │ • order.shipped │ ──→ Customer Service (notify user)                    │
-│  │ • inventory.low │ ──→ External systems (reorder alerts)                 │
-│  │ • product.created│ ──→ Shipping Service (update available products)     │
-│  └─────────────────┘                                                        │
+│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐          │
+│  │ Customer Events │    │  Order Events   │    │Analytics Events │          │
+│  │                 │    │                 │    │                 │          │
+│  │ • user.created  │───→│ • validate_user │───→│ • user_metrics  │          │
+│  │ • user.updated  │───→│ • update_cache  │───→│ • update_dashbd │          │
+│  │ • company.deact │───→│ • block_orders  │───→│ • alert_trigger │          │
+│  └─────────────────┘    └─────────────────┘    └─────────────────┘          │
+│                                  │                                         │
+│  ┌─────────────────┐             │              ┌─────────────────┐          │
+│  │Shipping Events  │             │              │ Pickup Events   │          │
+│  │                 │             │              │                 │          │
+│  │ • manifest.sub  │◄────────────┤              │ • pickup.done   │          │
+│  │ • shipment.del  │             └─────────────→│ • update_order  │          │
+│  └─────────────────┘                            └─────────────────┘          │
 │                                                                             │
-│  ┌─────────────────┐                                                        │
-│  │ Shipping Events │                                                        │
-│  │                 │                                                        │
-│  │ • manifest.sub  │ ──→ Order Service (update order status)               │
-│  │ • shipment.del  │ ──→ Order Service (complete order)                    │
-│  │ • rate.updated  │ ──→ Order Service (update shipping costs)             │
-│  └─────────────────┘                                                        │
-│                                                                             │
-│  Consistency Strategies:                                                    │
+│  Data Consistency Strategies:                                              │
 │                                                                             │
 │  1. Eventually Consistent:                                                  │
 │     - User profile updates across services                                 │
 │     - Company information synchronization                                  │
 │     - Product catalog updates                                              │
+│     - Performance metrics aggregation                                      │
 │                                                                             │
 │  2. Strong Consistency:                                                     │
-│     - Financial transactions                                               │
+│     - Financial transactions (payments, refunds)                           │
 │     - Inventory deductions                                                 │
+│     - Credit decisions and loan disbursement                               │
 │     - Order state transitions                                              │
 │                                                                             │
 │  3. Saga Pattern:                                                          │
 │     - Order creation with inventory reservation                            │
-│     - Manifest creation with product validation                            │
-│     - Payment processing with order confirmation                           │
+│     - Return processing with refund coordination                           │
+│     - Loan approval with credit limit updates                              │
+│     - Franchise assignment with territory reservation                      │
+│                                                                             │
+│  Database Design Principles:                                               │
+│                                                                             │
+│  • Database-per-Service: Each service owns its data                        │
+│  • Logical References: Cross-service FKs managed by application            │
+│  • Event Sourcing: Critical events stored for audit trails                │
+│  • CQRS: Read/write separation for complex aggregations                    │
+│  • Time-series Partitioning: For metrics and historical data              │
+│  • JSONB Usage: For flexible, schema-less attributes                       │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-## Database Indexes and Performance
+## Performance Optimization and Indexing Strategy
 
-### Indexing Strategy
+### Database Performance Patterns
 
 ```sql
--- Customer Service Indexes
-CREATE INDEX CONCURRENTLY idx_users_company_id ON users(company_id);
-CREATE INDEX CONCURRENTLY idx_users_email_active ON users(email, active);
-CREATE INDEX CONCURRENTLY idx_companies_active ON companies(active);
+-- Cross-service query optimization patterns
 
--- Order Service Indexes  
-CREATE INDEX CONCURRENTLY idx_products_company_category ON products(company_id, category);
-CREATE INDEX CONCURRENTLY idx_orders_customer_status ON orders(customer_id, status);
-CREATE INDEX CONCURRENTLY idx_orders_created_at ON orders(created_at DESC);
-CREATE INDEX CONCURRENTLY idx_inventory_product_location ON inventory_items(product_id, location);
-CREATE INDEX CONCURRENTLY idx_stock_movements_product_date ON stock_movements(product_id, created_at);
+-- 1. Customer Service - Company user lookups
+CREATE INDEX CONCURRENTLY idx_users_company_active ON users(company_id, active) WHERE active = true;
 
--- Shipping Service Indexes
-CREATE INDEX CONCURRENTLY idx_manifests_company_status ON manifests(company_id, status);  
-CREATE INDEX CONCURRENTLY idx_manifests_created_at ON manifests(created_at DESC);
-CREATE INDEX CONCURRENTLY idx_manifest_items_manifest ON manifest_items(manifest_id);
-CREATE INDEX CONCURRENTLY idx_shipping_rates_manifest_carrier ON shipping_rates(manifest_id, carrier_name);
+-- 2. Order Service - Customer order history
+CREATE INDEX CONCURRENTLY idx_orders_customer_date ON orders(customer_id, created_at DESC);
+
+-- 3. Analytics Service - Time-series metrics
+CREATE INDEX CONCURRENTLY idx_metrics_type_timestamp ON metrics(metric_type, timestamp DESC);
+CREATE INDEX CONCURRENTLY idx_metrics_service_timestamp ON metrics(source_service, timestamp DESC);
+
+-- 4. Pickup Service - Driver route optimization  
+CREATE INDEX CONCURRENTLY idx_pickups_date_zone ON pickups(pickup_date, postal_code);
+
+-- 5. Reverse Logistics - Return processing pipeline
+CREATE INDEX CONCURRENTLY idx_returns_status_date ON returns(status, created_at DESC);
+
+-- 6. Franchise Service - Territory performance
+CREATE INDEX CONCURRENTLY idx_performance_territory_period ON franchise_performance(franchise_id, period_start, period_end);
+
+-- 7. Microcredit Service - Customer credit pipeline
+CREATE INDEX CONCURRENTLY idx_loans_customer_status ON loans(customer_id, status);
+CREATE INDEX CONCURRENTLY idx_credit_scores_customer_date ON credit_scores(customer_id, score_date DESC);
+
+-- 8. Auth Service - Permission lookups
+CREATE INDEX CONCURRENTLY idx_user_roles_permissions ON user_roles(user_id) INCLUDE (role_id);
 ```
 
-## Data Migration Strategy
-
-### Cross-Service Data Migration
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                          DATA MIGRATION STRATEGY                           │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│  Migration Phases:                                                          │
-│                                                                             │
-│  Phase 1: Core Data Setup                                                   │
-│  ┌─────────────────┐                                                        │
-│  │ Customer Service│ ──→ Create companies and users                         │
-│  │                 │     • Bootstrap admin users                           │
-│  │                 │     • Create default document types                   │
-│  │                 │     • Setup initial companies                         │
-│  └─────────────────┘                                                        │
-│                                                                             │
-│  Phase 2: Product Catalog                                                   │
-│  ┌─────────────────┐                                                        │
-│  │  Order Service  │ ──→ Setup product catalog                             │
-│  │                 │     • Import existing products                        │
-│  │                 │     • Initialize inventory levels                     │
-│  │                 │     • Create product categories                       │
-│  └─────────────────┘                                                        │
-│                                                                             │
-│  Phase 3: Shipping Configuration                                            │
-│  ┌─────────────────┐                                                        │
-│  │ Shipping Service│ ──→ Configure shipping parameters                     │
-│  │                 │     • Setup countries and zones                       │
-│  │                 │     • Configure carriers                              │
-│  │                 │     • Import rate tables                              │
-│  └─────────────────┘                                                        │
-│                                                                             │
-│  Data Seeding Order:                                                        │
-│  1. Document Types                                                          │
-│  2. Companies                                                               │
-│  3. Users (with company relationships)                                      │
-│  4. Countries and Shipping Zones                                            │
-│  5. Shipping Carriers                                                       │
-│  6. Product Categories                                                       │
-│  7. Products (with company ownership)                                       │
-│  8. Initial Inventory Levels                                                │
-│  9. Sample Orders (for testing)                                             │
-│  10. Sample Manifests (for testing)                                         │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+This comprehensive Entity Relationship Models documentation covers all 9 microservices in the Quenty platform, showing detailed data models, relationships, cross-service integrations, and performance optimization strategies for the complete system architecture.
