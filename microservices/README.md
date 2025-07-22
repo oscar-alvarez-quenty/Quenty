@@ -1,60 +1,50 @@
-# Quenty Microservices Architecture
+# Quenty Microservices Architecture with Authentication
 
-This directory contains the microservices implementation of the Quenty application, breaking down the monolithic application into independent, scalable services.
+This directory contains the enhanced microservices implementation of the Quenty application with **centralized authentication and role-based access control (RBAC)**.
 
-## Architecture Overview
+## 🔐 Architecture Overview
 
-The application has been decomposed into the following microservices:
+The application has been redesigned with a **secure-by-default** microservices architecture featuring centralized authentication and authorization.
 
-### Core Services
+### 🎯 Core Authentication-Enabled Services
 
-1. **API Gateway** (Port 8000)
-   - Central entry point for all client requests
-   - Routes requests to appropriate microservices
-   - Implements circuit breakers and retry logic
-   - Handles authentication and rate limiting
+1. **🔐 Authentication Service** (Port 8003) - **NEW CENTRAL HUB**
+   - **Primary Role**: Central authentication, authorization, and user management
+   - JWT-based authentication with refresh tokens
+   - OAuth integration (Google, Azure)
+   - Role-Based Access Control (RBAC) with granular permissions
+   - User and company management
+   - Session management and security auditing
+   - **All other services authenticate through this service**
 
-2. **Customer Service** (Port 8001)
-   - Customer registration and management
-   - KYC validation
-   - Wallet management
-   - Customer profiles
+2. **👥 Customer Service** (Port 8001) - **REFACTORED FOR SECURITY**
+   - **Primary Role**: Customer relationship management and support
+   - Customer profile management (linked to auth users)
+   - Support ticket system with full lifecycle
+   - Customer analytics and reporting
+   - **Security**: Ownership-based access control, admin permissions for management
 
-3. **Order Service** (Port 8002)
-   - Order creation and management
-   - Quotation generation
-   - Order confirmation
-   - Guide generation
+3. **📦 Order Service** (Port 8002) - **ENHANCED WITH PERMISSIONS**
+   - **Primary Role**: Order processing, product catalog, and inventory
+   - Order creation and management with role-based access
+   - Product catalog with permission controls
+   - Inventory management with restricted access
+   - **Security**: Permission-based operations, customer order isolation
 
-4. **Pickup Service** (Port 8003)
-   - Pickup scheduling
-   - Route optimization
-   - Pickup attempts tracking
+4. **🚢 International Shipping Service** (Port 8004) - **PERMISSION-CONTROLLED**
+   - **Primary Role**: International shipping and logistics
+   - Manifest creation with role restrictions
+   - Shipping rate calculation and validation
+   - Carrier integration (DHL, FedEx, UPS)
+   - **Security**: Admin controls for configuration, role-based shipping access
 
-5. **International Shipping Service** (Port 8004)
-   - International KYC validation
-   - Customs documentation
-   - International shipping restrictions
+### 🏗️ Legacy Services (To Be Enhanced)
 
-6. **Microcredit Service** (Port 8005)
-   - Credit scoring
-   - Loan disbursement
-   - Payment tracking
-
-7. **Analytics Service** (Port 8006)
-   - Business dashboards
-   - KPIs and metrics
-   - Reporting
-
-8. **Reverse Logistics Service** (Port 8007)
-   - Returns processing
-   - Inspections
-   - Refunds
-
-9. **Franchise Service** (Port 8008)
-   - Franchise operations
-   - Logistics operators management
-   - Commission management
+5. **🚚 Pickup Service** (Port 8005) - *Awaiting auth integration*
+6. **💳 Microcredit Service** (Port 8006) - *Awaiting auth integration*
+7. **📊 Analytics Service** (Port 8007) - *Awaiting auth integration*
+8. **↩️ Reverse Logistics Service** (Port 8008) - *Awaiting auth integration*
+9. **🏢 Franchise Service** (Port 8009) - *Awaiting auth integration*
 
 ### Infrastructure Services
 
@@ -150,12 +140,42 @@ Services register themselves with Consul on startup. The API Gateway uses Consul
 - Distributed tracing with Jaeger
 - Trace spans across service boundaries
 
-## Security
+## 🔐 Security Architecture
 
-- JWT-based authentication at API Gateway
-- Service-to-service communication within Docker network
-- Each service runs as non-root user
+### Centralized Authentication & Authorization
+- **JWT-based authentication** with access and refresh tokens
+- **OAuth 2.0 integration** with Google and Azure providers
+- **Role-Based Access Control (RBAC)** with granular permissions
+- **Session management** with token revocation capabilities
+- **Audit logging** for all authentication and authorization events
+
+### Service Security
+- **Service-to-service authentication** via auth service verification
+- **Permission validation** for all protected endpoints
+- **Ownership-based access control** (users can only access their own data)
+- **Admin role separation** for management operations
+- Each service runs as non-root user in Docker containers
 - Separate database credentials per service
+
+### Default Security Roles
+| Role | Access Level | Key Permissions |
+|------|--------------|-----------------|
+| **Super Administrator** | Full system access | `*` (all permissions) |
+| **Administrator** | Administrative access | `users:*`, `companies:*`, `customers:*`, `orders:*` |
+| **Manager** | Operations management | `customers:*`, `orders:*`, `reports:view` |
+| **Customer Service** | Customer support | `customers:read:all`, `orders:read:all` |
+| **Customer** | Own data access | `profile:*`, `orders:read:own`, `customers:read:own` |
+| **Shipping Coordinator** | Logistics management | `shipping:*`, `manifests:*` |
+
+### Security Best Practices Implemented
+- ✅ Password hashing with bcrypt
+- ✅ JWT token signing and validation
+- ✅ Session timeout and token refresh
+- ✅ Input validation with Pydantic
+- ✅ SQL injection prevention
+- ✅ Rate limiting on auth endpoints
+- ✅ Comprehensive audit logging
+- ✅ Principle of least privilege
 
 ## Deployment
 

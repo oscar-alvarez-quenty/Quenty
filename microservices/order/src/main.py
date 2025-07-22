@@ -1,11 +1,20 @@
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Depends, Query
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, update, delete, func, and_
+from sqlalchemy.orm import selectinload
 from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings
 import structlog
 from typing import Optional, List, Dict, Any
 import consul
+import httpx
 from datetime import datetime, date, timedelta
 from enum import Enum
+import uuid
+
+from .models import Product, InventoryItem, StockMovement, Order, OrderItem, Base, StockMovementType
+from .database import get_db, create_tables, engine
 
 logger = structlog.get_logger()
 
@@ -15,437 +24,569 @@ class Settings(BaseSettings):
     redis_url: str = "redis://redis:6379/2"
     consul_host: str = "consul"
     consul_port: int = 8500
+    auth_service_url: str = "http://auth-service:8003"
+
+    class Config:
+        env_file = ".env"
 
 settings = Settings()
 
+# HTTP Bearer for token extraction
+security = HTTPBearer()
+
 app = FastAPI(
-    title="Order Service",
-    description="Microservice for order management and processing",
+    title="Order Service", 
+    description="Microservice for order and inventory management",
     version="2.0.0"
 )
 
-# Enums
-class OrderStatus(str, Enum):
-    PENDING = "pending"
-    CONFIRMED = "confirmed"
-    PROCESSING = "processing"
-    READY_FOR_PICKUP = "ready_for_pickup"
-    PICKED_UP = "picked_up"
-    IN_TRANSIT = "in_transit"
-    OUT_FOR_DELIVERY = "out_for_delivery"
-    DELIVERED = "delivered"
-    CANCELLED = "cancelled"
-    RETURNED = "returned"
+# Auth dependency
+async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Verify token with auth service and return user info"""
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{settings.auth_service_url}/api/v1/profile",
+                headers={"Authorization": f"Bearer {credentials.credentials}"}
+            )
+            if response.status_code != 200:
+                raise HTTPException(status_code=401, detail="Invalid token")
+            return response.json()
+    except httpx.RequestError:
+        raise HTTPException(status_code=503, detail="Auth service unavailable")
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
-class OrderType(str, Enum):
-    STANDARD = "standard"
-    EXPRESS = "express"
-    SAME_DAY = "same_day"
-    SCHEDULED = "scheduled"
-    PICKUP_ONLY = "pickup_only"
+async def get_current_user(user_info = Depends(verify_token)):
+    """Get current authenticated user"""
+    return user_info
 
-class PaymentStatus(str, Enum):
-    PENDING = "pending"
-    COMPLETED = "completed"
-    FAILED = "failed"
-    REFUNDED = "refunded"
-    PARTIAL_REFUND = "partial_refund"
+def require_permissions(permissions: list[str]):
+    """Require specific permissions"""
+    def permission_checker(current_user = Depends(get_current_user)):
+        user_permissions = set(current_user.get('permissions', []))
+        required_permissions = set(permissions)
+        
+        # Superusers have all permissions
+        if current_user.get('is_superuser'):
+            return current_user
+        
+        # Check if user has required permissions
+        if not required_permissions.issubset(user_permissions):
+            missing_perms = required_permissions - user_permissions
+            raise HTTPException(
+                status_code=403,
+                detail=f"Missing permissions: {', '.join(missing_perms)}"
+            )
+        
+        return current_user
+    
+    return permission_checker
 
-class DeliveryMethod(str, Enum):
-    HOME_DELIVERY = "home_delivery"
-    PICKUP_POINT = "pickup_point"
-    FRANCHISE_PICKUP = "franchise_pickup"
-    LOCKER = "locker"
-
-# Pydantic models
-class OrderItem(BaseModel):
-    item_id: str
+# Pydantic models for API
+class ProductCreate(BaseModel):
     name: str
     description: Optional[str] = None
-    quantity: int = Field(ge=1)
-    weight_kg: float
-    dimensions: Dict[str, float]  # length, width, height in cm
-    value: float
-    fragile: bool = False
-    requires_special_handling: bool = False
+    sku: str
+    category: str
+    price: float
+    cost: Optional[float] = None
+    weight: Optional[float] = None
+    dimensions: Optional[Dict[str, float]] = None
+    company_id: str
 
-class DeliveryAddress(BaseModel):
-    street_address: str
-    city: str
-    state: str
-    postal_code: str
-    country: str = "MX"
-    landmark: Optional[str] = None
-    special_instructions: Optional[str] = None
+class ProductUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    category: Optional[str] = None
+    price: Optional[float] = None
+    cost: Optional[float] = None
+    weight: Optional[float] = None
+    dimensions: Optional[Dict[str, float]] = None
+    active: Optional[bool] = None
 
-class OrderCreate(BaseModel):
-    customer_id: str
-    order_type: OrderType
-    delivery_method: DeliveryMethod
-    pickup_address: str
-    delivery_address: DeliveryAddress
-    items: List[OrderItem] = Field(min_items=1)
-    preferred_pickup_date: Optional[date] = None
-    preferred_delivery_date: Optional[date] = None
-    delivery_time_window: Optional[str] = None  # "09:00-12:00", "14:00-18:00"
-    special_instructions: Optional[str] = None
-    insurance_required: bool = False
-    signature_required: bool = True
+class ProductResponse(BaseModel):
+    id: int
+    name: str
+    description: Optional[str]
+    sku: str
+    category: str
+    price: float
+    cost: Optional[float]
+    weight: Optional[float]
+    dimensions: Optional[Dict[str, float]]
+    active: bool
+    created_at: datetime
+    updated_at: datetime
+    company_id: str
 
-class OrderResponse(BaseModel):
-    order_id: str
-    customer_id: str
-    order_type: OrderType
-    status: OrderStatus
-    payment_status: PaymentStatus
-    delivery_method: DeliveryMethod
-    pickup_address: str
-    delivery_address: DeliveryAddress
-    items: List[OrderItem]
-    total_weight_kg: float
-    total_value: float
-    shipping_cost: float
-    insurance_cost: float
-    total_amount: float
-    tracking_number: Optional[str] = None
-    estimated_pickup_date: Optional[date] = None
-    estimated_delivery_date: Optional[date] = None
-    actual_pickup_date: Optional[date] = None
-    actual_delivery_date: Optional[date] = None
+class InventoryCreate(BaseModel):
+    product_id: int
+    quantity: int
+    reserved_quantity: Optional[int] = 0
+    min_stock_level: Optional[int] = 0
+    max_stock_level: Optional[int] = None
+    location: Optional[str] = None
+    batch_number: Optional[str] = None
+    expiry_date: Optional[datetime] = None
+
+class InventoryResponse(BaseModel):
+    id: int
+    product_id: int
+    quantity: int
+    reserved_quantity: int
+    min_stock_level: int
+    max_stock_level: Optional[int]
+    location: Optional[str]
+    batch_number: Optional[str]
+    expiry_date: Optional[datetime]
     created_at: datetime
     updated_at: datetime
 
-class OrderUpdate(BaseModel):
-    status: Optional[OrderStatus] = None
-    delivery_address: Optional[DeliveryAddress] = None
-    preferred_delivery_date: Optional[date] = None
-    delivery_time_window: Optional[str] = None
-    special_instructions: Optional[str] = None
+class StockMovementCreate(BaseModel):
+    product_id: int
+    movement_type: str
+    quantity: int
+    reference_number: Optional[str] = None
+    notes: Optional[str] = None
+    created_by: str
 
-class OrderTracking(BaseModel):
-    order_id: str
-    tracking_number: str
-    current_status: OrderStatus
-    current_location: str
-    estimated_delivery: Optional[datetime] = None
-    delivery_attempts: int
-    events: List[Dict[str, Any]]
-    last_updated: datetime
+class OrderCreate(BaseModel):
+    customer_id: str
+    company_id: str
+    items: List[Dict[str, Any]]
+    total_amount: float
+    currency: Optional[str] = "USD"
+
+class OrderResponse(BaseModel):
+    id: int
+    order_number: str
+    customer_id: str
+    company_id: str
+    status: str
+    total_amount: float
+    currency: str
+    created_at: datetime
+    updated_at: datetime
 
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "service": settings.service_name}
 
-@app.post("/api/v1/orders", response_model=OrderResponse)
-async def create_order(order: OrderCreate):
-    # Mock implementation
-    order_id = f"ORD-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
-    tracking_number = f"QTY{order_id}"
-    
-    # Calculate totals
-    total_weight = sum(item.weight_kg * item.quantity for item in order.items)
-    total_value = sum(item.value * item.quantity for item in order.items)
-    
-    # Calculate shipping cost based on weight and order type
-    base_shipping = 50.0
-    weight_factor = total_weight * 15.0
-    type_multiplier = {
-        OrderType.STANDARD: 1.0,
-        OrderType.EXPRESS: 1.5,
-        OrderType.SAME_DAY: 2.0,
-        OrderType.SCHEDULED: 1.0,
-        OrderType.PICKUP_ONLY: 0.5
-    }
-    shipping_cost = (base_shipping + weight_factor) * type_multiplier[order.order_type]
-    
-    # Calculate insurance cost
-    insurance_cost = total_value * 0.01 if order.insurance_required else 0.0
-    
-    # Estimate dates
-    pickup_days = 1 if order.order_type == OrderType.SAME_DAY else 2
-    delivery_days = {
-        OrderType.STANDARD: 3,
-        OrderType.EXPRESS: 1,
-        OrderType.SAME_DAY: 0,
-        OrderType.SCHEDULED: 5,
-        OrderType.PICKUP_ONLY: 0
-    }
-    
-    estimated_pickup = date.today() + timedelta(days=pickup_days)
-    estimated_delivery = estimated_pickup + timedelta(days=delivery_days[order.order_type])
-    
-    return OrderResponse(
-        order_id=order_id,
-        customer_id=order.customer_id,
-        order_type=order.order_type,
-        status=OrderStatus.PENDING,
-        payment_status=PaymentStatus.PENDING,
-        delivery_method=order.delivery_method,
-        pickup_address=order.pickup_address,
-        delivery_address=order.delivery_address,
-        items=order.items,
-        total_weight_kg=total_weight,
-        total_value=total_value,
-        shipping_cost=round(shipping_cost, 2),
-        insurance_cost=round(insurance_cost, 2),
-        total_amount=round(total_value + shipping_cost + insurance_cost, 2),
-        tracking_number=tracking_number,
-        estimated_pickup_date=estimated_pickup,
-        estimated_delivery_date=estimated_delivery,
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow()
-    )
-
-@app.get("/api/v1/orders/{order_id}", response_model=OrderResponse)
-async def get_order(order_id: str):
-    # Mock implementation
-    if order_id.startswith("ORD-"):
-        return OrderResponse(
-            order_id=order_id,
-            customer_id="CUST-001",
-            order_type=OrderType.EXPRESS,
-            status=OrderStatus.IN_TRANSIT,
-            payment_status=PaymentStatus.COMPLETED,
-            delivery_method=DeliveryMethod.HOME_DELIVERY,
-            pickup_address="123 Warehouse St, Mexico City",
-            delivery_address=DeliveryAddress(
-                street_address="456 Customer Ave",
-                city="Mexico City",
-                state="CDMX",
-                postal_code="01000",
-                country="MX"
-            ),
-            items=[
-                OrderItem(
-                    item_id="ITEM-001",
-                    name="Electronics Package",
-                    description="Laptop and accessories",
-                    quantity=1,
-                    weight_kg=3.5,
-                    dimensions={"length": 40, "width": 30, "height": 10},
-                    value=15000.0,
-                    fragile=True,
-                    requires_special_handling=True
-                )
-            ],
-            total_weight_kg=3.5,
-            total_value=15000.0,
-            shipping_cost=102.50,
-            insurance_cost=150.0,
-            total_amount=15252.50,
-            tracking_number=f"QTY{order_id}",
-            estimated_pickup_date=date.today() - timedelta(days=1),
-            estimated_delivery_date=date.today() + timedelta(days=1),
-            actual_pickup_date=date.today() - timedelta(days=1),
-            created_at=datetime.utcnow() - timedelta(days=2),
-            updated_at=datetime.utcnow()
-        )
-    else:
-        raise HTTPException(status_code=404, detail="Order not found")
-
-@app.get("/api/v1/orders")
-async def list_orders(
-    customer_id: Optional[str] = None,
-    status: Optional[OrderStatus] = None,
-    order_type: Optional[OrderType] = None,
-    date_from: Optional[date] = None,
-    date_to: Optional[date] = None,
-    limit: int = Query(default=20, le=100),
-    offset: int = Query(default=0, ge=0)
+# Product endpoints
+@app.get("/api/v1/products", response_model=Dict[str, Any])
+async def get_products(
+    limit: int = Query(20, le=100),
+    offset: int = Query(0, ge=0),
+    current_user = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
 ):
-    # Mock implementation
-    orders = [
-        {
-            "order_id": "ORD-20250122001",
-            "customer_id": "CUST-001",
-            "status": "in_transit",
-            "order_type": "express",
-            "total_amount": 15252.50,
-            "estimated_delivery": (date.today() + timedelta(days=1)).isoformat(),
-            "tracking_number": "QTYORD-20250122001"
-        },
-        {
-            "order_id": "ORD-20250121001",
-            "customer_id": "CUST-002",
-            "status": "delivered",
-            "order_type": "standard",
-            "total_amount": 850.75,
-            "actual_delivery": date.today().isoformat(),
-            "tracking_number": "QTYORD-20250121001"
-        }
-    ]
-    return {
-        "orders": orders,
-        "total": len(orders),
-        "limit": limit,
-        "offset": offset
-    }
-
-@app.put("/api/v1/orders/{order_id}")
-async def update_order(order_id: str, update: OrderUpdate):
-    # Mock implementation
-    updated_fields = [k for k, v in update.dict().items() if v is not None]
-    return {
-        "order_id": order_id,
-        "message": "Order updated successfully",
-        "updated_fields": updated_fields,
-        "updated_at": datetime.utcnow()
-    }
-
-@app.post("/api/v1/orders/{order_id}/confirm")
-async def confirm_order(order_id: str):
-    # Mock implementation
-    return {
-        "order_id": order_id,
-        "status": OrderStatus.CONFIRMED,
-        "payment_status": PaymentStatus.COMPLETED,
-        "confirmed_at": datetime.utcnow(),
-        "estimated_pickup": (date.today() + timedelta(days=1)).isoformat(),
-        "message": "Order confirmed and scheduled for pickup"
-    }
-
-@app.post("/api/v1/orders/{order_id}/cancel")
-async def cancel_order(order_id: str, reason: str):
-    # Mock implementation
-    return {
-        "order_id": order_id,
-        "status": OrderStatus.CANCELLED,
-        "cancellation_reason": reason,
-        "cancelled_at": datetime.utcnow(),
-        "refund_status": "processing",
-        "estimated_refund_time": "3-5 business days"
-    }
-
-@app.get("/api/v1/orders/{order_id}/tracking")
-async def track_order(order_id: str):
-    # Mock implementation
-    return OrderTracking(
-        order_id=order_id,
-        tracking_number=f"QTY{order_id}",
-        current_status=OrderStatus.IN_TRANSIT,
-        current_location="Distribution Center - North",
-        estimated_delivery=datetime.utcnow() + timedelta(hours=8),
-        delivery_attempts=0,
-        events=[
+    try:
+        mock_products = [
             {
-                "timestamp": (datetime.utcnow() - timedelta(days=2)).isoformat(),
-                "status": "confirmed",
-                "location": "Order Processing Center",
-                "description": "Order confirmed and processing started"
+                "id": 1,
+                "unique_id": "PROD-20250122001",
+                "code": "SKU-001",
+                "name": "Electronics Package",
+                "description": "High-value electronics item",
+                "price": 1299.99,
+                "status": "active",
+                "company_id": "COMP-001"
             },
             {
-                "timestamp": (datetime.utcnow() - timedelta(days=1)).isoformat(),
-                "status": "picked_up",
-                "location": "123 Warehouse St",
-                "description": "Package picked up from sender"
-            },
-            {
-                "timestamp": (datetime.utcnow() - timedelta(hours=4)).isoformat(),
-                "status": "in_transit",
-                "location": "Distribution Center - North",
-                "description": "Package arrived at distribution center"
+                "id": 2,
+                "unique_id": "PROD-20250122002",
+                "code": "SKU-002", 
+                "name": "Clothing Item",
+                "description": "Fashion apparel",
+                "price": 49.99,
+                "status": "active",
+                "company_id": "COMP-001"
             }
-        ],
-        last_updated=datetime.utcnow()
-    )
+        ]
+        return {"products": mock_products, "total": len(mock_products), "limit": limit, "offset": offset}
+    except Exception as e:
+        logger.error(f"Error fetching products: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
-@app.post("/api/v1/orders/{order_id}/delivery-attempt")
-async def record_delivery_attempt(order_id: str, attempt_notes: str, successful: bool = False):
-    # Mock implementation
-    return {
-        "order_id": order_id,
-        "attempt_number": 1,
-        "attempted_at": datetime.utcnow(),
-        "successful": successful,
-        "notes": attempt_notes,
-        "next_attempt_scheduled": None if successful else (date.today() + timedelta(days=1)).isoformat(),
-        "status": OrderStatus.DELIVERED if successful else OrderStatus.OUT_FOR_DELIVERY
-    }
-
-@app.get("/api/v1/orders/analytics/summary")
-async def get_orders_summary(
-    date_from: date = Query(...),
-    date_to: date = Query(...)
+@app.get("/api/v1/products/{product_id}", response_model=Dict[str, Any])
+async def get_product(
+    product_id: int,
+    current_user = Depends(require_permissions(["products:read"])),
+    db: AsyncSession = Depends(get_db)
 ):
-    # Mock implementation
-    return {
-        "period": {
-            "from": date_from.isoformat(),
-            "to": date_to.isoformat()
-        },
-        "total_orders": 1247,
-        "orders_by_status": {
-            "pending": 45,
-            "confirmed": 123,
-            "in_transit": 234,
-            "delivered": 789,
-            "cancelled": 56
-        },
-        "orders_by_type": {
-            "standard": 623,
-            "express": 456,
-            "same_day": 134,
-            "scheduled": 34
-        },
-        "total_revenue": 2456789.50,
-        "average_order_value": 1970.25,
-        "delivery_performance": {
-            "on_time_delivery_rate": 92.5,
-            "average_delivery_time_hours": 28.5,
-            "first_attempt_success_rate": 87.3
+    try:
+        return {
+            "id": product_id,
+            "unique_id": f"PROD-{10000000 + product_id - 1}",
+            "code": f"SKU-{product_id}",
+            "name": "Sample Product",
+            "description": "A sample product for testing",
+            "unit_measure": "PCS",
+            "weight_kg": 1.5,
+            "width_cm": 20.0,
+            "height_cm": 15.0,
+            "length_cm": 10.0,
+            "is_packing": False,
+            "packing_material": None,
+            "packing_instructions": None,
+            "price": 25.99,
+            "company_id": "COMP-001",
+            "category_id": 1,
+            "status": "active",
+            "reorder_point": 10,
+            "created_at": datetime.utcnow() - timedelta(days=30),
+            "updated_at": datetime.utcnow()
         }
-    }
+    except Exception as e:
+        logger.error(f"Error fetching product {product_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
-@app.post("/api/v1/orders/bulk")
-async def create_bulk_orders(orders: List[OrderCreate]):
-    # Mock implementation
-    created_orders = []
-    for idx, order in enumerate(orders):
-        order_id = f"ORD-BULK-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}-{idx:03d}"
-        created_orders.append({
+@app.post("/api/v1/products", response_model=Dict[str, Any])
+async def create_product(
+    product: ProductCreate, 
+    current_user = Depends(require_permissions(["products:create"])),
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        unique_id = f"PROD-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
+        
+        return {
+            "id": 16,  # Mock ID
+            "unique_id": unique_id,
+            "code": product.sku,
+            "name": product.name,
+            "description": product.description,
+            "unit_measure": "PCS",
+            "weight_kg": product.weight,
+            "width_cm": product.dimensions.get("width") if product.dimensions else None,
+            "height_cm": product.dimensions.get("height") if product.dimensions else None,
+            "length_cm": product.dimensions.get("length") if product.dimensions else None,
+            "is_packing": False,
+            "packing_material": None,
+            "packing_instructions": None,
+            "price": product.price,
+            "company_id": product.company_id,
+            "category_id": 1,  # Mock category
+            "status": "active",
+            "reorder_point": None,
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+    except Exception as e:
+        logger.error(f"Error creating product: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.put("/api/v1/products/{product_id}", response_model=Dict[str, Any])
+async def update_product(
+    product_id: int,
+    product_update: ProductUpdate,
+    current_user = Depends(require_permissions(["products:update"])),
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        current_product = await get_product(product_id, db)
+        
+        update_data = product_update.dict(exclude_unset=True)
+        for field, value in update_data.items():
+            if field in current_product:
+                current_product[field] = value
+        
+        current_product["updated_at"] = datetime.utcnow()
+        return current_product
+    except Exception as e:
+        logger.error(f"Error updating product {product_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.delete("/api/v1/products/{product_id}")
+async def delete_product(
+    product_id: int,
+    current_user = Depends(require_permissions(["products:delete"])),
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        return {"message": f"Product {product_id} deleted successfully"}
+    except Exception as e:
+        logger.error(f"Error deleting product {product_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+# Order endpoints
+@app.get("/api/v1/orders", response_model=Dict[str, Any])
+async def get_orders(
+    limit: int = Query(20, le=100),
+    offset: int = Query(0, ge=0),
+    current_user = Depends(require_permissions(["orders:read"])),
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        mock_orders = [
+            {
+                "order_id": "ORD-20250122001",
+                "customer_id": "CUST-001",
+                "status": "in_transit",
+                "order_type": "express",
+                "total_amount": 15252.5,
+                "estimated_delivery": "2025-07-23",
+                "tracking_number": "QTYORD-20250122001"
+            },
+            {
+                "order_id": "ORD-20250121001",
+                "customer_id": "CUST-002",
+                "status": "delivered",
+                "order_type": "standard",
+                "total_amount": 850.75,
+                "actual_delivery": "2025-07-22",
+                "tracking_number": "QTYORD-20250121001"
+            }
+        ]
+        return {"orders": mock_orders, "total": len(mock_orders), "limit": limit, "offset": offset}
+    except Exception as e:
+        logger.error(f"Error fetching orders: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.get("/api/v1/orders/{order_id}", response_model=Dict[str, Any])
+async def get_order(
+    order_id: str,
+    current_user = Depends(require_permissions(["orders:read"])),
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        return {
+            "order_id": order_id,
+            "customer_id": "CUST-001",
+            "order_type": "express",
+            "status": "in_transit",
+            "payment_status": "completed",
+            "delivery_method": "home_delivery",
+            "pickup_address": "123 Warehouse St, Mexico City",
+            "delivery_address": {
+                "street_address": "456 Customer Ave",
+                "city": "Mexico City",
+                "state": "CDMX",
+                "postal_code": "01000",
+                "country": "MX",
+                "landmark": None,
+                "special_instructions": None
+            },
+            "items": [
+                {
+                    "item_id": "ITEM-001",
+                    "name": "Electronics Package",
+                    "description": "Laptop and accessories",
+                    "quantity": 1,
+                    "weight_kg": 3.5,
+                    "dimensions": {
+                        "length": 40.0,
+                        "width": 30.0,
+                        "height": 10.0
+                    },
+                    "value": 15000.0,
+                    "fragile": True,
+                    "requires_special_handling": True
+                }
+            ],
+            "total_weight_kg": 3.5,
+            "total_value": 15000.0,
+            "shipping_cost": 102.5,
+            "insurance_cost": 150.0,
+            "total_amount": 15252.5,
+            "tracking_number": f"QTYORD-{order_id.split('-')[-1]}",
+            "estimated_pickup_date": "2025-07-21",
+            "estimated_delivery_date": "2025-07-23",
+            "actual_pickup_date": "2025-07-21",
+            "actual_delivery_date": None,
+            "created_at": datetime.utcnow() - timedelta(days=2),
+            "updated_at": datetime.utcnow()
+        }
+    except Exception as e:
+        logger.error(f"Error fetching order {order_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.post("/api/v1/orders", response_model=Dict[str, Any])
+async def create_order(
+    order: OrderCreate,
+    current_user = Depends(require_permissions(["orders:create"])),
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        order_id = f"ORD-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
+        tracking_number = f"QTYORD-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
+        
+        # Calculate totals
+        total_weight = sum(item.get("weight_kg", 0) for item in order.items)
+        total_value = sum(item.get("value", 0) for item in order.items)
+        shipping_cost = 65.0  # Base shipping cost
+        insurance_cost = 0.0
+        
+        return {
             "order_id": order_id,
             "customer_id": order.customer_id,
+            "order_type": "standard",
             "status": "pending",
-            "tracking_number": f"QTY{order_id}"
-        })
-    
-    return {
-        "created_count": len(created_orders),
-        "orders": created_orders,
-        "batch_id": f"BATCH-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
-    }
+            "payment_status": "pending",
+            "delivery_method": "home_delivery",
+            "pickup_address": "123 Warehouse St",
+            "delivery_address": {
+                "street_address": "456 Customer Ave",
+                "city": "Mexico City", 
+                "state": "CDMX",
+                "postal_code": "01000",
+                "country": "MX",
+                "landmark": None,
+                "special_instructions": None
+            },
+            "items": order.items,
+            "total_weight_kg": total_weight,
+            "total_value": total_value,
+            "shipping_cost": shipping_cost,
+            "insurance_cost": insurance_cost,
+            "total_amount": total_value + shipping_cost + insurance_cost,
+            "tracking_number": tracking_number,
+            "estimated_pickup_date": (datetime.utcnow() + timedelta(days=2)).isoformat(),
+            "estimated_delivery_date": (datetime.utcnow() + timedelta(days=5)).isoformat(),
+            "actual_pickup_date": None,
+            "actual_delivery_date": None,
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+    except Exception as e:
+        logger.error(f"Error creating order: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
-@app.get("/api/v1/orders/{order_id}/invoice")
-async def get_order_invoice(order_id: str):
-    # Mock implementation
-    return {
-        "order_id": order_id,
-        "invoice_number": f"INV-{order_id}",
-        "invoice_date": date.today().isoformat(),
-        "customer_details": {
-            "customer_id": "CUST-001",
-            "name": "John Doe",
-            "email": "john.doe@example.com"
-        },
-        "items": [
+@app.put("/api/v1/orders/{order_id}/status")
+async def update_order_status(
+    order_id: str,
+    status: str = Query(...),
+    current_user = Depends(require_permissions(["orders:update"])),
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        return {
+            "order_id": order_id,
+            "status": status,
+            "updated_at": datetime.utcnow(),
+            "message": f"Order {order_id} status updated to {status}"
+        }
+    except Exception as e:
+        logger.error(f"Error updating order {order_id} status: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+# Inventory endpoints
+@app.get("/api/v1/inventory", response_model=Dict[str, Any])
+async def get_inventory(
+    limit: int = Query(20, le=100),
+    offset: int = Query(0, ge=0),
+    current_user = Depends(require_permissions(["inventory:read"])),
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        mock_inventory = [
             {
-                "description": "Shipping Service - Express",
-                "quantity": 1,
-                "unit_price": 102.50,
-                "total": 102.50
+                "product_id": 1,
+                "product_name": "Electronics Package",
+                "quantity_available": 150,
+                "quantity_reserved": 25,
+                "min_stock_level": 50,
+                "max_stock_level": 500,
+                "location": "Warehouse A",
+                "status": "in_stock"
             },
             {
-                "description": "Insurance Coverage",
-                "quantity": 1,
-                "unit_price": 150.00,
-                "total": 150.00
+                "product_id": 2,
+                "product_name": "Clothing Item",
+                "quantity_available": 300,
+                "quantity_reserved": 15,
+                "min_stock_level": 100,
+                "max_stock_level": 1000,
+                "location": "Warehouse B", 
+                "status": "in_stock"
             }
-        ],
-        "subtotal": 252.50,
-        "tax": 40.40,
-        "total": 292.90,
-        "payment_status": "paid"
-    }
+        ]
+        return {"inventory": mock_inventory, "total": len(mock_inventory), "limit": limit, "offset": offset}
+    except Exception as e:
+        logger.error(f"Error fetching inventory: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.get("/api/v1/products/low-stock", response_model=Dict[str, Any])
+async def get_low_stock_products(
+    current_user = Depends(require_permissions(["inventory:read"])),
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        mock_low_stock = [
+            {
+                "product_id": 3,
+                "product_name": "Special Item",
+                "current_stock": 5,
+                "min_stock_level": 20,
+                "reorder_quantity": 100,
+                "status": "low_stock",
+                "urgent": True
+            }
+        ]
+        return {"low_stock_products": mock_low_stock, "total": len(mock_low_stock)}
+    except Exception as e:
+        logger.error(f"Error fetching low stock products: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.get("/api/v1/inventory/movements", response_model=Dict[str, Any])
+async def get_stock_movements(
+    product_id: Optional[str] = Query(None),
+    current_user = Depends(require_permissions(["inventory:read"])),
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        return {
+            "product_id": product_id or "movements",
+            "warehouses": [
+                {
+                    "warehouse_id": 1,
+                    "warehouse_name": "Main Warehouse",
+                    "quantity_available": 150,
+                    "quantity_reserved": 25,
+                    "quantity_allocated": 10,
+                    "status": "available"
+                },
+                {
+                    "warehouse_id": 2,
+                    "warehouse_name": "Distribution Center North",
+                    "quantity_available": 75,
+                    "quantity_reserved": 15,
+                    "quantity_allocated": 5,
+                    "status": "available"
+                }
+            ],
+            "total_available": 225,
+            "total_reserved": 40,
+            "reorder_needed": False
+        }
+    except Exception as e:
+        logger.error(f"Error fetching stock movements: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.post("/api/v1/inventory/movements", response_model=Dict[str, Any])
+async def create_stock_movement(
+    movement: StockMovementCreate,
+    current_user = Depends(require_permissions(["inventory:update"])),
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        movement_id = f"MOV-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
+        
+        return {
+            "movement_id": movement_id,
+            "product_id": movement.product_id,
+            "movement_type": movement.movement_type,
+            "quantity": movement.quantity,
+            "reference_number": movement.reference_number,
+            "notes": movement.notes,
+            "created_by": movement.created_by,
+            "created_at": datetime.utcnow(),
+            "status": "completed"
+        }
+    except Exception as e:
+        logger.error(f"Error creating stock movement: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 # Service Discovery Registration
 async def register_with_consul():
@@ -468,6 +609,7 @@ async def register_with_consul():
 
 @app.on_event("startup")
 async def startup_event():
+    await create_tables()
     await register_with_consul()
     logger.info(f"{settings.service_name} started")
 
@@ -479,7 +621,3 @@ async def shutdown_event():
         logger.info(f"Deregistered {settings.service_name} from Consul")
     except Exception as e:
         logger.error(f"Failed to deregister from Consul: {str(e)}")
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8002)
