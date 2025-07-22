@@ -1,0 +1,15 @@
+# API Gateway Requirements
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+httpx==0.25.2
+pydantic==2.5.0
+pydantic-settings==2.1.0
+structlog==23.2.0
+prometheus-client==0.19.0
+opentelemetry-api==1.21.0
+opentelemetry-sdk==1.21.0
+opentelemetry-instrumentation-fastapi==0.42b0
+py-consul==1.5.1
+python-jose[cryptography]==3.3.0
+circuitbreaker==2.0.0
+tenacity==8.2.3
