@@ -8,6 +8,8 @@ import structlog
 from typing import Optional, List, Dict, Any
 import consul
 import httpx
+import os
+import logging
 from datetime import datetime, date, timedelta
 from enum import Enum
 import uuid
@@ -15,7 +17,35 @@ import uuid
 from .models import Manifest, ManifestItem, ShippingRate, Country, ShippingCarrier, Base, ManifestStatus, ShippingZone
 from .database import get_db, create_tables, engine
 
-logger = structlog.get_logger()
+# Import logging configuration
+try:
+    from .logging_config import LOGGING_MESSAGES, ERROR_MESSAGES, INFO_MESSAGES, DEBUG_MESSAGES, WARNING_MESSAGES
+except ImportError:
+    # Fallback if logging_config is not available
+    LOGGING_MESSAGES = ERROR_MESSAGES = INFO_MESSAGES = DEBUG_MESSAGES = WARNING_MESSAGES = {}
+
+# Configure structured logging
+structlog.configure(
+    processors=[
+        structlog.stdlib.filter_by_level,
+        structlog.stdlib.add_logger_name,
+        structlog.stdlib.add_log_level,
+        structlog.stdlib.PositionalArgumentsFormatter(),
+        structlog.processors.StackInfoRenderer(),
+        structlog.processors.format_exc_info,
+        structlog.processors.UnicodeDecoder(),
+        structlog.processors.JSONRenderer()
+    ],
+    context_class=dict,
+    logger_factory=structlog.stdlib.LoggerFactory(),
+    wrapper_class=structlog.stdlib.BoundLogger,
+    cache_logger_on_first_use=True,
+)
+
+# Set log level from environment
+log_level = os.getenv("LOG_LEVEL", "INFO").upper()
+logging.basicConfig(level=getattr(logging, log_level))
+logger = structlog.get_logger("international-shipping-service")
 
 class Settings(BaseSettings):
     service_name: str = "international-shipping-service"

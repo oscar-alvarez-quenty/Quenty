@@ -11,7 +11,7 @@ services:
       - "8000:8000"
     environment:
       - SERVICE_NAME=api-gateway
-      - LOG_LEVEL=INFO
+      - LOG_LEVEL=DEBUG
       - CUSTOMER_SERVICE_URL=http://customer-service:8001
       - ORDER_SERVICE_URL=http://order-service:8002
       - PICKUP_SERVICE_URL=http://pickup-service:8003
@@ -47,7 +47,7 @@ services:
       - SERVICE_NAME=auth-service
       - DATABASE_URL=postgresql+asyncpg://auth:auth_pass@auth-db:5432/auth_db
       - REDIS_URL=redis://redis:6379/0
-      - LOG_LEVEL=INFO
+      - LOG_LEVEL=DEBUG
       - JWT_SECRET_KEY=your-secret-key-change-this-in-production
       - JWT_ALGORITHM=HS256
       - JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30
@@ -91,7 +91,7 @@ services:
       - SERVICE_NAME=customer-service
       - DATABASE_URL=postgresql+asyncpg://customer:customer_pass@customer-db:5432/customer_db
       - REDIS_URL=redis://redis:6379/1
-      - LOG_LEVEL=INFO
+      - LOG_LEVEL=DEBUG
       - AUTH_SERVICE_URL=http://auth-service:8009
     depends_on:
       - customer-db
@@ -127,7 +127,7 @@ services:
       - SERVICE_NAME=order-service
       - DATABASE_URL=postgresql+asyncpg://order:order_pass@order-db:5432/order_db
       - REDIS_URL=redis://redis:6379/2
-      - LOG_LEVEL=INFO
+      - LOG_LEVEL=DEBUG
       - AUTH_SERVICE_URL=http://auth-service:8009
       - CUSTOMER_SERVICE_URL=http://customer-service:8001
       - SHIPPING_SERVICE_URL=http://international-shipping-service:8004
@@ -165,7 +165,7 @@ services:
       - SERVICE_NAME=pickup-service
       - DATABASE_URL=postgresql+asyncpg://pickup:pickup_pass@pickup-db:5432/pickup_db
       - REDIS_URL=redis://redis:6379/3
-      - LOG_LEVEL=INFO
+      - LOG_LEVEL=DEBUG
       - AUTH_SERVICE_URL=http://auth-service:8009
       - ORDER_SERVICE_URL=http://order-service:8002
     depends_on:
@@ -202,7 +202,7 @@ services:
       - SERVICE_NAME=international-shipping-service
       - DATABASE_URL=postgresql+asyncpg://intlship:intlship_pass@intl-shipping-db:5432/intl_shipping_db
       - REDIS_URL=redis://redis:6379/4
-      - LOG_LEVEL=INFO
+      - LOG_LEVEL=DEBUG
       - AUTH_SERVICE_URL=http://auth-service:8009
       - CUSTOMER_SERVICE_URL=http://customer-service:8001
     depends_on:
@@ -239,7 +239,7 @@ services:
       - SERVICE_NAME=microcredit-service
       - DATABASE_URL=postgresql+asyncpg://credit:credit_pass@microcredit-db:5432/microcredit_db
       - REDIS_URL=redis://redis:6379/5
-      - LOG_LEVEL=INFO
+      - LOG_LEVEL=DEBUG
       - AUTH_SERVICE_URL=http://auth-service:8009
       - CUSTOMER_SERVICE_URL=http://customer-service:8001
     depends_on:
@@ -276,7 +276,7 @@ services:
       - SERVICE_NAME=analytics-service
       - DATABASE_URL=postgresql+asyncpg://analytics:analytics_pass@analytics-db:5432/analytics_db
       - REDIS_URL=redis://redis:6379/6
-      - LOG_LEVEL=INFO
+      - LOG_LEVEL=DEBUG
       - AUTH_SERVICE_URL=http://auth-service:8009
       - READ_REPLICA_URLS=postgresql+asyncpg://analytics:analytics_pass@customer-db:5432/customer_db,postgresql+asyncpg://analytics:analytics_pass@order-db:5432/order_db
     depends_on:
@@ -313,7 +313,7 @@ services:
       - SERVICE_NAME=reverse-logistics-service
       - DATABASE_URL=postgresql+asyncpg://reverse:reverse_pass@reverse-logistics-db:5432/reverse_logistics_db
       - REDIS_URL=redis://redis:6379/7
-      - LOG_LEVEL=INFO
+      - LOG_LEVEL=DEBUG
       - AUTH_SERVICE_URL=http://auth-service:8009
       - ORDER_SERVICE_URL=http://order-service:8002
       - CUSTOMER_SERVICE_URL=http://customer-service:8001
@@ -351,7 +351,7 @@ services:
       - SERVICE_NAME=franchise-service
       - DATABASE_URL=postgresql+asyncpg://franchise:franchise_pass@franchise-db:5432/franchise_db
       - REDIS_URL=redis://redis:6379/8
-      - LOG_LEVEL=INFO
+      - LOG_LEVEL=DEBUG
       - AUTH_SERVICE_URL=http://auth-service:8009
     depends_on:
       - franchise-db

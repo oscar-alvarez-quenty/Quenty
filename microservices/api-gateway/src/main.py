@@ -8,8 +8,36 @@ import consul
 import asyncio
 from circuitbreaker import circuit
 from tenacity import retry, stop_after_attempt, wait_exponential
+import os
+import logging
+try:
+    from .logging_config import LOGGING_MESSAGES, ERROR_MESSAGES, INFO_MESSAGES, DEBUG_MESSAGES, WARNING_MESSAGES
+except ImportError:
+    # Fallback if logging_config is not available
+    LOGGING_MESSAGES = ERROR_MESSAGES = INFO_MESSAGES = DEBUG_MESSAGES = WARNING_MESSAGES = {}
 
-logger = structlog.get_logger()
+# Configure structured logging
+structlog.configure(
+    processors=[
+        structlog.stdlib.filter_by_level,
+        structlog.stdlib.add_logger_name,
+        structlog.stdlib.add_log_level,
+        structlog.stdlib.PositionalArgumentsFormatter(),
+        structlog.processors.StackInfoRenderer(),
+        structlog.processors.format_exc_info,
+        structlog.processors.UnicodeDecoder(),
+        structlog.processors.JSONRenderer()
+    ],
+    context_class=dict,
+    logger_factory=structlog.stdlib.LoggerFactory(),
+    wrapper_class=structlog.stdlib.BoundLogger,
+    cache_logger_on_first_use=True,
+)
+
+# Set log level from environment
+log_level = os.getenv("LOG_LEVEL", "INFO").upper()
+logging.basicConfig(level=getattr(logging, log_level))
+logger = structlog.get_logger("api-gateway")
 
 class Settings(BaseSettings):
     service_name: str = "api-gateway"
@@ -57,22 +85,73 @@ service_registry = {
 # Circuit breaker decorator
 @circuit(failure_threshold=5, recovery_timeout=30)
 async def make_service_request(service_url: str, path: str, method: str = "GET", **kwargs):
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        response = await client.request(method, f"{service_url}{path}", **kwargs)
-        response.raise_for_status()
-        return response.json()
+    start_time = asyncio.get_event_loop().time()
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            logger.debug(
+                DEBUG_MESSAGES["AGW_D001"]["message"].format(request_id=f"{method}_{path}", client_ip=service_url),
+                **DEBUG_MESSAGES["AGW_D001"]
+            )
+            response = await client.request(method, f"{service_url}{path}", **kwargs)
+            response_time = int((asyncio.get_event_loop().time() - start_time) * 1000)
+            
+            logger.debug(
+                DEBUG_MESSAGES["AGW_D006"]["message"].format(
+                    service_name=service_url.split("//")[1].split(":")[0], 
+                    status_code=response.status_code, 
+                    response_time=response_time
+                ),
+                **DEBUG_MESSAGES["AGW_D006"]
+            )
+            
+            if response_time > 2000:  # Log warning for slow responses
+                logger.warning(
+                    WARNING_MESSAGES["AGW_W001"]["message"].format(
+                        service_name=service_url.split("//")[1].split(":")[0], 
+                        response_time=response_time
+                    ),
+                    **WARNING_MESSAGES["AGW_W001"]
+                )
+            
+            response.raise_for_status()
+            return response.json()
+    except httpx.TimeoutException as e:
+        logger.error(
+            ERROR_MESSAGES["AGW_E003"]["message"].format(service_name=service_url.split("//")[1].split(":")[0]),
+            **ERROR_MESSAGES["AGW_E003"]
+        )
+        raise
+    except Exception as e:
+        logger.error(
+            ERROR_MESSAGES["AGW_E002"]["message"].format(service_name=service_url.split("//")[1].split(":")[0]),
+            **ERROR_MESSAGES["AGW_E002"]
+        )
+        raise
 
 # Retry decorator for resilience
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
 async def resilient_request(service_name: str, path: str, method: str = "GET", **kwargs):
     service_url = service_registry.get(service_name)
     if not service_url:
+        logger.error(
+            ERROR_MESSAGES["AGW_E002"]["message"].format(service_name=service_name),
+            **ERROR_MESSAGES["AGW_E002"]
+        )
         raise HTTPException(status_code=404, detail=f"Service {service_name} not found")
     
     try:
-        return await make_service_request(service_url, path, method, **kwargs)
+        logger.info(
+            INFO_MESSAGES["AGW_I002"]["message"].format(service_name=service_name, method=method, path=path),
+            **INFO_MESSAGES["AGW_I002"]
+        )
+        result = await make_service_request(service_url, path, method, **kwargs)
+        return result
     except Exception as e:
-        logger.error(f"Error calling {service_name}: {str(e)}")
+        logger.error(
+            ERROR_MESSAGES["AGW_E002"]["message"].format(service_name=service_name),
+            **ERROR_MESSAGES["AGW_E002"],
+            error_details=str(e)
+        )
         raise HTTPException(status_code=503, detail=f"Service {service_name} unavailable")
 
 @app.get("/health")
@@ -86,9 +165,25 @@ async def check_all_services():
         try:
             async with httpx.AsyncClient(timeout=5.0) as client:
                 response = await client.get(f"{service_url}/health")
-                health_status[service_name] = "healthy" if response.status_code == 200 else "unhealthy"
-        except:
+                if response.status_code == 200:
+                    health_status[service_name] = "healthy"
+                    logger.info(
+                        INFO_MESSAGES["AGW_I003"]["message"].format(service_name=service_name),
+                        **INFO_MESSAGES["AGW_I003"]
+                    )
+                else:
+                    health_status[service_name] = "unhealthy"
+                    logger.warning(
+                        WARNING_MESSAGES["AGW_W002"]["message"].format(service_name=service_name),
+                        **WARNING_MESSAGES["AGW_W002"]
+                    )
+        except Exception as e:
             health_status[service_name] = "unreachable"
+            logger.warning(
+                WARNING_MESSAGES["AGW_W002"]["message"].format(service_name=service_name),
+                **WARNING_MESSAGES["AGW_W002"],
+                error_details=str(e)
+            )
     return health_status
 
 # Authentication endpoints
@@ -679,7 +774,10 @@ async def register_with_consul():
 @app.on_event("startup")
 async def startup_event():
     await register_with_consul()
-    logger.info(f"{settings.service_name} started")
+    logger.info(
+        INFO_MESSAGES["AGW_I001"]["message"].format(port=8000),
+        **INFO_MESSAGES["AGW_I001"]
+    )
 
 @app.on_event("shutdown")
 async def shutdown_event():

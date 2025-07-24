@@ -29,6 +29,15 @@ from .security import (
 )
 from .oauth import oauth_service
 
+# Import logging configuration
+import os
+import logging
+try:
+    from .logging_config import LOGGING_MESSAGES, ERROR_MESSAGES, INFO_MESSAGES, DEBUG_MESSAGES, WARNING_MESSAGES
+except ImportError:
+    # Fallback if logging_config is not available
+    LOGGING_MESSAGES = ERROR_MESSAGES = INFO_MESSAGES = DEBUG_MESSAGES = WARNING_MESSAGES = {}
+
 # Configure logging
 structlog.configure(
     processors=[
@@ -43,10 +52,14 @@ structlog.configure(
     ],
     context_class=dict,
     logger_factory=structlog.stdlib.LoggerFactory(),
+    wrapper_class=structlog.stdlib.BoundLogger,
     cache_logger_on_first_use=True,
 )
 
-logger = structlog.get_logger()
+# Set log level from environment
+log_level = os.getenv("LOG_LEVEL", "INFO").upper()
+logging.basicConfig(level=getattr(logging, log_level))
+logger = structlog.get_logger("auth-service")
 
 # Create FastAPI app
 app = FastAPI(

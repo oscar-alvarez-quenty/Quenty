@@ -9,12 +9,20 @@ import structlog
 import consul
 import requests
 import os
+import logging
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 from enum import Enum
 
 from .database import get_db, init_db, close_db
 from .models import Metric, Dashboard, Report, Alert, AnalyticsQuery, MetricType, ReportStatus
+
+# Import logging configuration
+try:
+    from .logging_config import LOGGING_MESSAGES, ERROR_MESSAGES, INFO_MESSAGES, DEBUG_MESSAGES, WARNING_MESSAGES
+except ImportError:
+    # Fallback if logging_config is not available
+    LOGGING_MESSAGES = ERROR_MESSAGES = INFO_MESSAGES = DEBUG_MESSAGES = WARNING_MESSAGES = {}
 
 # Configure logging
 structlog.configure(
@@ -33,7 +41,10 @@ structlog.configure(
     cache_logger_on_first_use=True,
 )
 
-logger = structlog.get_logger()
+# Set log level from environment
+log_level = os.getenv("LOG_LEVEL", "INFO").upper()
+logging.basicConfig(level=getattr(logging, log_level))
+logger = structlog.get_logger("analytics-service")
 
 # Settings
 AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL", "http://auth-service:8009")
