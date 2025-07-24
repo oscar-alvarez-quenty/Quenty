@@ -13,6 +13,9 @@ import json
 import os
 import logging
 from datetime import datetime, timedelta
+from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+from starlette.responses import Response
+import time
 
 from .models import CustomerProfile, SupportTicket, TicketMessage, CustomerNote, CustomerInteraction, Base
 from .database import get_db, create_tables, engine
@@ -67,6 +70,23 @@ app = FastAPI(
     title="Customer Service",
     description="Customer relationship management and support",
     version="2.0.0"
+)
+
+# Prometheus metrics
+customer_operations_total = Counter(
+    'customer_operations_total',
+    'Total number of customer operations',
+    ['operation', 'status']
+)
+customer_request_duration = Histogram(
+    'customer_request_duration_seconds',
+    'Duration of customer requests in seconds',
+    ['method', 'endpoint']
+)
+support_tickets_total = Counter(
+    'customer_support_tickets_total',
+    'Total number of support tickets',
+    ['status', 'priority']
 )
 
 # Auth dependency
@@ -265,6 +285,11 @@ class CustomerNoteResponse(BaseModel):
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "service": settings.service_name}
+
+@app.get("/metrics")
+async def get_metrics():
+    """Prometheus metrics endpoint"""
+    return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 # Customer Profile endpoints
 @app.get("/api/v1/customers", response_model=Dict[str, Any])

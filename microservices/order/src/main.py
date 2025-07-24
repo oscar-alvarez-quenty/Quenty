@@ -15,6 +15,9 @@ from datetime import datetime, date, timedelta
 from enum import Enum
 import uuid
 
+from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+from starlette.responses import Response
+import time
 from .models import Product, InventoryItem, StockMovement, Order, OrderItem, Base, StockMovementType
 from .database import get_db, create_tables, engine
 
@@ -68,6 +71,22 @@ app = FastAPI(
     title="Order Service", 
     description="Microservice for order and inventory management",
     version="2.0.0"
+)
+# Prometheus metrics
+order_service_operations_total = Counter(
+    'order_service_operations_total',
+    'Total number of order-service operations',
+    ['operation', 'status']
+)
+order_service_request_duration = Histogram(
+    'order_service_request_duration_seconds',
+    'Duration of order-service requests in seconds',
+    ['method', 'endpoint']
+)
+http_requests_total = Counter(
+    'http_requests_total',
+    'Total number of HTTP requests',
+    ['service', 'method', 'endpoint', 'status']
 )
 
 # Auth dependency
@@ -202,6 +221,10 @@ class OrderResponse(BaseModel):
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "service": settings.service_name}
+@app.get("/metrics")
+async def get_metrics():
+    """Prometheus metrics endpoint"""
+    return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 # Product endpoints
 @app.get("/api/v1/products", response_model=Dict[str, Any])

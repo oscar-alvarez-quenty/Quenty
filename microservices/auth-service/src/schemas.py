@@ -74,6 +74,32 @@ class UserResponse(UserBase, BaseTimestamp):
     locked_until: Optional[datetime] = None
     permissions: List[str] = []
     
+    @classmethod
+    def from_user(cls, user):
+        """Create UserResponse from User model with proper role handling"""
+        return cls(
+            id=user.id,
+            unique_id=user.unique_id,
+            username=user.username,
+            email=user.email,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            phone=user.phone,
+            role=user.role.code if user.role else UserRole.CUSTOMER,
+            company_id=user.company_id,
+            email_verified=user.email_verified,
+            is_active=user.is_active,
+            is_verified=user.is_verified,
+            is_superuser=user.is_superuser,
+            avatar_url=user.avatar_url,
+            last_login=user.last_login,
+            failed_login_attempts=user.failed_login_attempts,
+            locked_until=user.locked_until,
+            permissions=user.additional_permissions or [],
+            created_at=user.created_at,
+            updated_at=user.updated_at
+        )
+    
     class Config:
         from_attributes = True
 

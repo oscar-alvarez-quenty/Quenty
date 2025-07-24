@@ -9,6 +9,9 @@ from typing import List, Optional
 from datetime import datetime, timedelta
 import structlog
 import uuid
+from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+from starlette.responses import Response
+import time
 
 from .config import settings
 from .database import get_db, init_db, close_db
@@ -81,6 +84,27 @@ app.add_middleware(
 
 # Security instance
 security = HTTPBearer()
+
+# Prometheus metrics
+auth_requests_total = Counter(
+    'auth_requests_total',
+    'Total number of authentication requests',
+    ['method', 'endpoint', 'status']
+)
+auth_request_duration = Histogram(
+    'auth_request_duration_seconds',
+    'Duration of authentication requests in seconds',
+    ['method', 'endpoint']
+)
+active_sessions = Counter(
+    'auth_active_sessions_total',
+    'Total number of active user sessions',
+    ['token_type']
+)
+failed_login_attempts = Counter(
+    'auth_failed_login_attempts_total',
+    'Total number of failed login attempts'
+)
 
 async def create_initial_admin_user():
     """Create initial admin user if configured and no users exist"""
@@ -251,6 +275,12 @@ async def health_check():
         }
     )
 
+# Metrics endpoint
+@app.get("/metrics")
+async def get_metrics():
+    """Prometheus metrics endpoint"""
+    return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
 # Authentication Endpoints
 @app.post("/api/v1/auth/login", response_model=TokenResponse)
 async def login(
@@ -259,10 +289,13 @@ async def login(
     db: AsyncSession = Depends(get_db)
 ):
     """Authenticate user and return JWT tokens"""
+    start_time = time.time()
     try:
         # Authenticate user
         user = await authenticate_user(db, login_data.username_or_email, login_data.password)
         if not user:
+            failed_login_attempts.inc()
+            auth_requests_total.labels(method='POST', endpoint='/api/v1/auth/login', status='401').inc()
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid credentials"
@@ -299,6 +332,12 @@ async def login(
         
         # Get user permissions for profile
         permissions = await get_user_permissions(db, user)
+        
+        # Track metrics
+        auth_requests_total.labels(method='POST', endpoint='/api/v1/auth/login', status='200').inc()
+        auth_request_duration.labels(method='POST', endpoint='/api/v1/auth/login').observe(time.time() - start_time)
+        active_sessions.labels(token_type='access').inc()
+        active_sessions.labels(token_type='refresh').inc()
         
         return TokenResponse(
             access_token=access_token,
@@ -540,7 +579,7 @@ async def get_users(
         users = result.scalars().all()
         
         return PaginatedUsers(
-            users=[UserResponse.from_orm(user) for user in users],
+            users=[UserResponse.from_user(user) for user in users],
             total=total,
             limit=limit,
             offset=offset,
@@ -580,7 +619,7 @@ async def get_user(
                 detail="User not found"
             )
         
-        return UserResponse.from_orm(user)
+        return UserResponse.from_user(user)
         
     except HTTPException:
         raise
@@ -644,7 +683,7 @@ async def create_user(
         # Log user creation
         await log_audit_event(db, current_user, "create_user", "user", str(user.id), request, "success")
         
-        return UserResponse.from_orm(user)
+        return UserResponse.from_user(user)
         
     except HTTPException:
         raise
@@ -696,7 +735,7 @@ async def update_user(
         # Log user update
         await log_audit_event(db, current_user, "update_user", "user", str(user.id), request, "success")
         
-        return UserResponse.from_orm(user)
+        return UserResponse.from_user(user)
         
     except HTTPException:
         raise
