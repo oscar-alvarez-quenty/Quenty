@@ -26,16 +26,17 @@ logger = structlog.get_logger()
 
 class Settings(BaseSettings):
     service_name: str = "microcredit-service"
-    database_url: str = "postgresql+asyncpg://microcredit:microcredit_pass@microcredit-db:5432/microcredit_db"
+    database_url: str = "postgresql+asyncpg://credit:credit_pass@microcredit-db:5432/microcredit_db"
     redis_url: str = "redis://redis:6379/5"
     consul_host: str = "consul"
     consul_port: int = 8500
-    auth_service_url: str = "http://auth-service:8003"
+    auth_service_url: str = "http://auth-service:8009"
 
-    class Config:
-        env_file = ".env"
+    model_config = {"env_file": ".env"}
 
 settings = Settings()
+
+# Settings loaded successfully
 
 # HTTP Bearer for token extraction
 security = HTTPBearer()
@@ -161,7 +162,7 @@ class CreditApplicationResponse(BaseModel):
         from_attributes = True
 
 class CreditDecision(BaseModel):
-    decision: str = Field(regex="^(approve|reject)$")
+    decision: str = Field(pattern="^(approve|reject)$")
     approved_amount: Optional[float] = None
     approved_term_months: Optional[int] = None
     interest_rate: Optional[float] = None
@@ -214,7 +215,7 @@ class PaymentResponse(BaseModel):
         from_attributes = True
 
 class DisbursementRequest(BaseModel):
-    disbursement_method: str = Field(regex="^(bank_transfer|wallet|cash)$")
+    disbursement_method: str = Field(pattern="^(bank_transfer|wallet|cash)$")
     destination_account: Optional[str] = None
 
 class CreditScoreResponse(BaseModel):

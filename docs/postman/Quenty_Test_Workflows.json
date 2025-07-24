@@ -1,0 +1,835 @@
+{
+	"info": {
+		"_postman_id": "quenty-test-workflows",
+		"name": "Quenty Test Workflows",
+		"description": "Pre-configured test workflows and scenarios for common business processes in the Quenty platform.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "🔄 Complete Order Workflow",
+			"description": "End-to-end order processing from creation to delivery",
+			"item": [
+				{
+					"name": "1. Login as Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Login successful', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.environment.set('access_token', responseJson.access_token);",
+									"    pm.expect(responseJson.access_token).to.not.be.empty;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username_or_email\": \"{{admin_username}}\",\n    \"password\": \"{{admin_password}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "login"]
+						}
+					}
+				},
+				{
+					"name": "2. Create Test Customer",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Customer created successfully', function () {",
+									"    pm.response.to.have.status(201);",
+									"    const responseJson = pm.response.json();",
+									"    pm.environment.set('test_customer_id', responseJson.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"user_id\": \"workflow-test-user\",\n    \"customer_type\": \"individual\",\n    \"credit_limit\": 10000000,\n    \"payment_terms\": 30,\n    \"preferred_payment_method\": \"credit_card\",\n    \"default_shipping_address\": {\n        \"street\": \"Calle 100 #15-30\",\n        \"city\": \"Bogotá\",\n        \"state\": \"Cundinamarca\",\n        \"country\": \"Colombia\",\n        \"postal_code\": \"110111\"\n    },\n    \"billing_address\": {\n        \"street\": \"Calle 100 #15-30\",\n        \"city\": \"Bogotá\",\n        \"state\": \"Cundinamarca\",\n        \"country\": \"Colombia\",\n        \"postal_code\": \"110111\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/customers",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "customers"]
+						}
+					}
+				},
+				{
+					"name": "3. Create Test Product",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Product created successfully', function () {",
+									"    pm.response.to.have.status(201);",
+									"    const responseJson = pm.response.json();",
+									"    pm.environment.set('test_product_id', responseJson.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Workflow Test Product\",\n    \"sku\": \"WF-TEST-001\",\n    \"description\": \"Test product for workflow automation\",\n    \"price\": 2500000,\n    \"weight\": 1.5,\n    \"dimensions\": {\n        \"length\": 25,\n        \"width\": 15,\n        \"height\": 10\n    },\n    \"category\": \"Electronics\",\n    \"stock_quantity\": 100,\n    \"is_active\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/products",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "products"]
+						}
+					}
+				},
+				{
+					"name": "4. Create Order",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Order created successfully', function () {",
+									"    pm.response.to.have.status(201);",
+									"    const responseJson = pm.response.json();",
+									"    pm.environment.set('test_order_id', responseJson.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"customer_id\": \"{{test_customer_id}}\",\n    \"order_type\": \"standard\",\n    \"items\": [\n        {\n            \"product_id\": \"{{test_product_id}}\",\n            \"quantity\": 2,\n            \"unit_price\": 2500000,\n            \"total_price\": 5000000\n        }\n    ],\n    \"total_amount\": 5000000,\n    \"currency\": \"COP\",\n    \"shipping_address\": {\n        \"street\": \"Calle 100 #15-30\",\n        \"city\": \"Bogotá\",\n        \"state\": \"Cundinamarca\",\n        \"country\": \"Colombia\",\n        \"postal_code\": \"110111\"\n    },\n    \"billing_address\": {\n        \"street\": \"Calle 100 #15-30\",\n        \"city\": \"Bogotá\",\n        \"state\": \"Cundinamarca\",\n        \"country\": \"Colombia\",\n        \"postal_code\": \"110111\"\n    },\n    \"notes\": \"Workflow test order\",\n    \"priority\": \"normal\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/orders",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "orders"]
+						}
+					}
+				},
+				{
+					"name": "5. Confirm Order",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Order confirmed successfully', function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"confirmed\",\n    \"notes\": \"Order confirmed - ready for pickup\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/orders/{{test_order_id}}/status",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "orders", "{{test_order_id}}", "status"]
+						}
+					}
+				},
+				{
+					"name": "6. Schedule Pickup",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Pickup scheduled successfully', function () {",
+									"    pm.response.to.have.status(201);",
+									"    const responseJson = pm.response.json();",
+									"    pm.environment.set('test_pickup_id', responseJson.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"order_id\": \"{{test_order_id}}\",\n    \"pickup_address\": {\n        \"street\": \"Calle 100 #15-30\",\n        \"city\": \"Bogotá\",\n        \"state\": \"Cundinamarca\",\n        \"country\": \"Colombia\",\n        \"postal_code\": \"110111\"\n    },\n    \"pickup_date\": \"2025-07-25T14:00:00\",\n    \"pickup_time_window\": {\n        \"start\": \"14:00\",\n        \"end\": \"16:00\"\n    },\n    \"special_instructions\": \"Test pickup - workflow automation\",\n    \"contact_name\": \"Workflow Test Contact\",\n    \"contact_phone\": \"+573001234567\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/pickups",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "pickups"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "💰 Microcredit Application Workflow",
+			"description": "Complete microcredit application and approval process",
+			"item": [
+				{
+					"name": "1. Login as Admin",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username_or_email\": \"{{admin_username}}\",\n    \"password\": \"{{admin_password}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "login"]
+						}
+					}
+				},
+				{
+					"name": "2. Create Credit Application",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Credit application created', function () {",
+									"    pm.response.to.have.status(201);",
+									"    const responseJson = pm.response.json();",
+									"    pm.environment.set('credit_application_id', responseJson.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"credit_type\": \"business\",\n    \"requested_amount\": 8000000,\n    \"requested_term_months\": 18,\n    \"payment_frequency\": \"monthly\",\n    \"purpose\": \"Business expansion and inventory purchase\",\n    \"monthly_income\": 12000000,\n    \"employment_status\": \"business_owner\",\n    \"employment_years\": 5,\n    \"existing_debts\": 2000000,\n    \"business_name\": \"Test Business LLC\",\n    \"business_type\": \"retail\",\n    \"business_revenue_monthly\": 15000000,\n    \"business_years\": 3\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/microcredit/applications",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "microcredit", "applications"]
+						}
+					}
+				},
+				{
+					"name": "3. Approve Credit Application",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Credit application approved', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.environment.set('credit_account_id', responseJson.account_id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"decision\": \"approve\",\n    \"approved_amount\": 7000000,\n    \"approved_term_months\": 18,\n    \"interest_rate\": 16.5,\n    \"review_notes\": \"Approved - good credit history and business revenue\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/microcredit/applications/{{credit_application_id}}/decision",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "microcredit", "applications", "{{credit_application_id}}", "decision"]
+						}
+					}
+				},
+				{
+					"name": "4. Disburse Credit",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Credit disbursed successfully', function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"disbursement_method\": \"bank_transfer\",\n    \"destination_account\": \"1234567890\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/microcredit/accounts/{{credit_account_id}}/disburse",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "microcredit", "accounts", "{{credit_account_id}}", "disburse"]
+						}
+					}
+				},
+				{
+					"name": "5. Make First Payment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Payment processed successfully', function () {",
+									"    pm.response.to.have.status(201);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"payment_amount\": 500000,\n    \"payment_method\": \"bank_transfer\",\n    \"reference_number\": \"PAY-TEST-001\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/microcredit/accounts/{{credit_account_id}}/payments",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "microcredit", "accounts", "{{credit_account_id}}", "payments"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "↩️ Return Processing Workflow",
+			"description": "Complete product return and refund process",
+			"item": [
+				{
+					"name": "1. Login as Admin",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username_or_email\": \"{{admin_username}}\",\n    \"password\": \"{{admin_password}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "login"]
+						}
+					}
+				},
+				{
+					"name": "2. Create Return Request",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Return request created', function () {",
+									"    pm.response.to.have.status(201);",
+									"    const responseJson = pm.response.json();",
+									"    pm.environment.set('test_return_id', responseJson.return_id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"original_order_id\": \"{{test_order_id}}\",\n    \"customer_id\": \"{{test_customer_id}}\",\n    \"return_type\": \"refund\",\n    \"return_reason\": \"defective\",\n    \"description\": \"Product arrived with defect - screen damaged\",\n    \"preferred_resolution\": \"refund\",\n    \"return_address\": {\n        \"street\": \"Calle 100 #15-30\",\n        \"city\": \"Bogotá\",\n        \"state\": \"Cundinamarca\",\n        \"country\": \"Colombia\",\n        \"postal_code\": \"110111\"\n    },\n    \"items\": [\n        {\n            \"product_id\": \"{{test_product_id}}\",\n            \"quantity\": 1,\n            \"reason\": \"arrived_damaged\"\n        }\n    ],\n    \"photos\": [\"defect_photo_1.jpg\", \"defect_photo_2.jpg\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/returns",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "returns"]
+						}
+					}
+				},
+				{
+					"name": "3. Approve Return",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Return approved successfully', function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"approval_notes\": \"Return approved - valid defect claim\",\n    \"estimated_pickup_date\": \"2025-07-26\",\n    \"pickup_address\": {\n        \"street\": \"Calle 100 #15-30\",\n        \"city\": \"Bogotá\",\n        \"state\": \"Cundinamarca\",\n        \"country\": \"Colombia\",\n        \"postal_code\": \"110111\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/returns/{{test_return_id}}/approve",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "returns", "{{test_return_id}}", "approve"]
+						}
+					}
+				},
+				{
+					"name": "4. Schedule Return Pickup",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Return pickup scheduled', function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"pickup_date\": \"2025-07-26\",\n    \"time_window\": \"10:00-12:00\",\n    \"special_instructions\": \"Defective item return\",\n    \"pickup_address\": {\n        \"street\": \"Calle 100 #15-30\",\n        \"city\": \"Bogotá\",\n        \"state\": \"Cundinamarca\",\n        \"country\": \"Colombia\",\n        \"postal_code\": \"110111\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/returns/{{test_return_id}}/schedule-pickup",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "returns", "{{test_return_id}}", "schedule-pickup"]
+						}
+					}
+				},
+				{
+					"name": "5. Create Inspection Report",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Inspection report created', function () {",
+									"    pm.response.to.have.status(201);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"overall_condition\": \"damaged\",\n    \"condition_details\": \"Screen has visible crack, device otherwise functional\",\n    \"photos\": [\"inspection_1.jpg\", \"inspection_2.jpg\"],\n    \"resale_value\": 1200000,\n    \"refurbishment_cost\": 300000,\n    \"recommendation\": \"full_refund\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/returns/{{test_return_id}}/inspection",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "returns", "{{test_return_id}}", "inspection"]
+						}
+					}
+				},
+				{
+					"name": "6. Process Return",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Return processed successfully', function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"processing_action\": \"approve_full_refund\",\n    \"refund_amount\": 2500000,\n    \"processing_fee\": 0,\n    \"processing_notes\": \"Full refund approved due to manufacturing defect\",\n    \"requires_customer_action\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/returns/{{test_return_id}}/process",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "returns", "{{test_return_id}}", "process"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "📊 Analytics Data Population",
+			"description": "Populate analytics system with sample metrics",
+			"item": [
+				{
+					"name": "1. Login as Admin",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username_or_email\": \"{{admin_username}}\",\n    \"password\": \"{{admin_password}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "login"]
+						}
+					}
+				},
+				{
+					"name": "2. Ingest Revenue Metrics",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"metric_type\": \"revenue\",\n    \"name\": \"daily_revenue\",\n    \"value\": 2500000,\n    \"unit\": \"COP\",\n    \"tags\": {\n        \"source\": \"orders\",\n        \"period\": \"daily\",\n        \"region\": \"bogota\"\n    },\n    \"source_service\": \"order-service\",\n    \"source_entity_type\": \"order\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/analytics/metrics",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "analytics", "metrics"]
+						}
+					}
+				},
+				{
+					"name": "3. Ingest Order Count Metrics",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"metric_type\": \"orders\",\n    \"name\": \"total_orders\",\n    \"value\": 25,\n    \"unit\": \"count\",\n    \"tags\": {\n        \"source\": \"order_service\",\n        \"period\": \"daily\",\n        \"status\": \"completed\"\n    },\n    \"source_service\": \"order-service\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/analytics/metrics",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "analytics", "metrics"]
+						}
+					}
+				},
+				{
+					"name": "4. Ingest Customer Metrics",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"metric_type\": \"customers\",\n    \"name\": \"active_customers\",\n    \"value\": 12,\n    \"unit\": \"count\",\n    \"tags\": {\n        \"source\": \"customer_service\",\n        \"period\": \"daily\",\n        \"type\": \"active\"\n    },\n    \"source_service\": \"customer-service\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/analytics/metrics",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "analytics", "metrics"]
+						}
+					}
+				},
+				{
+					"name": "5. Get Dashboard Overview",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/analytics/dashboard?days=30",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "analytics", "dashboard"],
+							"query": [
+								{
+									"key": "days",
+									"value": "30"
+								}
+							]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "admin_username",
+			"value": "admin",
+			"type": "string"
+		},
+		{
+			"key": "admin_password",
+			"value": "AdminPassword123",
+			"type": "string"
+		},
+		{
+			"key": "test_customer_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "test_product_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "test_order_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "test_pickup_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "test_return_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "credit_application_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "credit_account_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

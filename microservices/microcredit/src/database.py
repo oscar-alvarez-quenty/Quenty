@@ -2,11 +2,15 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from .models import Base
 import structlog
+import os
 
 logger = structlog.get_logger()
 
-# Database configuration
-SQLALCHEMY_DATABASE_URL = "postgresql+asyncpg://microcredit:microcredit_pass@microcredit-db:5432/microcredit_db"
+# Database configuration - use environment variable or fallback
+SQLALCHEMY_DATABASE_URL = os.getenv(
+    "DATABASE_URL", 
+    "postgresql+asyncpg://credit:credit_pass@microcredit-db:5432/microcredit_db"
+)
 
 # Create async engine
 engine = create_async_engine(
