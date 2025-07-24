@@ -23,13 +23,14 @@ scrape_configs:
           expressions:
             output: log
             stream: stream
+            time: time
             attrs:
       - json:
           expressions:
             tag:
           source: attrs
       - regex:
-          expression: (?P<container_name>(?:[^|]*))\|
+          expression: (?P<container_name>[^|]+)
           source: tag
       - timestamp:
           format: RFC3339Nano
@@ -54,6 +55,7 @@ scrape_configs:
           expressions:
             output: log
             stream: stream
+            time: time
             attrs:
       - json:
           expressions:
@@ -66,13 +68,15 @@ scrape_configs:
           selector: '{job="api-gateway"}'
           stages:
             - regex:
-                expression: '(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) (?P<level>\w+) (?P<message>.*)'
+                expression: '(?P<level>INFO|DEBUG|WARNING|ERROR|CRITICAL):\s+(?P<client_info>[^\s]+)\s+-\s+"(?P<method>\w+)\s+(?P<path>[^"]+)"\s+(?P<status>\d+)?\s*(?P<message>.*)'
                 source: output
             - labels:
                 level:
+                method:
+                status:
             - timestamp:
-                format: '2006-01-02 15:04:05'
-                source: timestamp
+                format: RFC3339Nano
+                source: time
 
   # Quenty Microservices logs
   - job_name: microservices
@@ -87,26 +91,35 @@ scrape_configs:
           expressions:
             output: log
             stream: stream
+            time: time
             attrs:
       - json:
           expressions:
             tag:
           source: attrs
+      # Extract container ID from file path
       - regex:
-          expression: quenty-(?P<service_name>[^-]+)-service
-          source: tag
+          expression: '/var/lib/docker/containers/(?P<container_id>[^/]+)/'
+          source: filename
       - match:
           selector: '{job="microservices"}'
           stages:
+            # Extract log level and service logger from structured logs
             - regex:
-                expression: '(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) (?P<level>\w+) (?P<message>.*)'
+                expression: '(?P<level>INFO|DEBUG|WARNING|ERROR|CRITICAL):\s*(?P<service_logger>[^:]+):\s*(?P<message>.*)'
                 source: output
+            # Map container ID to service name (using hasPrefix since IDs are truncated)
+            - template:
+                source: service_name
+                template: '{{ if eq .service_logger "customer-service" }}customer{{ else if eq .service_logger "auth-service" }}auth{{ else if eq .service_logger "order-service" }}order{{ else if eq .service_logger "pickup-service" }}pickup{{ else if eq .service_logger "international-shipping-service" }}intl-shipping{{ else if eq .service_logger "microcredit-service" }}microcredit{{ else if eq .service_logger "analytics-service" }}analytics{{ else if eq .service_logger "reverse-logistics-service" }}reverse-logistics{{ else if eq .service_logger "franchise-service" }}franchise{{ else if contains .service_logger "api-gateway" }}api-gateway{{ else if hasPrefix .container_id "ec23b7b9e339" }}customer{{ else if hasPrefix .container_id "b0f8a7159bf2" }}auth{{ else if hasPrefix .container_id "71a7cd481bc7" }}order{{ else if hasPrefix .container_id "5ff190900889" }}pickup{{ else if hasPrefix .container_id "7db50476b684" }}intl-shipping{{ else if hasPrefix .container_id "0bf2e819ad1d" }}microcredit{{ else if hasPrefix .container_id "cad9d7a14cca" }}analytics{{ else if hasPrefix .container_id "dd4b8fdcfa61" }}reverse-logistics{{ else if hasPrefix .container_id "ebf9e51e7c09" }}franchise{{ else if hasPrefix .container_id "a5d9e5bdca33" }}api-gateway{{ else }}unknown{{ end }}'
             - labels:
                 service_name:
                 level:
+                service_logger:
+                container_id:
             - timestamp:
-                format: '2006-01-02 15:04:05'
-                source: timestamp
+                format: RFC3339Nano
+                source: time
 
   # PostgreSQL database logs
   - job_name: postgres

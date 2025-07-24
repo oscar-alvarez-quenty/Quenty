@@ -15,9 +15,64 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 3,
+  "id": null,
   "links": [],
   "panels": [
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1000
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.0.0",
+      "targets": [
+        {
+          "expr": "rabbitmq_queue_messages",
+          "legendFormat": "{{queue}}",
+          "refId": "A"
+        }
+      ],
+      "title": "RabbitMQ Queue Depth",
+      "type": "stat"
+    },
     {
       "datasource": "Prometheus",
       "fieldConfig": {
@@ -67,16 +122,17 @@
               }
             ]
           },
-          "unit": "percent"
-        }
+          "unit": "bytes"
+        },
+        "overrides": []
       },
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 0,
+        "x": 12,
         "y": 0
       },
-      "id": 1,
+      "id": 2,
       "options": {
         "legend": {
           "calcs": [],
@@ -89,13 +145,97 @@
       },
       "targets": [
         {
-          "expr": "rate(process_cpu_seconds_total{job=\"prometheus\"}[5m]) * 100",
-          "interval": "",
-          "legendFormat": "Prometheus CPU Usage",
+          "expr": "rabbitmq_process_resident_memory_bytes",
+          "legendFormat": "RabbitMQ Memory",
           "refId": "A"
         }
       ],
-      "title": "Prometheus CPU Usage",
+      "title": "RabbitMQ Memory Usage",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "expr": "rabbitmq_connections",
+          "legendFormat": "Active Connections",
+          "refId": "A"
+        },
+        {
+          "expr": "rabbitmq_channels",
+          "legendFormat": "Active Channels",
+          "refId": "B"
+        }
+      ],
+      "title": "RabbitMQ Connections & Channels",
       "type": "timeseries"
     },
     {
@@ -148,15 +288,16 @@
             ]
           },
           "unit": "bytes"
-        }
+        },
+        "overrides": []
       },
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 0
+        "y": 8
       },
-      "id": 2,
+      "id": 4,
       "options": {
         "legend": {
           "calcs": [],
@@ -170,7 +311,6 @@
       "targets": [
         {
           "expr": "process_resident_memory_bytes{job=\"prometheus\"}",
-          "interval": "",
           "legendFormat": "Prometheus Memory",
           "refId": "A"
         }
@@ -228,167 +368,8 @@
             ]
           },
           "unit": "bytes"
-        }
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 8
-      },
-      "id": 3,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom"
         },
-        "tooltip": {
-          "mode": "single"
-        }
-      },
-      "targets": [
-        {
-          "expr": "rabbitmq_process_resident_memory_bytes",
-          "interval": "",
-          "legendFormat": "RabbitMQ Memory Used",
-          "refId": "A"
-        }
-      ],
-      "title": "RabbitMQ Memory Usage",
-      "type": "timeseries"
-    },
-    {
-      "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "vis": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "none"
-        }
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 8
-      },
-      "id": 4,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single"
-        }
-      },
-      "targets": [
-        {
-          "expr": "rabbitmq_queue_messages",
-          "interval": "",
-          "legendFormat": "{{queue}} messages",
-          "refId": "A"
-        }
-      ],
-      "title": "RabbitMQ Queue Depths",
-      "type": "timeseries"
-    },
-    {
-      "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "vis": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "none"
-        }
+        "overrides": []
       },
       "gridPos": {
         "h": 8,
@@ -409,13 +390,17 @@
       },
       "targets": [
         {
-          "expr": "rabbitmq_connections",
-          "interval": "",
-          "legendFormat": "RabbitMQ Connections",
+          "expr": "prometheus_tsdb_storage_blocks_bytes",
+          "legendFormat": "TSDB Storage Size",
           "refId": "A"
+        },
+        {
+          "expr": "prometheus_tsdb_wal_storage_size_bytes",
+          "legendFormat": "WAL Storage Size",
+          "refId": "B"
         }
       ],
-      "title": "RabbitMQ Connections",
+      "title": "Prometheus Storage Usage",
       "type": "timeseries"
     },
     {
@@ -467,8 +452,9 @@
               }
             ]
           },
-          "unit": "Bps"
-        }
+          "unit": "short"
+        },
+        "overrides": []
       },
       "gridPos": {
         "h": 8,
@@ -489,19 +475,17 @@
       },
       "targets": [
         {
-          "expr": "rate(rabbitmq_connection_incoming_bytes_total[5m])",
-          "interval": "",
-          "legendFormat": "RabbitMQ Incoming",
+          "expr": "prometheus_tsdb_head_series",
+          "legendFormat": "Active Series",
           "refId": "A"
         },
         {
-          "expr": "rate(rabbitmq_connection_outgoing_bytes_total[5m])",
-          "interval": "",
-          "legendFormat": "RabbitMQ Outgoing",
+          "expr": "prometheus_engine_queries",
+          "legendFormat": "Active Queries",
           "refId": "B"
         }
       ],
-      "title": "RabbitMQ Network I/O",
+      "title": "Prometheus Metrics & Queries",
       "type": "timeseries"
     }
   ],
@@ -511,7 +495,7 @@
   "tags": [
     "quenty",
     "infrastructure",
-    "system"
+    "working"
   ],
   "templating": {
     "list": []
@@ -522,7 +506,7 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "Quenty Infrastructure Monitoring",
-  "uid": "quenty-infrastructure",
+  "title": "Quenty Infrastructure Monitoring (Working)",
+  "uid": "quenty-infrastructure-working",
   "version": 1
 }

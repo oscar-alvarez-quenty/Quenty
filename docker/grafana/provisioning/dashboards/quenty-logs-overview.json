@@ -89,8 +89,8 @@
       },
       "targets": [
         {
-          "expr": "sum(rate({job=~\".*\"}[1m])) by (job)",
-          "legendFormat": "{{job}}",
+          "expr": "sum(rate({service_name=~\".+\"}[1m])) by (service_name)",
+          "legendFormat": "{{service_name}}",
           "refId": "A"
         }
       ],
@@ -142,8 +142,8 @@
       },
       "targets": [
         {
-          "expr": "sum(count_over_time({job=~\".*\"}[5m])) by (job)",
-          "legendFormat": "{{job}}",
+          "expr": "sum(count_over_time({service_name=~\".+\"}[5m])) by (service_name)",
+          "legendFormat": "{{service_name}}",
           "refId": "A"
         }
       ],
@@ -273,7 +273,7 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "{job=~\".*\"} |= \"\"",
+          "expr": "{service_name=~\".+\"}",
           "legendFormat": "",
           "refId": "A"
         }

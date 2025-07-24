@@ -15,7 +15,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 3,
+  "id": null,
   "links": [],
   "panels": [
     {
@@ -23,80 +23,58 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "vis": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
+            "mode": "thresholds"
           },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "red",
                 "value": null
               },
               {
-                "color": "red",
-                "value": 80
+                "color": "green",
+                "value": 1
               }
             ]
           },
-          "unit": "percent"
-        }
+          "unit": "none"
+        },
+        "overrides": []
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
+        "w": 24,
         "x": 0,
         "y": 0
       },
       "id": 1,
       "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom"
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
         },
-        "tooltip": {
-          "mode": "single"
-        }
+        "textMode": "auto"
       },
+      "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "rate(process_cpu_seconds_total{job=\"prometheus\"}[5m]) * 100",
+          "expr": "up{job=~\".*-service\"}",
           "interval": "",
-          "legendFormat": "Prometheus CPU Usage",
+          "legendFormat": "{{job}}",
           "refId": "A"
         }
       ],
-      "title": "Prometheus CPU Usage",
-      "type": "timeseries"
+      "title": "Service Health Status",
+      "type": "stat"
     },
     {
       "datasource": "Prometheus",
@@ -147,14 +125,15 @@
               }
             ]
           },
-          "unit": "bytes"
-        }
+          "unit": "reqps"
+        },
+        "overrides": []
       },
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 12,
-        "y": 0
+        "x": 0,
+        "y": 8
       },
       "id": 2,
       "options": {
@@ -167,15 +146,16 @@
           "mode": "single"
         }
       },
+      "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "process_resident_memory_bytes{job=\"prometheus\"}",
+          "expr": "rate(auth_requests_total[5m])",
           "interval": "",
-          "legendFormat": "Prometheus Memory",
+          "legendFormat": "Auth Requests",
           "refId": "A"
         }
       ],
-      "title": "Prometheus Memory Usage",
+      "title": "Auth Service Request Rate",
       "type": "timeseries"
     },
     {
@@ -227,13 +207,14 @@
               }
             ]
           },
-          "unit": "bytes"
-        }
+          "unit": "s"
+        },
+        "overrides": []
       },
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 0,
+        "x": 12,
         "y": 8
       },
       "id": 3,
@@ -247,51 +228,32 @@
           "mode": "single"
         }
       },
+      "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "rabbitmq_process_resident_memory_bytes",
+          "expr": "histogram_quantile(0.95, rate(auth_request_duration_seconds_bucket[5m]))",
           "interval": "",
-          "legendFormat": "RabbitMQ Memory Used",
+          "legendFormat": "95th percentile",
           "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.50, rate(auth_request_duration_seconds_bucket[5m]))",
+          "interval": "",
+          "legendFormat": "50th percentile",
+          "refId": "B"
         }
       ],
-      "title": "RabbitMQ Memory Usage",
+      "title": "Auth Service Response Time",
       "type": "timeseries"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": "Loki",
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
           "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "vis": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
+            "displayMode": "list",
+            "filterable": true,
+            "inspect": false
           },
           "mappings": [],
           "thresholds": {
@@ -306,40 +268,64 @@
                 "value": 80
               }
             ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Time"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
+              }
+            ]
           },
-          "unit": "none"
-        }
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Line"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 800
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 8
+        "w": 24,
+        "x": 0,
+        "y": 16
       },
       "id": 4,
       "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single"
-        }
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Time"
+          }
+        ]
       },
+      "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "rabbitmq_queue_messages",
-          "interval": "",
-          "legendFormat": "{{queue}} messages",
+          "expr": "{service_name=~\".+\"} |~ \"\"",
+          "legendFormat": "",
           "refId": "A"
         }
       ],
-      "title": "RabbitMQ Queue Depths",
-      "type": "timeseries"
+      "title": "Recent Service Logs",
+      "type": "table"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": "Loki",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -387,121 +373,36 @@
               }
             ]
           },
-          "unit": "none"
-        }
+          "unit": "short"
+        },
+        "overrides": []
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
+        "w": 24,
         "x": 0,
-        "y": 16
+        "y": 24
       },
       "id": 5,
       "options": {
         "legend": {
           "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom"
+          "displayMode": "table",
+          "placement": "right"
         },
         "tooltip": {
           "mode": "single"
         }
       },
+      "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "rabbitmq_connections",
-          "interval": "",
-          "legendFormat": "RabbitMQ Connections",
+          "expr": "sum by (service_name) (count_over_time({service_name=~\".+\"}[5m]))",
+          "legendFormat": "{{service_name}}",
           "refId": "A"
         }
       ],
-      "title": "RabbitMQ Connections",
-      "type": "timeseries"
-    },
-    {
-      "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "vis": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "Bps"
-        }
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 16
-      },
-      "id": 6,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single"
-        }
-      },
-      "targets": [
-        {
-          "expr": "rate(rabbitmq_connection_incoming_bytes_total[5m])",
-          "interval": "",
-          "legendFormat": "RabbitMQ Incoming",
-          "refId": "A"
-        },
-        {
-          "expr": "rate(rabbitmq_connection_outgoing_bytes_total[5m])",
-          "interval": "",
-          "legendFormat": "RabbitMQ Outgoing",
-          "refId": "B"
-        }
-      ],
-      "title": "RabbitMQ Network I/O",
+      "title": "Log Volume by Service (5min rate)",
       "type": "timeseries"
     }
   ],
@@ -510,8 +411,8 @@
   "style": "dark",
   "tags": [
     "quenty",
-    "infrastructure",
-    "system"
+    "overview",
+    "working"
   ],
   "templating": {
     "list": []
@@ -522,7 +423,7 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "Quenty Infrastructure Monitoring",
-  "uid": "quenty-infrastructure",
+  "title": "Quenty Working Overview",
+  "uid": "quenty-working-overview",
   "version": 1
 }

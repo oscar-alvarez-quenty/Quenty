@@ -119,7 +119,7 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "{job=\"microservices\", service_name=~\".*($service).*\"} |~ \"$search_text\"",
+          "expr": "{service_name=~\".+($service).+|^($service)$\"} |~ \"$search_text\"",
           "legendFormat": "",
           "refId": "A"
         }
@@ -218,7 +218,7 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "sum by (service_name) (count_over_time({job=\"microservices\", service_name=~\".*($service).*\"} |~ \"$search_text\" [1m]))",
+          "expr": "sum by (service_name) (count_over_time({service_name=~\".+($service).+|^($service)$\"} |~ \"$search_text\" [1m]))",
           "legendFormat": "{{service_name}}",
           "refId": "A"
         }
@@ -309,7 +309,7 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "sum by (level) (count_over_time({job=\"microservices\", service_name=~\".*($service).*\"} |~ \"$search_text\" [$__range]))",
+          "expr": "sum by (level) (count_over_time({service_name=~\".+($service).+|^($service)$\"} |~ \"$search_text\" [$__range]))",
           "legendFormat": "{{level}}",
           "refId": "A"
         }
@@ -418,7 +418,7 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "{job=\"microservices\", service_name=~\".*($service).*\", level=~\"(error|warning)\"} |~ \"$search_text\"",
+          "expr": "{service_name=~\".+($service).+|^($service)$\", level=~\"(ERROR|WARNING)\"} |~ \"$search_text\"",
           "legendFormat": "",
           "refId": "A"
         }
