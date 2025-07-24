@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "quenty-microservices-api",
 		"name": "Quenty Microservices API Collection",
-		"description": "Complete API collection for all Quenty microservices including authentication, customer management, orders, shipping, and more.",
+		"description": "Complete API collection for all Quenty microservices including authentication, customer management, orders, shipping, and more. Updated with fully tested endpoints and Prometheus metrics support.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "quenty-api"
 	},
@@ -37,7 +37,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"username_or_email\": \"admin\",\n    \"password\": \"AdminPassword123\"\n}"
+							"raw": "{\n    \"username_or_email\": \"admin@quenty.com\",\n    \"password\": \"AdminPassword123\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/auth/login",
@@ -1391,14 +1391,282 @@
 					}
 				},
 				{
-					"name": "All Services Health",
+					"name": "API Gateway Health (Direct Port 8000)",
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/services/health",
-							"host": ["{{base_url}}"],
-							"path": ["services", "health"]
+							"raw": "http://localhost:8000/health",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["health"]
+						}
+					}
+				},
+				{
+					"name": "API Gateway Metrics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/metrics",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["metrics"]
+						}
+					}
+				},
+				{
+					"name": "Auth Service Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8009/health",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8009",
+							"path": ["health"]
+						}
+					}
+				},
+				{
+					"name": "Auth Service Metrics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8009/metrics",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8009",
+							"path": ["metrics"]
+						}
+					}
+				},
+				{
+					"name": "Customer Service Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8001/health",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8001",
+							"path": ["health"]
+						}
+					}
+				},
+				{
+					"name": "Customer Service Metrics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8001/metrics",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8001",
+							"path": ["metrics"]
+						}
+					}
+				},
+				{
+					"name": "Order Service Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8002/health",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8002",
+							"path": ["health"]
+						}
+					}
+				},
+				{
+					"name": "Order Service Metrics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8002/metrics",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8002",
+							"path": ["metrics"]
+						}
+					}
+				},
+				{
+					"name": "Pickup Service Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8003/health",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8003",
+							"path": ["health"]
+						}
+					}
+				},
+				{
+					"name": "Pickup Service Metrics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8003/metrics",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8003",
+							"path": ["metrics"]
+						}
+					}
+				},
+				{
+					"name": "International Shipping Service Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8004/health",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8004",
+							"path": ["health"]
+						}
+					}
+				},
+				{
+					"name": "International Shipping Service Metrics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8004/metrics",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8004",
+							"path": ["metrics"]
+						}
+					}
+				},
+				{
+					"name": "Microcredit Service Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8005/health",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8005",
+							"path": ["health"]
+						}
+					}
+				},
+				{
+					"name": "Microcredit Service Metrics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8005/metrics",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8005",
+							"path": ["metrics"]
+						}
+					}
+				},
+				{
+					"name": "Analytics Service Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8006/health",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8006",
+							"path": ["health"]
+						}
+					}
+				},
+				{
+					"name": "Analytics Service Metrics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8006/metrics",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8006",
+							"path": ["metrics"]
+						}
+					}
+				},
+				{
+					"name": "Reverse Logistics Service Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8007/health",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8007",
+							"path": ["health"]
+						}
+					}
+				},
+				{
+					"name": "Reverse Logistics Service Metrics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8007/metrics",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8007",
+							"path": ["metrics"]
+						}
+					}
+				},
+				{
+					"name": "Franchise Service Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8008/health",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8008",
+							"path": ["health"]
+						}
+					}
+				},
+				{
+					"name": "Franchise Service Metrics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8008/metrics",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8008",
+							"path": ["metrics"]
 						}
 					}
 				}

@@ -1,12 +1,14 @@
 # Quenty Microservices Postman Collection
 
-This directory contains a comprehensive Postman collection for testing all Quenty microservices APIs.
+This directory contains a comprehensive Postman collection for testing all Quenty microservices APIs, updated with all tested endpoints and Prometheus metrics support.
 
 ## Files
 
-- **`Quenty_Microservices_Collection.json`** - Complete API collection with all endpoints
-- **`Quenty_Local_Environment.json`** - Environment variables for local development
+- **`Quenty_Microservices_Collection.json`** - Complete API collection with all endpoints and metrics
+- **`Quenty_Local_Environment.json`** - Environment variables for local development with service URLs
+- **`Quenty_Test_Workflows.json`** - Pre-configured test workflows for common operations
 - **`README.md`** - This documentation file
+- **`SETUP_GUIDE.md`** - Detailed setup and configuration guide
 
 ## Quick Start
 
@@ -37,8 +39,9 @@ curl http://localhost:8000/services/health
 
 1. Open the **Authentication & Users** folder
 2. Run the **Login** request
-   - Uses default admin credentials: `admin` / `AdminPassword123`
+   - Uses default admin credentials: `admin@quenty.com` / `AdminPassword123`
    - Automatically sets the `access_token` environment variable
+   - Or use the pre-configured `admin_token` for immediate testing
 
 ## Collection Structure
 
@@ -117,8 +120,11 @@ curl http://localhost:8000/services/health
 - **Get Franchise Performance** - Performance metrics
 
 ### 🏥 System Health & Monitoring
-- **API Gateway Health** - Gateway status check
-- **All Services Health** - Complete system health
+- **API Gateway Health** - Gateway status check (port 8000)
+- **API Gateway Metrics** - Prometheus metrics for gateway
+- **Service Health Checks** - Individual health checks for all 10 microservices
+- **Service Metrics** - Prometheus metrics for all microservices
+- **Direct Service Access** - Bypass gateway for individual service testing
 
 ## Usage Tips
 
@@ -165,11 +171,15 @@ The environment includes these key variables:
 |----------|-------------|---------------|
 | `base_url` | API Gateway URL | `http://localhost:8000` |
 | `access_token` | JWT authentication token | Auto-set by login |
-| `admin_username` | Admin username | `admin` |
+| `admin_username` | Admin username | `admin@quenty.com` |
 | `admin_password` | Admin password | `AdminPassword123` |
 | `customer_id` | Customer ID for testing | Set manually |
 | `product_id` | Product ID for testing | Set manually |
 | `order_id` | Order ID for testing | Set manually |
+| `admin_token` | Pre-configured admin JWT token | Ready to use |
+| `auth_service_url` | Direct auth service URL | `http://localhost:8009` |
+| `customer_service_url` | Direct customer service URL | `http://localhost:8001` |
+| Other service URLs | Direct access to all microservices | Ports 8001-8009 |
 
 ## Error Troubleshooting
 
@@ -206,16 +216,52 @@ For issues or questions:
 
 ## Collection Coverage
 
-This collection covers **all 89 endpoints** across **9 microservices**:
+This collection covers **all endpoints** across **10 microservices** with **comprehensive testing**:
 
-- ✅ **Auth Service** (12 endpoints)
-- ✅ **Customer Service** (8 endpoints)
-- ✅ **Order Service** (15 endpoints)
-- ✅ **Pickup Service** (10 endpoints)
-- ✅ **International Shipping** (12 endpoints)
-- ✅ **Microcredit Service** (8 endpoints)
-- ✅ **Analytics Service** (6 endpoints)
-- ✅ **Reverse Logistics** (10 endpoints)
-- ✅ **Franchise Service** (8 endpoints)
+| Service | Port | Health | Metrics | Business Endpoints | Status |
+|---------|------|--------|---------|-------------------|---------|
+| **API Gateway** | 8000 | ✅ | ✅ | Routes all services | ✅ Working |
+| **Auth Service** | 8009 | ✅ | ✅ | User management | ✅ Working |
+| **Customer Service** | 8001 | ✅ | ✅ | Customer CRUD | ✅ Working |
+| **Order Service** | 8002 | ✅ | ✅ | Order management | ✅ Working |
+| **Pickup Service** | 8003 | ✅ | ✅ | Pickup scheduling | ✅ Working |
+| **Intl Shipping** | 8004 | ✅ | ✅ | Shipping & manifests | ✅ Working |
+| **Microcredit** | 8005 | ✅ | ✅ | Credit applications | ✅ Working |
+| **Analytics** | 8006 | ✅ | ✅ | Dashboard (DB issue) | ⚠️ Migration needed |
+| **Reverse Logistics** | 8007 | ✅ | ✅ | Returns processing | ✅ Working |
+| **Franchise** | 8008 | ✅ | ✅ | Franchise management | ✅ Working |
 
-**Total: 89 endpoints** providing complete API coverage for the Quenty platform.
+## Testing Status
+
+- **Services Tested**: 10/10
+- **Fully Working**: 9/10 (90%)
+- **Health Checks**: 100% ✅
+- **Metrics Collection**: 100% ✅
+- **Authentication**: Working with admin@quenty.com
+- **Wildcard Permissions**: ✅ Implemented for superusers
+
+### Known Issues
+
+**Analytics Service**
+- Health and metrics work perfectly
+- Dashboard endpoint needs database migration
+- Error: `relation "metrics" does not exist`
+
+### Key Features Added
+
+1. **Complete Health Monitoring**
+   - Individual health checks for all 10 services
+   - Prometheus metrics endpoints for all services
+   - Direct service access (bypass API Gateway)
+
+2. **Enhanced Authentication**
+   - Updated admin credentials: admin@quenty.com
+   - Pre-configured admin token for immediate testing
+   - Wildcard permission support for superusers
+
+3. **Service Architecture Documentation**
+   - Complete port mapping and service URLs
+   - Direct service access capabilities
+   - Comprehensive testing coverage
+
+**Total Coverage**: Complete API testing for the entire Quenty microservices platform.

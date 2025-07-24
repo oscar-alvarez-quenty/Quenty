@@ -123,6 +123,10 @@ def require_permissions(permissions: list[str]):
         if current_user.get('is_superuser'):
             return current_user
         
+        # Check for wildcard permission
+        if '*' in user_permissions:
+            return current_user
+        
         # Check if user has required permissions
         if not required_permissions.issubset(user_permissions):
             missing_perms = required_permissions - user_permissions

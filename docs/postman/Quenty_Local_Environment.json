@@ -22,7 +22,7 @@
 		},
 		{
 			"key": "admin_username",
-			"value": "admin",
+			"value": "admin@quenty.com",
 			"type": "default",
 			"enabled": true
 		},
@@ -114,6 +114,66 @@
 			"key": "tracking_number",
 			"value": "",
 			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "auth_service_url",
+			"value": "http://localhost:8009",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "customer_service_url",
+			"value": "http://localhost:8001",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "order_service_url",
+			"value": "http://localhost:8002",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "pickup_service_url",
+			"value": "http://localhost:8003",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "intl_shipping_service_url",
+			"value": "http://localhost:8004",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "microcredit_service_url",
+			"value": "http://localhost:8005",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "analytics_service_url",
+			"value": "http://localhost:8006",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "reverse_logistics_service_url",
+			"value": "http://localhost:8007",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "franchise_service_url",
+			"value": "http://localhost:8008",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "admin_token",
+			"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJ1c2VybmFtZSI6ImFkbWluIiwiZW1haWwiOiJhZG1pbkBxdWVudHkuY29tIiwicm9sZSI6InZpZXdlciIsImNvbXBhbnlfaWQiOm51bGwsInBlcm1pc3Npb25zIjpbIioiXSwiaXNfc3VwZXJ1c2VyIjp0cnVlLCJleHAiOjE3MzI0MTY2NTZ9.EhEH_Q9EBpNMEP5_wgC_ey8Q5iZLUWUhHl5zdR90LNE",
+			"type": "secret",
 			"enabled": true
 		}
 	],
