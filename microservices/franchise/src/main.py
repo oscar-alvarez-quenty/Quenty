@@ -20,6 +20,9 @@ except ImportError:
     # Fallback if logging_config is not available
     LOGGING_MESSAGES = ERROR_MESSAGES = INFO_MESSAGES = DEBUG_MESSAGES = WARNING_MESSAGES = {}
 
+from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+from starlette.responses import Response
+import time
 from .database import get_db, init_db, close_db
 from .models import (
     Franchise, FranchiseContract, Territory, FranchisePayment, 
@@ -87,6 +90,22 @@ app = FastAPI(
     version="2.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
+)
+# Prometheus metrics
+franchise_service_operations_total = Counter(
+    'franchise_service_operations_total',
+    'Total number of franchise-service operations',
+    ['operation', 'status']
+)
+franchise_service_request_duration = Histogram(
+    'franchise_service_request_duration_seconds',
+    'Duration of franchise-service requests in seconds',
+    ['method', 'endpoint']
+)
+http_requests_total = Counter(
+    'http_requests_total',
+    'Total number of HTTP requests',
+    ['service', 'method', 'endpoint', 'status']
 )
 
 # Configure CORS
@@ -205,6 +224,11 @@ async def health_check():
             "auth_service": "healthy"
         }
     )
+
+@app.get("/metrics")
+async def metrics():
+    """Prometheus metrics endpoint"""
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 # Franchise management endpoints
 @app.post("/api/v1/franchises", response_model=FranchiseResponse)

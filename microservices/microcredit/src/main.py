@@ -17,6 +17,9 @@ from enum import Enum
 import uuid
 import math
 
+from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+from starlette.responses import Response
+import time
 from .models import (
     CreditApplication, CreditAccount, CreditPayment, CreditDisbursement,
     CreditDocument, CreditScore, CreditPolicy, CreditLimit, Base,
@@ -76,6 +79,22 @@ app = FastAPI(
     description="Microservice for microcredit and financing management",
     version="2.0.0"
 )
+# Prometheus metrics
+microcredit_service_operations_total = Counter(
+    'microcredit_service_operations_total',
+    'Total number of microcredit-service operations',
+    ['operation', 'status']
+)
+microcredit_service_request_duration = Histogram(
+    'microcredit_service_request_duration_seconds',
+    'Duration of microcredit-service requests in seconds',
+    ['method', 'endpoint']
+)
+http_requests_total = Counter(
+    'http_requests_total',
+    'Total number of HTTP requests',
+    ['service', 'method', 'endpoint', 'status']
+)
 
 # Auth dependency
 async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
@@ -106,6 +125,10 @@ def require_permissions(permissions: list[str]):
         
         # Superusers have all permissions
         if current_user.get('is_superuser'):
+            return current_user
+        
+        # Check for wildcard permission
+        if '*' in user_permissions:
             return current_user
         
         # Check if user has required permissions
@@ -266,6 +289,10 @@ class CreditScoreResponse(BaseModel):
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "service": settings.service_name}
+@app.get("/metrics")
+async def get_metrics():
+    """Prometheus metrics endpoint"""
+    return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 # Credit Application endpoints
 @app.post("/api/v1/applications", response_model=CreditApplicationResponse)

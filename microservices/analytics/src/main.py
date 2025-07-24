@@ -13,6 +13,9 @@ import logging
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 from enum import Enum
+from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+from starlette.responses import Response
+import time
 
 from .database import get_db, init_db, close_db
 from .models import Metric, Dashboard, Report, Alert, AnalyticsQuery, MetricType, ReportStatus
@@ -58,6 +61,23 @@ app = FastAPI(
     version="2.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
+)
+
+# Prometheus metrics
+analytics_operations_total = Counter(
+    'analytics_operations_total',
+    'Total number of analytics operations',
+    ['operation', 'status']
+)
+analytics_request_duration = Histogram(
+    'analytics_request_duration_seconds',
+    'Duration of analytics requests in seconds',
+    ['method', 'endpoint']
+)
+http_requests_total = Counter(
+    'http_requests_total',
+    'Total number of HTTP requests',
+    ['service', 'method', 'endpoint', 'status']
 )
 
 # Configure CORS
@@ -227,6 +247,11 @@ async def health_check():
             "auth_service": "healthy"
         }
     )
+
+@app.get("/metrics")
+async def get_metrics():
+    """Prometheus metrics endpoint"""
+    return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 @app.get("/api/v1/analytics/dashboard")
 async def get_dashboard_metrics(

@@ -14,6 +14,9 @@ from datetime import datetime, date, timedelta
 from enum import Enum
 import uuid
 
+from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+from starlette.responses import Response
+import time
 from .models import Manifest, ManifestItem, ShippingRate, Country, ShippingCarrier, Base, ManifestStatus, ShippingZone
 from .database import get_db, create_tables, engine
 
@@ -68,6 +71,22 @@ app = FastAPI(
     description="Microservice for international shipping and manifest management",
     version="2.0.0"
 )
+# Prometheus metrics
+intl_shipping_service_operations_total = Counter(
+    'intl_shipping_service_operations_total',
+    'Total number of intl-shipping-service operations',
+    ['operation', 'status']
+)
+intl_shipping_service_request_duration = Histogram(
+    'intl_shipping_service_request_duration_seconds',
+    'Duration of intl-shipping-service requests in seconds',
+    ['method', 'endpoint']
+)
+http_requests_total = Counter(
+    'http_requests_total',
+    'Total number of HTTP requests',
+    ['service', 'method', 'endpoint', 'status']
+)
 
 # Auth dependency
 async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
@@ -98,6 +117,10 @@ def require_permissions(permissions: list[str]):
         
         # Superusers have all permissions
         if current_user.get('is_superuser'):
+            return current_user
+        
+        # Check for wildcard permission
+        if '*' in user_permissions:
             return current_user
         
         # Check if user has required permissions
@@ -188,6 +211,10 @@ class CarrierCreate(BaseModel):
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "service": settings.service_name}
+@app.get("/metrics")
+async def get_metrics():
+    """Prometheus metrics endpoint"""
+    return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 # Manifest endpoints
 @app.get("/api/v1/manifests", response_model=Dict[str, Any])

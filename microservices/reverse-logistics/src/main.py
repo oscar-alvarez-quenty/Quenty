@@ -20,6 +20,9 @@ except ImportError:
     # Fallback if logging_config is not available
     LOGGING_MESSAGES = ERROR_MESSAGES = INFO_MESSAGES = DEBUG_MESSAGES = WARNING_MESSAGES = {}
 
+from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+from starlette.responses import Response
+import time
 from .database import get_db, init_db, close_db
 from .models import (
     Return, ReturnItem, InspectionReport, ReturnStatusHistory, DisposalRecord, 
@@ -86,6 +89,22 @@ app = FastAPI(
     version="2.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
+)
+# Prometheus metrics
+reverse_logistics_service_operations_total = Counter(
+    'reverse_logistics_service_operations_total',
+    'Total number of reverse-logistics-service operations',
+    ['operation', 'status']
+)
+reverse_logistics_service_request_duration = Histogram(
+    'reverse_logistics_service_request_duration_seconds',
+    'Duration of reverse-logistics-service requests in seconds',
+    ['method', 'endpoint']
+)
+http_requests_total = Counter(
+    'http_requests_total',
+    'Total number of HTTP requests',
+    ['service', 'method', 'endpoint', 'status']
 )
 
 # Configure CORS
@@ -202,6 +221,11 @@ async def health_check():
             "auth_service": "healthy"
         }
     )
+
+@app.get("/metrics")
+async def metrics():
+    """Prometheus metrics endpoint"""
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 @app.post("/api/v1/returns", response_model=ReturnResponse)
 async def create_return_request(

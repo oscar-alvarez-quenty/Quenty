@@ -88,7 +88,7 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "{job=\"microservices\", logger=~\".*($service).*\", level=~\"($log_level)\"} |~ \"$search_text\" |~ \"($message_code)\"",
+          "expr": "{service_name=~\".+($service).+|^($service)$\"} |~ \"$search_text\" |~ \"($message_code)\"",
           "legendFormat": "",
           "refId": "A"
         }
@@ -181,7 +181,7 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "{job=\"microservices\", logger=~\".*($service).*\", level=~\"($log_level)\"} |~ \"$search_text\" |~ \"($message_code)\" | json | line_format \"{{.timestamp}} [{{.level | upper}}] {{.logger}}: {{.event}}\"",
+          "expr": "{service_name=~\".+($service).+|^($service)$\"} |~ \"$search_text\" |~ \"($message_code)\"",
           "legendFormat": "",
           "refId": "A"
         }
@@ -259,7 +259,7 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "{job=\"microservices\", logger=~\".*($service).*\"} |~ \"(?i)(error|exception|failed|failure)\" | json",
+          "expr": "{service_name=~\".+($service).+|^($service)$\"} |~ \"(?i)(error|exception|failed|failure)\"",
           "legendFormat": "",
           "refId": "A"
         }
@@ -337,7 +337,7 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "{job=\"microservices\", logger=~\".*($service).*\", level=~\"($log_level)\"} |~ \"(?i)(started|initialized|registered|created|updated)\" | json",
+          "expr": "{service_name=~\".+($service).+|^($service)$\"} |~ \"(?i)(started|initialized|registered|created|updated)\"",
           "legendFormat": "",
           "refId": "A"
         }
@@ -415,7 +415,7 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "{job=\"microservices\", logger=~\".*($service).*\"} |~ \"($message_code)\" |~ \"(?i)(order|customer|payment|credit|shipment|pickup)\" | json",
+          "expr": "{service_name=~\".+($service).+|^($service)$\"} |~ \"($message_code)\" |~ \"(?i)(order|customer|payment|credit|shipment|pickup)\"",
           "legendFormat": "",
           "refId": "A"
         }
@@ -496,8 +496,8 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "sum by (logger) (count_over_time({job=\"microservices\", logger=~\".*($service).*\", level=~\"($log_level)\"}[5m]))",
-          "legendFormat": "{{logger}}",
+          "expr": "sum by (service_name) (count_over_time({service_name=~\".+($service).+|^($service)$\"}[5m]))",
+          "legendFormat": "{{service_name}}",
           "refId": "A"
         }
       ],
@@ -540,50 +540,55 @@
           {
             "selected": false,
             "text": "Auth Service",
-            "value": "auth-service"
+            "value": "auth"
           },
           {
             "selected": false,
             "text": "Customer Service",
-            "value": "customer-service"
+            "value": "customer"
           },
           {
             "selected": false,
             "text": "Order Service",
-            "value": "order-service"
+            "value": "order"
           },
           {
             "selected": false,
             "text": "Pickup Service",
-            "value": "pickup-service"
+            "value": "pickup"
           },
           {
             "selected": false,
             "text": "International Shipping",
-            "value": "international-shipping-service"
+            "value": "intl-shipping"
           },
           {
             "selected": false,
             "text": "Microcredit Service",
-            "value": "microcredit-service"
+            "value": "microcredit"
           },
           {
             "selected": false,
             "text": "Analytics Service",
-            "value": "analytics-service"
+            "value": "analytics"
           },
           {
             "selected": false,
             "text": "Reverse Logistics",
-            "value": "reverse-logistics-service"
+            "value": "reverse-logistics"
           },
           {
             "selected": false,
             "text": "Franchise Service",
-            "value": "franchise-service"
+            "value": "franchise"
+          },
+          {
+            "selected": false,
+            "text": "Unknown/Other",
+            "value": "unknown"
           }
         ],
-        "query": "api-gateway,auth-service,customer-service,order-service,pickup-service,international-shipping-service,microcredit-service,analytics-service,reverse-logistics-service,franchise-service",
+        "query": "api-gateway,auth,customer,order,pickup,intl-shipping,microcredit,analytics,reverse-logistics,franchise,unknown",
         "queryValue": "",
         "skipUrlSync": false,
         "type": "custom"

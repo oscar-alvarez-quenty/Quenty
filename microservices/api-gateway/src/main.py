@@ -10,6 +10,8 @@ from circuitbreaker import circuit
 from tenacity import retry, stop_after_attempt, wait_exponential
 import os
 import logging
+from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+from starlette.responses import Response
 try:
     from .logging_config import LOGGING_MESSAGES, ERROR_MESSAGES, INFO_MESSAGES, DEBUG_MESSAGES, WARNING_MESSAGES
 except ImportError:
@@ -59,6 +61,23 @@ app = FastAPI(
     title="Quenty API Gateway",
     description="API Gateway for Quenty Microservices",
     version="2.0.0"
+)
+
+# Prometheus metrics
+api_gateway_operations_total = Counter(
+    'api_gateway_operations_total',
+    'Total number of api-gateway operations',
+    ['operation', 'status']
+)
+api_gateway_request_duration = Histogram(
+    'api_gateway_request_duration_seconds',
+    'Duration of api-gateway requests in seconds',
+    ['method', 'endpoint']
+)
+http_requests_total = Counter(
+    'http_requests_total',
+    'Total number of HTTP requests',
+    ['service', 'method', 'endpoint', 'status']
 )
 
 app.add_middleware(
@@ -157,6 +176,10 @@ async def resilient_request(service_name: str, path: str, method: str = "GET", *
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "service": settings.service_name}
+
+@app.get("/metrics")
+async def metrics():
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 @app.get("/services/health")
 async def check_all_services():

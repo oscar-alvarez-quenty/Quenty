@@ -89,7 +89,7 @@
       },
       "targets": [
         {
-          "expr": "rate(http_requests_total{job=\"quenty-app\"}[5m])",
+          "expr": "rate(auth_requests_total[5m])",
           "interval": "",
           "legendFormat": "{{method}} {{handler}}",
           "refId": "A"
@@ -146,7 +146,7 @@
       "pluginVersion": "8.3.3",
       "targets": [
         {
-          "expr": "up{job=\"quenty-app\"}",
+          "expr": "up{job=~\".*-service\"}",
           "interval": "",
           "legendFormat": "App Status",
           "refId": "A"
@@ -227,19 +227,19 @@
       },
       "targets": [
         {
-          "expr": "histogram_quantile(0.50, rate(http_request_duration_seconds_bucket{job=\"quenty-app\"}[5m]))",
+          "expr": "histogram_quantile(0.50, rate(auth_request_duration_seconds_bucket[5m]))",
           "interval": "",
           "legendFormat": "50th percentile",
           "refId": "A"
         },
         {
-          "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=\"quenty-app\"}[5m]))",
+          "expr": "histogram_quantile(0.95, rate(auth_request_duration_seconds_bucket[5m]))",
           "interval": "",
           "legendFormat": "95th percentile",
           "refId": "B"
         },
         {
-          "expr": "histogram_quantile(0.99, rate(http_request_duration_seconds_bucket{job=\"quenty-app\"}[5m]))",
+          "expr": "histogram_quantile(0.99, rate(auth_request_duration_seconds_bucket[5m]))",
           "interval": "",
           "legendFormat": "99th percentile",
           "refId": "C"
@@ -267,6 +267,6 @@
   "timepicker": {},
   "timezone": "",
   "title": "Quenty Overview Dashboard",
-  "uid": "quenty-overview",
+  "uid": "quenty-overview-simple",
   "version": 1
 }

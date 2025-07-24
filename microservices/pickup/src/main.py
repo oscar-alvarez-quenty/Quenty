@@ -11,10 +11,13 @@ import consul
 import httpx
 import os
 import logging
-from datetime import datetime, date, time, timedelta
+from datetime import datetime, date, time as dt_time, timedelta
 from enum import Enum
 import uuid
+import time
 
+from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+from starlette.responses import Response
 from .models import (
     Pickup, PickupRoute, PickupPackage, PickupAttempt, PickupCapacity, 
     Driver, PickupZone, Base, PickupStatus, PickupType, VehicleType, RouteStatus
@@ -72,6 +75,22 @@ app = FastAPI(
     description="Microservice for package pickup scheduling and management",
     version="2.0.0"
 )
+# Prometheus metrics
+pickup_service_operations_total = Counter(
+    'pickup_service_operations_total',
+    'Total number of pickup-service operations',
+    ['operation', 'status']
+)
+pickup_service_request_duration = Histogram(
+    'pickup_service_request_duration_seconds',
+    'Duration of pickup-service requests in seconds',
+    ['method', 'endpoint']
+)
+http_requests_total = Counter(
+    'http_requests_total',
+    'Total number of HTTP requests',
+    ['service', 'method', 'endpoint', 'status']
+)
 
 # Auth dependency
 async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
@@ -102,6 +121,10 @@ def require_permissions(permissions: list[str]):
         
         # Superusers have all permissions
         if current_user.get('is_superuser'):
+            return current_user
+        
+        # Check for wildcard permission
+        if '*' in user_permissions:
             return current_user
         
         # Check if user has required permissions
@@ -142,8 +165,8 @@ async def validate_pickup_ownership(pickup_id: int, current_user: dict, db: Asyn
 class PickupRequest(BaseModel):
     pickup_type: PickupType
     pickup_date: date
-    time_window_start: time
-    time_window_end: time
+    time_window_start: dt_time
+    time_window_end: dt_time
     pickup_address: str
     pickup_latitude: Optional[float] = None
     pickup_longitude: Optional[float] = None
@@ -176,8 +199,8 @@ class PickupRequest(BaseModel):
 
 class PickupUpdate(BaseModel):
     pickup_date: Optional[date] = None
-    time_window_start: Optional[time] = None
-    time_window_end: Optional[time] = None
+    time_window_start: Optional[dt_time] = None
+    time_window_end: Optional[dt_time] = None
     pickup_address: Optional[str] = None
     contact_phone: Optional[str] = None
     package_count: Optional[int] = None
@@ -206,8 +229,8 @@ class PickupResponse(BaseModel):
     pickup_type: PickupType
     status: PickupStatus
     pickup_date: date
-    time_window_start: time
-    time_window_end: time
+    time_window_start: dt_time
+    time_window_end: dt_time
     pickup_address: str
     contact_name: str
     contact_phone: str
@@ -249,6 +272,10 @@ class RouteResponse(BaseModel):
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "service": settings.service_name}
+@app.get("/metrics")
+async def get_metrics():
+    """Prometheus metrics endpoint"""
+    return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 # Pickup endpoints
 @app.post("/api/v1/pickups", response_model=PickupResponse)
