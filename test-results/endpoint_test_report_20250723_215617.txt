@@ -1,0 +1,112 @@
+=======================================================================
+🚀 QUENTY MICROSERVICES ENDPOINT TEST REPORT
+=======================================================================
+Timestamp: Wed Jul 23 09:56:17 PM -05 2025
+Test Environment: Linux 6.8.0-64-generic
+Docker Status: Docker version 27.5.1, build 27.5.1-0ubuntu3~24.04.2
+
+🔍 Checking service availability...
+✅ international-shipping:8004 - Running
+✅ api-gateway:8000 - Running
+✅ customer-service:8001 - Running
+✅ auth-service:8009 - Running
+✅ microcredit-service:8005 - Running
+✅ order-service:8002 - Running
+✅ reverse-logistics:8007 - Running
+✅ pickup-service:8003 - Running
+✅ franchise-service:8008 - Running
+✅ analytics-service:8006 - Running
+
+🏥 TESTING HEALTH ENDPOINTS
+=======================================================================
+✅ PASS: international-shipping /health (200)
+✅ PASS: api-gateway /health (200)
+✅ PASS: customer-service /health (200)
+✅ PASS: auth-service /health (200)
+✅ PASS: microcredit-service /health (200)
+✅ PASS: order-service /health (200)
+✅ PASS: reverse-logistics /health (200)
+✅ PASS: pickup-service /health (200)
+✅ PASS: franchise-service /health (200)
+✅ PASS: analytics-service /health (200)
+
+🌐 TESTING API GATEWAY ENDPOINTS
+=======================================================================
+✅ PASS: api-gateway /docs (200)
+✅ PASS: api-gateway /openapi.json (200)
+❌ FAIL: api-gateway /api/v1/status (Expected: 200, Got: 404)
+
+🔐 TESTING AUTH SERVICE ENDPOINTS
+=======================================================================
+✅ PASS: auth-service /docs (200)
+❌ FAIL: auth-service /api/v1/register (Expected: 422, Got: 404)
+❌ FAIL: auth-service /api/v1/login (Expected: 422, Got: 404)
+✅ PASS: auth-service /api/v1/users (403)
+
+👥 TESTING CUSTOMER SERVICE ENDPOINTS
+=======================================================================
+✅ PASS: customer-service /docs (200)
+✅ PASS: customer-service /api/v1/customers (403)
+✅ PASS: customer-service /api/v1/customers/search (403)
+
+📦 TESTING ORDER SERVICE ENDPOINTS
+=======================================================================
+✅ PASS: order-service /docs (200)
+✅ PASS: order-service /api/v1/orders (403)
+✅ PASS: order-service /api/v1/orders/stats (403)
+
+🚚 TESTING PICKUP SERVICE ENDPOINTS
+=======================================================================
+✅ PASS: pickup-service /docs (200)
+✅ PASS: pickup-service /api/v1/pickups (403)
+❌ FAIL: pickup-service /api/v1/routes (Expected: 403, Got: 405)
+
+🌍 TESTING INTERNATIONAL SHIPPING ENDPOINTS
+=======================================================================
+✅ PASS: international-shipping /docs (200)
+✅ PASS: international-shipping /api/v1/manifests (403)
+✅ PASS: international-shipping /api/v1/countries (403)
+✅ PASS: international-shipping /api/v1/carriers (403)
+
+💳 TESTING MICROCREDIT SERVICE ENDPOINTS
+=======================================================================
+✅ PASS: microcredit-service /docs (200)
+✅ PASS: microcredit-service /api/v1/applications (403)
+✅ PASS: microcredit-service /api/v1/accounts (403)
+
+📊 TESTING ANALYTICS SERVICE ENDPOINTS
+=======================================================================
+✅ PASS: analytics-service /docs (200)
+✅ PASS: analytics-service /api/v1/analytics/dashboard (403)
+✅ PASS: analytics-service /api/v1/analytics/trends (403)
+
+↩️ TESTING REVERSE LOGISTICS ENDPOINTS
+=======================================================================
+✅ PASS: reverse-logistics /docs (200)
+✅ PASS: reverse-logistics /api/v1/returns (403)
+
+🏢 TESTING FRANCHISE SERVICE ENDPOINTS
+=======================================================================
+✅ PASS: franchise-service /docs (200)
+✅ PASS: franchise-service /api/v1/franchises (403)
+✅ PASS: franchise-service /api/v1/territories (403)
+
+🔍 TESTING MONITORING INFRASTRUCTURE
+=======================================================================
+✅ Grafana - Available at http://localhost:3000
+✅ Prometheus - Available at http://localhost:9090
+✅ Loki - Available at http://localhost:3100
+✅ Jaeger - Available at http://localhost:16686
+✅ Consul - Available at http://localhost:8500
+
+📋 TEST SUMMARY
+=======================================================================
+Total Tests: 41
+Passed: 37
+Failed: 4
+Success Rate: 90.24%
+
+⚠️  4 tests failed. Please check the detailed results above.
+
+📁 Report saved to: /home/jhunter/devel/QUENTY/Quenty/test-results/endpoint_test_report_20250723_215617.txt
+📄 JSON report saved to: /home/jhunter/devel/QUENTY/Quenty/test-results/endpoint_test_report_20250723_215617.json

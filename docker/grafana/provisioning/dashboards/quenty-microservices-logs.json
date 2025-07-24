@@ -88,12 +88,12 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "{job=\"microservices\"} |= \"\"",
+          "expr": "{job=\"microservices\", logger=~\".*($service).*\", level=~\"($log_level)\"} |~ \"$search_text\" |~ \"($message_code)\"",
           "legendFormat": "",
           "refId": "A"
         }
       ],
-      "title": "Auth Service Logs",
+      "title": "All Microservices Logs (Filtered)",
       "transformations": [
         {
           "id": "filterFieldsByName",
@@ -181,12 +181,12 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "{job=\"microservices\", service_name=\"customer\"} |= \"\"",
+          "expr": "{job=\"microservices\", logger=~\".*($service).*\", level=~\"($log_level)\"} |~ \"$search_text\" |~ \"($message_code)\" | json | line_format \"{{.timestamp}} [{{.level | upper}}] {{.logger}}: {{.event}}\"",
           "legendFormat": "",
           "refId": "A"
         }
       ],
-      "title": "Customer Service Logs",
+      "title": "Structured Logs (JSON Parsed)",
       "type": "table"
     },
     {
@@ -259,12 +259,12 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "{job=\"microservices\", service_name=\"order\"} |= \"\"",
+          "expr": "{job=\"microservices\", logger=~\".*($service).*\"} |~ \"(?i)(error|exception|failed|failure)\" | json",
           "legendFormat": "",
           "refId": "A"
         }
       ],
-      "title": "Order Service Logs",
+      "title": "Error & Exception Logs",
       "type": "table"
     },
     {
@@ -337,12 +337,12 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "{job=\"microservices\", service_name=\"analytics\"} |= \"\"",
+          "expr": "{job=\"microservices\", logger=~\".*($service).*\", level=~\"($log_level)\"} |~ \"(?i)(started|initialized|registered|created|updated)\" | json",
           "legendFormat": "",
           "refId": "A"
         }
       ],
-      "title": "Analytics Service Logs",
+      "title": "Service Activity & Events",
       "type": "table"
     },
     {
@@ -415,13 +415,94 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "{job=\"microservices\", service_name=\"microcredit\"} |= \"\"",
+          "expr": "{job=\"microservices\", logger=~\".*($service).*\"} |~ \"($message_code)\" |~ \"(?i)(order|customer|payment|credit|shipment|pickup)\" | json",
           "legendFormat": "",
           "refId": "A"
         }
       ],
-      "title": "Microcredit Service Logs",
+      "title": "Business Events & Transactions",
       "type": "table"
+    },
+    {
+      "datasource": "Loki",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 30
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "pluginVersion": "8.0.0",
+      "targets": [
+        {
+          "expr": "sum by (logger) (count_over_time({job=\"microservices\", logger=~\".*($service).*\", level=~\"($log_level)\"}[5m]))",
+          "legendFormat": "{{logger}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Log Volume by Service (5min rate)",
+      "type": "timeseries"
     }
   ],
   "refresh": "30s",
@@ -443,7 +524,7 @@
         "hide": 0,
         "includeAll": true,
         "label": "Service",
-        "multi": false,
+        "multi": true,
         "name": "service",
         "options": [
           {
@@ -453,41 +534,193 @@
           },
           {
             "selected": false,
-            "text": "auth",
-            "value": "auth"
+            "text": "API Gateway",
+            "value": "api-gateway"
           },
           {
             "selected": false,
-            "text": "customer",
-            "value": "customer"
+            "text": "Auth Service",
+            "value": "auth-service"
           },
           {
             "selected": false,
-            "text": "order",
-            "value": "order"
+            "text": "Customer Service",
+            "value": "customer-service"
           },
           {
             "selected": false,
-            "text": "pickup",
-            "value": "pickup"
+            "text": "Order Service",
+            "value": "order-service"
           },
           {
             "selected": false,
-            "text": "analytics",
-            "value": "analytics"
+            "text": "Pickup Service",
+            "value": "pickup-service"
           },
           {
             "selected": false,
-            "text": "microcredit",
-            "value": "microcredit"
+            "text": "International Shipping",
+            "value": "international-shipping-service"
           },
           {
             "selected": false,
-            "text": "franchise",
-            "value": "franchise"
+            "text": "Microcredit Service",
+            "value": "microcredit-service"
+          },
+          {
+            "selected": false,
+            "text": "Analytics Service",
+            "value": "analytics-service"
+          },
+          {
+            "selected": false,
+            "text": "Reverse Logistics",
+            "value": "reverse-logistics-service"
+          },
+          {
+            "selected": false,
+            "text": "Franchise Service",
+            "value": "franchise-service"
           }
         ],
-        "query": "auth,customer,order,pickup,analytics,microcredit,franchise",
+        "query": "api-gateway,auth-service,customer-service,order-service,pickup-service,international-shipping-service,microcredit-service,analytics-service,reverse-logistics-service,franchise-service",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "hide": 0,
+        "includeAll": true,
+        "label": "Log Level",
+        "multi": true,
+        "name": "log_level",
+        "options": [
+          {
+            "selected": true,
+            "text": "All",
+            "value": "$__all"
+          },
+          {
+            "selected": false,
+            "text": "ERROR",
+            "value": "error"
+          },
+          {
+            "selected": false,
+            "text": "WARNING",
+            "value": "warning"
+          },
+          {
+            "selected": false,
+            "text": "INFO",
+            "value": "info"
+          },
+          {
+            "selected": false,
+            "text": "DEBUG",
+            "value": "debug"
+          }
+        ],
+        "query": "error,warning,info,debug",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "",
+          "value": ""
+        },
+        "hide": 0,
+        "label": "Search Text",
+        "name": "search_text",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "hide": 0,
+        "includeAll": true,
+        "label": "Message Code",
+        "multi": true,
+        "name": "message_code",
+        "options": [
+          {
+            "selected": true,
+            "text": "All",
+            "value": "$__all"
+          },
+          {
+            "selected": false,
+            "text": "API Gateway (AGW_)",
+            "value": "AGW_"
+          },
+          {
+            "selected": false,
+            "text": "Auth Service (AUTH_)",
+            "value": "AUTH_"
+          },
+          {
+            "selected": false,
+            "text": "Customer (CUST_)",
+            "value": "CUST_"
+          },
+          {
+            "selected": false,
+            "text": "Order (ORD_)",
+            "value": "ORD_"
+          },
+          {
+            "selected": false,
+            "text": "Pickup (PKP_)",
+            "value": "PKP_"
+          },
+          {
+            "selected": false,
+            "text": "International (INTL_)",
+            "value": "INTL_"
+          },
+          {
+            "selected": false,
+            "text": "Microcredit (MC_)",
+            "value": "MC_"
+          },
+          {
+            "selected": false,
+            "text": "Analytics (ANL_)",
+            "value": "ANL_"
+          },
+          {
+            "selected": false,
+            "text": "Reverse Logistics (RL_)",
+            "value": "RL_"
+          },
+          {
+            "selected": false,
+            "text": "Franchise (FRN_)",
+            "value": "FRN_"
+          }
+        ],
+        "query": "AGW_,AUTH_,CUST_,ORD_,PKP_,INTL_,MC_,ANL_,RL_,FRN_",
         "queryValue": "",
         "skipUrlSync": false,
         "type": "custom"
