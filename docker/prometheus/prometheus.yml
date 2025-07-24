@@ -20,24 +20,108 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']
 
-  # FastAPI application metrics
-  - job_name: 'quenty-app'
+  # API Gateway
+  - job_name: 'api-gateway'
     static_configs:
-      - targets: ['app:8000']
+      - targets: ['api-gateway:8000']
     metrics_path: '/metrics'
-    scrape_interval: 30s
+    scrape_interval: 15s
     scrape_timeout: 10s
 
-  # PostgreSQL exporter
-  - job_name: 'postgres'
+  # Quenty Microservices
+  - job_name: 'auth-service'
     static_configs:
-      - targets: ['postgres-exporter:9187']
-    scrape_interval: 30s
+      - targets: ['auth-service:8009']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    scrape_timeout: 10s
 
-  # Redis exporter
+  - job_name: 'customer-service'
+    static_configs:
+      - targets: ['customer-service:8001']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+
+  - job_name: 'order-service'
+    static_configs:
+      - targets: ['order-service:8002']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+
+  - job_name: 'pickup-service'
+    static_configs:
+      - targets: ['pickup-service:8003']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+
+  - job_name: 'international-shipping-service'
+    static_configs:
+      - targets: ['international-shipping-service:8004']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+
+  - job_name: 'microcredit-service'
+    static_configs:
+      - targets: ['microcredit-service:8005']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+
+  - job_name: 'analytics-service'
+    static_configs:
+      - targets: ['analytics-service:8006']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+
+  - job_name: 'reverse-logistics-service'
+    static_configs:
+      - targets: ['reverse-logistics-service:8007']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+
+  - job_name: 'franchise-service'
+    static_configs:
+      - targets: ['franchise-service:8008']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+
+  # Infrastructure Services
   - job_name: 'redis'
     static_configs:
-      - targets: ['redis-exporter:9121']
+      - targets: ['redis:6379']
+    scrape_interval: 30s
+
+  - job_name: 'rabbitmq'
+    static_configs:
+      - targets: ['rabbitmq:15692']  # RabbitMQ Prometheus plugin port
+    scrape_interval: 30s
+
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:9113']
+    scrape_interval: 30s
+
+  # PostgreSQL Databases (if exporters are available)
+  - job_name: 'postgres-auth'
+    static_configs:
+      - targets: ['postgres-exporter-auth:9187']
+    scrape_interval: 30s
+
+  - job_name: 'postgres-customer'
+    static_configs:
+      - targets: ['postgres-exporter-customer:9187']
+    scrape_interval: 30s
+
+  - job_name: 'postgres-order'
+    static_configs:
+      - targets: ['postgres-exporter-order:9187']
     scrape_interval: 30s
 
   # Node exporter for system metrics
@@ -46,8 +130,11 @@ scrape_configs:
       - targets: ['node-exporter:9100']
     scrape_interval: 30s
 
-  # Nginx metrics
-  - job_name: 'nginx'
+  # Consul service discovery
+  - job_name: 'consul'
     static_configs:
-      - targets: ['nginx:9113']
+      - targets: ['consul:8500']
+    metrics_path: '/v1/agent/metrics'
+    params:
+      format: ['prometheus']
     scrape_interval: 30s

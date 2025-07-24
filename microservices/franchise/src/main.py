@@ -542,7 +542,7 @@ async def check_territory_availability(
 @app.get("/api/v1/franchises/{franchise_id}/performance")
 async def get_franchise_performance(
     franchise_id: str,
-    period_type: str = Query("monthly", regex="^(daily|weekly|monthly|quarterly|annual)$"),
+    period_type: str = Query("monthly", pattern="^(daily|weekly|monthly|quarterly|annual)$"),
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
     current_user: dict = Depends(require_permissions(["franchises:read"])),

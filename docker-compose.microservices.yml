@@ -41,6 +41,8 @@ services:
       context: ./microservices/auth-service
       dockerfile: Dockerfile
     container_name: quenty-auth-service
+    ports:
+      - "8009:8009"
     environment:
       - SERVICE_NAME=auth-service
       - DATABASE_URL=postgresql+asyncpg://auth:auth_pass@auth-db:5432/auth_db
@@ -65,6 +67,8 @@ services:
   auth-db:
     image: postgres:15-alpine
     container_name: quenty-auth-db
+    ports:
+      - "5441:5432"
     environment:
       - POSTGRES_USER=auth
       - POSTGRES_PASSWORD=auth_pass
@@ -81,6 +85,8 @@ services:
       context: ./microservices/customer
       dockerfile: Dockerfile
     container_name: quenty-customer-service
+    ports:
+      - "8001:8001"
     environment:
       - SERVICE_NAME=customer-service
       - DATABASE_URL=postgresql+asyncpg://customer:customer_pass@customer-db:5432/customer_db
@@ -97,6 +103,8 @@ services:
   customer-db:
     image: postgres:15-alpine
     container_name: quenty-customer-db
+    ports:
+      - "5433:5432"
     environment:
       - POSTGRES_USER=customer
       - POSTGRES_PASSWORD=customer_pass
@@ -113,6 +121,8 @@ services:
       context: ./microservices/order
       dockerfile: Dockerfile
     container_name: quenty-order-service
+    ports:
+      - "8002:8002"
     environment:
       - SERVICE_NAME=order-service
       - DATABASE_URL=postgresql+asyncpg://order:order_pass@order-db:5432/order_db
@@ -131,6 +141,8 @@ services:
   order-db:
     image: postgres:15-alpine
     container_name: quenty-order-db
+    ports:
+      - "5434:5432"
     environment:
       - POSTGRES_USER=order
       - POSTGRES_PASSWORD=order_pass
@@ -147,6 +159,8 @@ services:
       context: ./microservices/pickup
       dockerfile: Dockerfile
     container_name: quenty-pickup-service
+    ports:
+      - "8003:8003"
     environment:
       - SERVICE_NAME=pickup-service
       - DATABASE_URL=postgresql+asyncpg://pickup:pickup_pass@pickup-db:5432/pickup_db
@@ -164,6 +178,8 @@ services:
   pickup-db:
     image: postgres:15-alpine
     container_name: quenty-pickup-db
+    ports:
+      - "5435:5432"
     environment:
       - POSTGRES_USER=pickup
       - POSTGRES_PASSWORD=pickup_pass
@@ -180,6 +196,8 @@ services:
       context: ./microservices/international-shipping
       dockerfile: Dockerfile
     container_name: quenty-intl-shipping-service
+    ports:
+      - "8004:8004"
     environment:
       - SERVICE_NAME=international-shipping-service
       - DATABASE_URL=postgresql+asyncpg://intlship:intlship_pass@intl-shipping-db:5432/intl_shipping_db
@@ -197,6 +215,8 @@ services:
   intl-shipping-db:
     image: postgres:15-alpine
     container_name: quenty-intl-shipping-db
+    ports:
+      - "5436:5432"
     environment:
       - POSTGRES_USER=intlship
       - POSTGRES_PASSWORD=intlship_pass
@@ -213,6 +233,8 @@ services:
       context: ./microservices/microcredit
       dockerfile: Dockerfile
     container_name: quenty-microcredit-service
+    ports:
+      - "8005:8005"
     environment:
       - SERVICE_NAME=microcredit-service
       - DATABASE_URL=postgresql+asyncpg://credit:credit_pass@microcredit-db:5432/microcredit_db
@@ -230,6 +252,8 @@ services:
   microcredit-db:
     image: postgres:15-alpine
     container_name: quenty-microcredit-db
+    ports:
+      - "5437:5432"
     environment:
       - POSTGRES_USER=credit
       - POSTGRES_PASSWORD=credit_pass
@@ -246,6 +270,8 @@ services:
       context: ./microservices/analytics
       dockerfile: Dockerfile
     container_name: quenty-analytics-service
+    ports:
+      - "8006:8006"
     environment:
       - SERVICE_NAME=analytics-service
       - DATABASE_URL=postgresql+asyncpg://analytics:analytics_pass@analytics-db:5432/analytics_db
@@ -263,6 +289,8 @@ services:
   analytics-db:
     image: postgres:15-alpine
     container_name: quenty-analytics-db
+    ports:
+      - "5438:5432"
     environment:
       - POSTGRES_USER=analytics
       - POSTGRES_PASSWORD=analytics_pass
@@ -279,6 +307,8 @@ services:
       context: ./microservices/reverse-logistics
       dockerfile: Dockerfile
     container_name: quenty-reverse-logistics-service
+    ports:
+      - "8007:8007"
     environment:
       - SERVICE_NAME=reverse-logistics-service
       - DATABASE_URL=postgresql+asyncpg://reverse:reverse_pass@reverse-logistics-db:5432/reverse_logistics_db
@@ -297,6 +327,8 @@ services:
   reverse-logistics-db:
     image: postgres:15-alpine
     container_name: quenty-reverse-logistics-db
+    ports:
+      - "5439:5432"
     environment:
       - POSTGRES_USER=reverse
       - POSTGRES_PASSWORD=reverse_pass
@@ -313,6 +345,8 @@ services:
       context: ./microservices/franchise
       dockerfile: Dockerfile
     container_name: quenty-franchise-service
+    ports:
+      - "8008:8008"
     environment:
       - SERVICE_NAME=franchise-service
       - DATABASE_URL=postgresql+asyncpg://franchise:franchise_pass@franchise-db:5432/franchise_db
@@ -329,6 +363,8 @@ services:
   franchise-db:
     image: postgres:15-alpine
     container_name: quenty-franchise-db
+    ports:
+      - "5440:5432"
     environment:
       - POSTGRES_USER=franchise
       - POSTGRES_PASSWORD=franchise_pass
@@ -343,6 +379,8 @@ services:
   redis:
     image: redis:7-alpine
     container_name: quenty-redis
+    ports:
+      - "6379:6379"
     command: redis-server --appendonly yes
     volumes:
       - redis-data:/data
@@ -355,6 +393,7 @@ services:
     image: rabbitmq:3-management-alpine
     container_name: quenty-rabbitmq
     ports:
+      - "5672:5672"    # AMQP port
       - "15672:15672"  # Management UI
     environment:
       - RABBITMQ_DEFAULT_USER=quenty
@@ -423,6 +462,36 @@ services:
       - quenty-network
     restart: unless-stopped
 
+  # Log Aggregation
+  loki:
+    image: grafana/loki:latest
+    container_name: quenty-loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./docker/loki/loki-config.yml:/etc/loki/local-config.yaml
+      - loki-data:/loki
+    networks:
+      - quenty-network
+    restart: unless-stopped
+
+  # Log Collection
+  promtail:
+    image: grafana/promtail:latest
+    container_name: quenty-promtail
+    volumes:
+      - ./docker/promtail/promtail-config.yml:/etc/promtail/config.yml
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    networks:
+      - quenty-network
+    restart: unless-stopped
+
   # Load Balancer / Reverse Proxy
   nginx:
     image: nginx:alpine
@@ -457,6 +526,7 @@ volumes:
   consul-data:
   prometheus-data:
   grafana-data:
+  loki-data:
 
 networks:
   quenty-network:

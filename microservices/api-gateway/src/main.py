@@ -140,85 +140,522 @@ async def oauth_callback(provider: str, request: Request):
     params = dict(request.query_params)
     return await resilient_request("auth", f"/api/v1/auth/{provider}/callback", params=params)
 
+# User management endpoints
+@app.post("/api/v1/users")
+async def create_user(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("auth", "/api/v1/users", method="POST", json=body, headers=headers)
+
+@app.get("/api/v1/users")
+async def list_users(request: Request):
+    headers = dict(request.headers)
+    params = dict(request.query_params)
+    return await resilient_request("auth", "/api/v1/users", headers=headers, params=params)
+
+@app.get("/api/v1/users/{user_id}")
+async def get_user(user_id: str, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("auth", f"/api/v1/users/{user_id}", headers=headers)
+
+@app.put("/api/v1/users/{user_id}")
+async def update_user(user_id: str, request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("auth", f"/api/v1/users/{user_id}", method="PUT", json=body, headers=headers)
+
+@app.delete("/api/v1/users/{user_id}")
+async def delete_user(user_id: str, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("auth", f"/api/v1/users/{user_id}", method="DELETE", headers=headers)
+
 # Customer endpoints
+@app.get("/api/v1/customers")
+async def list_customers(request: Request):
+    headers = dict(request.headers)
+    params = dict(request.query_params)
+    return await resilient_request("customer", "/api/v1/customers", headers=headers, params=params)
+
 @app.get("/api/v1/customers/{customer_id}")
-async def get_customer(customer_id: str):
-    return await resilient_request("customer", f"/api/v1/customers/{customer_id}")
+async def get_customer(customer_id: str, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("customer", f"/api/v1/customers/{customer_id}", headers=headers)
+
+@app.get("/api/v1/customers/by-user/{user_id}")
+async def get_customer_by_user(user_id: str, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("customer", f"/api/v1/customers/by-user/{user_id}", headers=headers)
 
 @app.post("/api/v1/customers")
 async def create_customer(request: Request):
     body = await request.json()
-    return await resilient_request("customer", "/api/v1/customers", method="POST", json=body)
+    headers = dict(request.headers)
+    return await resilient_request("customer", "/api/v1/customers", method="POST", json=body, headers=headers)
+
+@app.put("/api/v1/customers/{customer_id}")
+async def update_customer(customer_id: str, request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("customer", f"/api/v1/customers/{customer_id}", method="PUT", json=body, headers=headers)
+
+@app.delete("/api/v1/customers/{customer_id}")
+async def delete_customer(customer_id: str, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("customer", f"/api/v1/customers/{customer_id}", method="DELETE", headers=headers)
+
+# Customer Support Tickets
+@app.get("/api/v1/customers/{customer_id}/tickets")
+async def get_customer_tickets(customer_id: str, request: Request):
+    headers = dict(request.headers)
+    params = dict(request.query_params)
+    return await resilient_request("customer", f"/api/v1/customers/{customer_id}/tickets", headers=headers, params=params)
+
+@app.post("/api/v1/customers/{customer_id}/tickets")
+async def create_customer_ticket(customer_id: str, request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("customer", f"/api/v1/customers/{customer_id}/tickets", method="POST", json=body, headers=headers)
+
+@app.get("/api/v1/tickets/{ticket_id}/messages")
+async def get_ticket_messages(ticket_id: str, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("customer", f"/api/v1/tickets/{ticket_id}/messages", headers=headers)
+
+@app.post("/api/v1/tickets/{ticket_id}/messages")
+async def add_ticket_message(ticket_id: str, request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("customer", f"/api/v1/tickets/{ticket_id}/messages", method="POST", json=body, headers=headers)
+
+# Customer Analytics
+@app.get("/api/v1/customers/analytics")
+async def get_customer_analytics(request: Request):
+    headers = dict(request.headers)
+    params = dict(request.query_params)
+    return await resilient_request("customer", "/api/v1/customers/analytics", headers=headers, params=params)
+
+# Product endpoints
+@app.get("/api/v1/products")
+async def list_products(request: Request):
+    headers = dict(request.headers)
+    params = dict(request.query_params)
+    return await resilient_request("order", "/api/v1/products", headers=headers, params=params)
+
+@app.get("/api/v1/products/{product_id}")
+async def get_product(product_id: str, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("order", f"/api/v1/products/{product_id}", headers=headers)
+
+@app.post("/api/v1/products")
+async def create_product(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("order", "/api/v1/products", method="POST", json=body, headers=headers)
+
+@app.put("/api/v1/products/{product_id}")
+async def update_product(product_id: str, request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("order", f"/api/v1/products/{product_id}", method="PUT", json=body, headers=headers)
+
+@app.delete("/api/v1/products/{product_id}")
+async def delete_product(product_id: str, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("order", f"/api/v1/products/{product_id}", method="DELETE", headers=headers)
 
 # Order endpoints
+@app.get("/api/v1/orders")
+async def list_orders(request: Request):
+    headers = dict(request.headers)
+    params = dict(request.query_params)
+    return await resilient_request("order", "/api/v1/orders", headers=headers, params=params)
+
 @app.get("/api/v1/orders/{order_id}")
-async def get_order(order_id: str):
-    return await resilient_request("order", f"/api/v1/orders/{order_id}")
+async def get_order(order_id: str, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("order", f"/api/v1/orders/{order_id}", headers=headers)
 
 @app.post("/api/v1/orders")
 async def create_order(request: Request):
     body = await request.json()
-    return await resilient_request("order", "/api/v1/orders", method="POST", json=body)
+    headers = dict(request.headers)
+    return await resilient_request("order", "/api/v1/orders", method="POST", json=body, headers=headers)
+
+@app.put("/api/v1/orders/{order_id}/status")
+async def update_order_status(order_id: str, request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("order", f"/api/v1/orders/{order_id}/status", method="PUT", json=body, headers=headers)
 
 @app.post("/api/v1/orders/{order_id}/quote")
 async def quote_order(order_id: str):
     return await resilient_request("order", f"/api/v1/orders/{order_id}/quote", method="POST")
 
+# Inventory endpoints
+@app.get("/api/v1/inventory")
+async def list_inventory(request: Request):
+    headers = dict(request.headers)
+    params = dict(request.query_params)
+    return await resilient_request("order", "/api/v1/inventory", headers=headers, params=params)
+
+@app.get("/api/v1/products/low-stock")
+async def get_low_stock_products(request: Request):
+    headers = dict(request.headers)
+    params = dict(request.query_params)
+    return await resilient_request("order", "/api/v1/products/low-stock", headers=headers, params=params)
+
+@app.get("/api/v1/inventory/movements")
+async def get_inventory_movements(request: Request):
+    headers = dict(request.headers)
+    params = dict(request.query_params)
+    return await resilient_request("order", "/api/v1/inventory/movements", headers=headers, params=params)
+
+@app.post("/api/v1/inventory/movements")
+async def create_inventory_movement(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("order", "/api/v1/inventory/movements", method="POST", json=body, headers=headers)
+
 # Pickup endpoints
+@app.get("/api/v1/pickups")
+async def list_pickups(request: Request):
+    headers = dict(request.headers)
+    params = dict(request.query_params)
+    return await resilient_request("pickup", "/api/v1/pickups", headers=headers, params=params)
+
 @app.post("/api/v1/pickups")
 async def schedule_pickup(request: Request):
     body = await request.json()
-    return await resilient_request("pickup", "/api/v1/pickups", method="POST", json=body)
+    headers = dict(request.headers)
+    return await resilient_request("pickup", "/api/v1/pickups", method="POST", json=body, headers=headers)
 
 @app.get("/api/v1/pickups/{pickup_id}")
-async def get_pickup(pickup_id: str):
-    return await resilient_request("pickup", f"/api/v1/pickups/{pickup_id}")
+async def get_pickup(pickup_id: str, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("pickup", f"/api/v1/pickups/{pickup_id}", headers=headers)
+
+@app.put("/api/v1/pickups/{pickup_id}")
+async def update_pickup(pickup_id: str, request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("pickup", f"/api/v1/pickups/{pickup_id}", method="PUT", json=body, headers=headers)
+
+@app.post("/api/v1/pickups/{pickup_id}/assign")
+async def assign_pickup(pickup_id: str, request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("pickup", f"/api/v1/pickups/{pickup_id}/assign", method="POST", json=body, headers=headers)
+
+@app.post("/api/v1/pickups/{pickup_id}/complete")
+async def complete_pickup(pickup_id: str, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("pickup", f"/api/v1/pickups/{pickup_id}/complete", method="POST", headers=headers)
+
+@app.post("/api/v1/pickups/{pickup_id}/cancel")
+async def cancel_pickup(pickup_id: str, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("pickup", f"/api/v1/pickups/{pickup_id}/cancel", method="POST", headers=headers)
+
+@app.get("/api/v1/pickups/availability")
+async def check_pickup_availability(request: Request):
+    headers = dict(request.headers)
+    params = dict(request.query_params)
+    return await resilient_request("pickup", "/api/v1/pickups/availability", headers=headers, params=params)
+
+# Route Management endpoints
+@app.post("/api/v1/routes")
+async def create_route(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("pickup", "/api/v1/routes", method="POST", json=body, headers=headers)
+
+@app.get("/api/v1/routes/{route_id}/pickups")
+async def get_route_pickups(route_id: str, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("pickup", f"/api/v1/routes/{route_id}/pickups", headers=headers)
 
 # International Shipping endpoints
-@app.post("/api/v1/international-shipping/kyc")
-async def validate_kyc(request: Request):
+
+# Manifest endpoints
+@app.get("/api/v1/manifests")
+async def list_manifests(request: Request):
+    headers = dict(request.headers)
+    params = dict(request.query_params)
+    return await resilient_request("international-shipping", "/api/v1/manifests", headers=headers, params=params)
+
+@app.get("/api/v1/manifests/{manifest_id}")
+async def get_manifest(manifest_id: str, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("international-shipping", f"/api/v1/manifests/{manifest_id}", headers=headers)
+
+@app.post("/api/v1/manifests")
+async def create_manifest(request: Request):
     body = await request.json()
-    return await resilient_request("international-shipping", "/api/v1/kyc", method="POST", json=body)
+    headers = dict(request.headers)
+    return await resilient_request("international-shipping", "/api/v1/manifests", method="POST", json=body, headers=headers)
+
+@app.put("/api/v1/manifests/{manifest_id}")
+async def update_manifest(manifest_id: str, request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("international-shipping", f"/api/v1/manifests/{manifest_id}", method="PUT", json=body, headers=headers)
+
+@app.delete("/api/v1/manifests/{manifest_id}")
+async def delete_manifest(manifest_id: str, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("international-shipping", f"/api/v1/manifests/{manifest_id}", method="DELETE", headers=headers)
+
+# Manifest Items endpoints
+@app.get("/api/v1/manifests/{manifest_id}/items")
+async def get_manifest_items(manifest_id: str, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("international-shipping", f"/api/v1/manifests/{manifest_id}/items", headers=headers)
+
+@app.post("/api/v1/manifests/{manifest_id}/items")
+async def create_manifest_item(manifest_id: str, request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("international-shipping", f"/api/v1/manifests/{manifest_id}/items", method="POST", json=body, headers=headers)
+
+# Shipping Rates endpoints
+@app.get("/api/v1/shipping/rates")
+async def get_shipping_rates(request: Request):
+    headers = dict(request.headers)
+    params = dict(request.query_params)
+    return await resilient_request("international-shipping", "/api/v1/shipping/rates", headers=headers, params=params)
+
+@app.post("/api/v1/shipping/validate")
+async def validate_shipping(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("international-shipping", "/api/v1/shipping/validate", method="POST", json=body, headers=headers)
+
+# Countries endpoints
+@app.get("/api/v1/countries")
+async def list_countries(request: Request):
+    headers = dict(request.headers)
+    params = dict(request.query_params)
+    return await resilient_request("international-shipping", "/api/v1/countries", headers=headers, params=params)
+
+@app.post("/api/v1/countries")
+async def create_country(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("international-shipping", "/api/v1/countries", method="POST", json=body, headers=headers)
+
+# Carriers endpoints
+@app.get("/api/v1/carriers")
+async def list_carriers(request: Request):
+    headers = dict(request.headers)
+    params = dict(request.query_params)
+    return await resilient_request("international-shipping", "/api/v1/carriers", headers=headers, params=params)
+
+@app.post("/api/v1/carriers")
+async def create_carrier(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("international-shipping", "/api/v1/carriers", method="POST", json=body, headers=headers)
+
+# Tracking endpoints
+@app.get("/api/v1/tracking/{tracking_number}")
+async def track_shipment(tracking_number: str, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("international-shipping", f"/api/v1/tracking/{tracking_number}", headers=headers)
 
 # Microcredit endpoints
-@app.post("/api/v1/microcredit/apply")
-async def apply_microcredit(request: Request):
-    body = await request.json()
-    return await resilient_request("microcredit", "/api/v1/apply", method="POST", json=body)
 
-@app.get("/api/v1/microcredit/{customer_id}/status")
-async def get_credit_status(customer_id: str):
-    return await resilient_request("microcredit", f"/api/v1/{customer_id}/status")
+# Credit Application endpoints
+@app.get("/api/v1/microcredit/applications")
+async def list_credit_applications(request: Request):
+    headers = dict(request.headers)
+    params = dict(request.query_params)
+    return await resilient_request("microcredit", "/api/v1/applications", headers=headers, params=params)
+
+@app.post("/api/v1/microcredit/applications")
+async def create_credit_application(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("microcredit", "/api/v1/applications", method="POST", json=body, headers=headers)
+
+@app.get("/api/v1/microcredit/applications/{application_id}")
+async def get_credit_application(application_id: str, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("microcredit", f"/api/v1/applications/{application_id}", headers=headers)
+
+@app.post("/api/v1/microcredit/applications/{application_id}/decision")
+async def make_credit_decision(application_id: str, request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("microcredit", f"/api/v1/applications/{application_id}/decision", method="POST", json=body, headers=headers)
+
+# Credit Account endpoints
+@app.get("/api/v1/microcredit/accounts")
+async def list_credit_accounts(request: Request):
+    headers = dict(request.headers)
+    params = dict(request.query_params)
+    return await resilient_request("microcredit", "/api/v1/accounts", headers=headers, params=params)
+
+@app.post("/api/v1/microcredit/accounts/{account_id}/disburse")
+async def disburse_credit(account_id: str, request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("microcredit", f"/api/v1/accounts/{account_id}/disburse", method="POST", json=body, headers=headers)
+
+# Payment endpoints
+@app.get("/api/v1/microcredit/accounts/{account_id}/payments")
+async def get_payment_history(account_id: str, request: Request):
+    headers = dict(request.headers)
+    params = dict(request.query_params)
+    return await resilient_request("microcredit", f"/api/v1/accounts/{account_id}/payments", headers=headers, params=params)
+
+@app.post("/api/v1/microcredit/accounts/{account_id}/payments")
+async def make_payment(account_id: str, request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("microcredit", f"/api/v1/accounts/{account_id}/payments", method="POST", json=body, headers=headers)
+
+# Credit Score endpoints
+@app.get("/api/v1/microcredit/credit-score/{customer_id}")
+async def get_credit_score(customer_id: str, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("microcredit", f"/api/v1/credit-score/{customer_id}", headers=headers)
 
 # Analytics endpoints
-@app.get("/api/v1/analytics/dashboard/{dashboard_id}")
-async def get_dashboard(dashboard_id: str):
-    return await resilient_request("analytics", f"/api/v1/dashboard/{dashboard_id}")
-
-@app.get("/api/v1/analytics/kpis")
-async def get_kpis(request: Request):
+@app.get("/api/v1/analytics/dashboard")
+async def get_analytics_dashboard(request: Request):
+    headers = dict(request.headers)
     params = dict(request.query_params)
-    return await resilient_request("analytics", "/api/v1/kpis", params=params)
+    return await resilient_request("analytics", "/api/v1/analytics/dashboard", headers=headers, params=params)
+
+@app.post("/api/v1/analytics/metrics")
+async def ingest_metric(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("analytics", "/api/v1/analytics/metrics", method="POST", json=body, headers=headers)
+
+@app.post("/api/v1/analytics/query")
+async def query_analytics(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("analytics", "/api/v1/analytics/query", method="POST", json=body, headers=headers)
+
+@app.post("/api/v1/analytics/reports")
+async def generate_report(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("analytics", "/api/v1/analytics/reports", method="POST", json=body, headers=headers)
+
+@app.get("/api/v1/analytics/reports/{report_id}")
+async def get_report_status(report_id: str, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("analytics", f"/api/v1/analytics/reports/{report_id}", headers=headers)
+
+@app.get("/api/v1/analytics/trends")
+async def get_trends(request: Request):
+    headers = dict(request.headers)
+    params = dict(request.query_params)
+    return await resilient_request("analytics", "/api/v1/analytics/trends", headers=headers, params=params)
 
 # Reverse Logistics endpoints
+@app.get("/api/v1/returns")
+async def list_returns(request: Request):
+    headers = dict(request.headers)
+    params = dict(request.query_params)
+    return await resilient_request("reverse-logistics", "/api/v1/returns", headers=headers, params=params)
+
 @app.post("/api/v1/returns")
 async def create_return(request: Request):
     body = await request.json()
-    return await resilient_request("reverse-logistics", "/api/v1/returns", method="POST", json=body)
+    headers = dict(request.headers)
+    return await resilient_request("reverse-logistics", "/api/v1/returns", method="POST", json=body, headers=headers)
 
 @app.get("/api/v1/returns/{return_id}")
-async def get_return(return_id: str):
-    return await resilient_request("reverse-logistics", f"/api/v1/returns/{return_id}")
+async def get_return(return_id: str, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("reverse-logistics", f"/api/v1/returns/{return_id}", headers=headers)
+
+@app.put("/api/v1/returns/{return_id}/approve")
+async def approve_return(return_id: str, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("reverse-logistics", f"/api/v1/returns/{return_id}/approve", method="PUT", headers=headers)
+
+@app.put("/api/v1/returns/{return_id}/reject")
+async def reject_return(return_id: str, request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("reverse-logistics", f"/api/v1/returns/{return_id}/reject", method="PUT", json=body, headers=headers)
+
+@app.post("/api/v1/returns/{return_id}/schedule-pickup")
+async def schedule_return_pickup(return_id: str, request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("reverse-logistics", f"/api/v1/returns/{return_id}/schedule-pickup", method="POST", json=body, headers=headers)
+
+@app.post("/api/v1/returns/{return_id}/inspection")
+async def create_return_inspection(return_id: str, request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("reverse-logistics", f"/api/v1/returns/{return_id}/inspection", method="POST", json=body, headers=headers)
+
+@app.post("/api/v1/returns/{return_id}/process")
+async def process_return(return_id: str, request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("reverse-logistics", f"/api/v1/returns/{return_id}/process", method="POST", json=body, headers=headers)
+
+@app.get("/api/v1/returns/{return_id}/tracking")
+async def track_return(return_id: str, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("reverse-logistics", f"/api/v1/returns/{return_id}/tracking", headers=headers)
 
 # Franchise endpoints
-@app.get("/api/v1/franchises/{franchise_id}")
-async def get_franchise(franchise_id: str):
-    return await resilient_request("franchise", f"/api/v1/franchises/{franchise_id}")
+@app.get("/api/v1/franchises")
+async def list_franchises(request: Request):
+    headers = dict(request.headers)
+    params = dict(request.query_params)
+    return await resilient_request("franchise", "/api/v1/franchises", headers=headers, params=params)
 
 @app.post("/api/v1/franchises")
 async def create_franchise(request: Request):
     body = await request.json()
-    return await resilient_request("franchise", "/api/v1/franchises", method="POST", json=body)
+    headers = dict(request.headers)
+    return await resilient_request("franchise", "/api/v1/franchises", method="POST", json=body, headers=headers)
+
+@app.get("/api/v1/franchises/{franchise_id}")
+async def get_franchise(franchise_id: str, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("franchise", f"/api/v1/franchises/{franchise_id}", headers=headers)
+
+@app.put("/api/v1/franchises/{franchise_id}")
+async def update_franchise(franchise_id: str, request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("franchise", f"/api/v1/franchises/{franchise_id}", method="PUT", json=body, headers=headers)
+
+@app.put("/api/v1/franchises/{franchise_id}/status")
+async def update_franchise_status(franchise_id: str, request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("franchise", f"/api/v1/franchises/{franchise_id}/status", method="PUT", json=body, headers=headers)
+
+# Territory Management endpoints
+@app.get("/api/v1/territories")
+async def list_territories(request: Request):
+    headers = dict(request.headers)
+    params = dict(request.query_params)
+    return await resilient_request("franchise", "/api/v1/territories", headers=headers, params=params)
+
+@app.get("/api/v1/territories/{territory_code}")
+async def get_territory(territory_code: str, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("franchise", f"/api/v1/territories/{territory_code}", headers=headers)
+
+# Performance Tracking endpoints
+@app.get("/api/v1/franchises/{franchise_id}/performance")
+async def get_franchise_performance(franchise_id: str, request: Request):
+    headers = dict(request.headers)
+    params = dict(request.query_params)
+    return await resilient_request("franchise", f"/api/v1/franchises/{franchise_id}/performance", headers=headers, params=params)
 
 # Service Discovery Registration
 async def register_with_consul():

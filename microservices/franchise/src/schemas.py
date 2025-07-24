@@ -40,7 +40,7 @@ class FranchiseBase(BaseModel):
     
     # Franchisee Information
     franchisee_name: str = Field(..., min_length=1, max_length=500)
-    franchisee_email: str = Field(..., regex=r'^[^@]+@[^@]+\.[^@]+$')
+    franchisee_email: str = Field(..., pattern=r'^[^@]+@[^@]+\.[^@]+$')
     franchisee_phone: Optional[str] = Field(None, max_length=50)
     franchisee_id: Optional[str] = None
     
@@ -78,7 +78,7 @@ class FranchiseUpdate(BaseModel):
     description: Optional[str] = None
     
     franchisee_name: Optional[str] = Field(None, min_length=1, max_length=500)
-    franchisee_email: Optional[str] = Field(None, regex=r'^[^@]+@[^@]+\.[^@]+$')
+    franchisee_email: Optional[str] = Field(None, pattern=r'^[^@]+@[^@]+\.[^@]+$')
     franchisee_phone: Optional[str] = Field(None, max_length=50)
     
     address: Optional[str] = Field(None, min_length=1)
@@ -210,8 +210,8 @@ class TerritoryBase(BaseModel):
     population_density: Optional[Decimal] = Field(None, ge=0)
     
     # Market Information
-    market_potential: Optional[str] = Field(None, regex=r'^(high|medium|low)$')
-    competition_level: Optional[str] = Field(None, regex=r'^(high|medium|low)$')
+    market_potential: Optional[str] = Field(None, pattern=r'^(high|medium|low)$')
+    competition_level: Optional[str] = Field(None, pattern=r'^(high|medium|low)$')
     average_income: Optional[Decimal] = Field(None, ge=0)
     demographic_profile: Optional[Dict[str, Any]] = {}
 
@@ -275,7 +275,7 @@ class PaymentResponse(PaymentBase):
 class PerformanceBase(BaseModel):
     period_start: date
     period_end: date
-    period_type: str = Field(..., regex=r'^(daily|weekly|monthly|quarterly|annual)$')
+    period_type: str = Field(..., pattern=r'^(daily|weekly|monthly|quarterly|annual)$')
     
     # Financial Metrics
     revenue: Optional[Decimal] = Field(0, ge=0)
@@ -345,7 +345,7 @@ class AuditCreate(AuditBase):
 class AuditUpdate(BaseModel):
     # Results
     overall_score: Optional[Decimal] = Field(None, ge=0, le=100)
-    grade: Optional[str] = Field(None, regex=r'^[ABCDF]$')
+    grade: Optional[str] = Field(None, pattern=r'^[ABCDF]$')
     pass_status: Optional[bool] = None
     
     # Findings

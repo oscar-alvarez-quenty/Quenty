@@ -1,0 +1,24 @@
+notifiers:
+  - name: 'Email Alerts'
+    type: email
+    uid: email-alerts
+    org_id: 1
+    is_default: true
+    settings:
+      addresses: admin@quenty.com
+      subject: "Grafana Alert - {{range .Alerts}}{{.AlertName}}{{end}}"
+      single_email: false
+    disable_resolve_message: false
+    
+  - name: 'Slack Alerts'
+    type: slack
+    uid: slack-alerts
+    org_id: 1
+    is_default: false
+    settings:
+      url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+      channel: '#alerts'
+      username: 'Grafana'
+      title: 'Grafana Alert'
+      text: "{{range .Alerts}}{{.AlertName}}: {{.Message}}{{end}}"
+    disable_resolve_message: false

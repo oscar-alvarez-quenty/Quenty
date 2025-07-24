@@ -1,0 +1,1510 @@
+{
+	"info": {
+		"_postman_id": "quenty-microservices-api",
+		"name": "Quenty Microservices API Collection",
+		"description": "Complete API collection for all Quenty microservices including authentication, customer management, orders, shipping, and more.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "quenty-api"
+	},
+	"item": [
+		{
+			"name": "Authentication & Users",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.environment.set('access_token', responseJson.access_token);",
+									"    pm.environment.set('refresh_token', responseJson.refresh_token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username_or_email\": \"admin\",\n    \"password\": \"AdminPassword123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "login"]
+						}
+					}
+				},
+				{
+					"name": "Register User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"newuser\",\n    \"email\": \"newuser@example.com\",\n    \"password\": \"SecurePassword123\",\n    \"password_confirm\": \"SecurePassword123\",\n    \"first_name\": \"John\",\n    \"last_name\": \"Doe\",\n    \"role\": \"user\",\n    \"company_id\": \"COMP-TECH0001\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "register"]
+						}
+					}
+				},
+				{
+					"name": "Get Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/profile",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "profile"]
+						}
+					}
+				},
+				{
+					"name": "List Users",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/users?limit=20&offset=0",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "users"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Refresh Token",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refresh_token\": \"{{refresh_token}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/refresh",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "refresh"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Customer Management",
+			"item": [
+				{
+					"name": "Create Customer",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"user_id\": \"test.user\",\n    \"customer_type\": \"individual\",\n    \"credit_limit\": 5000000,\n    \"payment_terms\": 30,\n    \"preferred_payment_method\": \"credit_card\",\n    \"default_shipping_address\": {\n        \"street\": \"Calle 123 #45-67\",\n        \"city\": \"Bogotá\",\n        \"state\": \"Cundinamarca\",\n        \"country\": \"Colombia\",\n        \"postal_code\": \"110111\"\n    },\n    \"billing_address\": {\n        \"street\": \"Calle 123 #45-67\",\n        \"city\": \"Bogotá\",\n        \"state\": \"Cundinamarca\",\n        \"country\": \"Colombia\",\n        \"postal_code\": \"110111\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/customers",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "customers"]
+						}
+					}
+				},
+				{
+					"name": "List Customers",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/customers?limit=20&offset=0",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "customers"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Customer by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "customers", "{{customer_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Create Support Ticket",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"subject\": \"Order Issue\",\n    \"description\": \"I have an issue with my recent order\",\n    \"priority\": \"medium\",\n    \"category\": \"order_support\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}/tickets",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "customers", "{{customer_id}}", "tickets"]
+						}
+					}
+				},
+				{
+					"name": "Get Customer Analytics",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/customers/analytics",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "customers", "analytics"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Product & Order Management",
+			"item": [
+				{
+					"name": "Create Product",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Laptop Dell XPS 13\",\n    \"sku\": \"DELL-XPS13-001\",\n    \"description\": \"13-inch ultrabook with Intel i7 processor\",\n    \"price\": 3500000,\n    \"weight\": 1.2,\n    \"dimensions\": {\n        \"length\": 30,\n        \"width\": 20,\n        \"height\": 1.5\n    },\n    \"category\": \"Electronics\",\n    \"stock_quantity\": 50,\n    \"is_active\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/products",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "products"]
+						}
+					}
+				},
+				{
+					"name": "List Products",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/products?limit=20&offset=0",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "products"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Order",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"customer_id\": \"{{customer_id}}\",\n    \"order_type\": \"standard\",\n    \"items\": [\n        {\n            \"product_id\": \"{{product_id}}\",\n            \"quantity\": 1,\n            \"unit_price\": 3500000,\n            \"total_price\": 3500000\n        }\n    ],\n    \"total_amount\": 3500000,\n    \"currency\": \"COP\",\n    \"shipping_address\": {\n        \"street\": \"Calle 123 #45-67\",\n        \"city\": \"Bogotá\",\n        \"state\": \"Cundinamarca\",\n        \"country\": \"Colombia\",\n        \"postal_code\": \"110111\"\n    },\n    \"billing_address\": {\n        \"street\": \"Calle 123 #45-67\",\n        \"city\": \"Bogotá\",\n        \"state\": \"Cundinamarca\",\n        \"country\": \"Colombia\",\n        \"postal_code\": \"110111\"\n    },\n    \"notes\": \"Test order\",\n    \"priority\": \"normal\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/orders",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "orders"]
+						}
+					}
+				},
+				{
+					"name": "List Orders",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/orders?limit=20&offset=0",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "orders"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Order Status",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"confirmed\",\n    \"notes\": \"Order confirmed and ready for processing\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/orders/{{order_id}}/status",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "orders", "{{order_id}}", "status"]
+						}
+					}
+				},
+				{
+					"name": "Get Inventory",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/inventory?limit=20&offset=0",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "inventory"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Pickup & Routes",
+			"item": [
+				{
+					"name": "Schedule Pickup",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"order_id\": \"{{order_id}}\",\n    \"pickup_address\": {\n        \"street\": \"Calle 123 #45-67\",\n        \"city\": \"Bogotá\",\n        \"state\": \"Cundinamarca\",\n        \"country\": \"Colombia\",\n        \"postal_code\": \"110111\"\n    },\n    \"pickup_date\": \"2025-07-25T10:00:00\",\n    \"pickup_time_window\": {\n        \"start\": \"09:00\",\n        \"end\": \"17:00\"\n    },\n    \"special_instructions\": \"Call before arrival\",\n    \"contact_name\": \"John Doe\",\n    \"contact_phone\": \"+573001234567\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/pickups",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "pickups"]
+						}
+					}
+				},
+				{
+					"name": "List Pickups",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/pickups?limit=20&offset=0",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "pickups"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Assign Pickup",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"driver_id\": \"driver-001\",\n    \"vehicle_id\": \"vehicle-001\",\n    \"estimated_arrival\": \"2025-07-25T10:30:00\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/pickups/{{pickup_id}}/assign",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "pickups", "{{pickup_id}}", "assign"]
+						}
+					}
+				},
+				{
+					"name": "Complete Pickup",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/pickups/{{pickup_id}}/complete",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "pickups", "{{pickup_id}}", "complete"]
+						}
+					}
+				},
+				{
+					"name": "Check Pickup Availability",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/pickups/availability?date=2025-07-25&city=Bogotá",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "pickups", "availability"],
+							"query": [
+								{
+									"key": "date",
+									"value": "2025-07-25"
+								},
+								{
+									"key": "city",
+									"value": "Bogotá"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Route",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"driver_id\": \"driver-001\",\n    \"vehicle_id\": \"vehicle-001\",\n    \"route_date\": \"2025-07-25\",\n    \"pickup_ids\": [\"{{pickup_id}}\"],\n    \"starting_location\": \"Depot Bogotá\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/routes",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "routes"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "International Shipping",
+			"item": [
+				{
+					"name": "Create Country",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"US\",\n    \"name\": \"United States\",\n    \"currency\": \"USD\",\n    \"is_active\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/countries",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "countries"]
+						}
+					}
+				},
+				{
+					"name": "List Countries",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/countries",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "countries"]
+						}
+					}
+				},
+				{
+					"name": "Create Carrier",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"DHL Express\",\n    \"code\": \"DHL\",\n    \"is_active\": true,\n    \"supports_tracking\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/carriers",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "carriers"]
+						}
+					}
+				},
+				{
+					"name": "List Carriers",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/carriers",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "carriers"]
+						}
+					}
+				},
+				{
+					"name": "Create Manifest",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"manifest_number\": \"MAN123456\",\n    \"carrier_id\": \"{{carrier_id}}\",\n    \"destination_country\": \"US\",\n    \"departure_date\": \"2025-07-26T08:00:00\",\n    \"status\": \"draft\",\n    \"total_weight\": 15.5,\n    \"total_value\": 25000000,\n    \"currency\": \"COP\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/manifests",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "manifests"]
+						}
+					}
+				},
+				{
+					"name": "List Manifests",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/manifests",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "manifests"]
+						}
+					}
+				},
+				{
+					"name": "Get Shipping Rates",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/shipping/rates?origin=CO&destination=US&weight=2.5",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "shipping", "rates"],
+							"query": [
+								{
+									"key": "origin",
+									"value": "CO"
+								},
+								{
+									"key": "destination",
+									"value": "US"
+								},
+								{
+									"key": "weight",
+									"value": "2.5"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Track Shipment",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/tracking/{{tracking_number}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "tracking", "{{tracking_number}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Microcredit Services",
+			"item": [
+				{
+					"name": "Create Credit Application",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"customer_id\": \"{{customer_id}}\",\n    \"requested_amount\": 5000000,\n    \"purpose\": \"business_expansion\",\n    \"term_months\": 12,\n    \"monthly_income\": 8000000,\n    \"employment_status\": \"self_employed\",\n    \"employment_years\": 3,\n    \"existing_debts\": 1000000,\n    \"business_name\": \"My Business\",\n    \"business_type\": \"retail\",\n    \"business_revenue_monthly\": 5000000,\n    \"business_years\": 2\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/microcredit/applications",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "microcredit", "applications"]
+						}
+					}
+				},
+				{
+					"name": "List Credit Applications",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/microcredit/applications?limit=20&offset=0",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "microcredit", "applications"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Make Credit Decision",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"decision\": \"approve\",\n    \"approved_amount\": 4000000,\n    \"approved_term_months\": 12,\n    \"interest_rate\": 18.5,\n    \"review_notes\": \"Approved with good credit score\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/microcredit/applications/{{application_id}}/decision",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "microcredit", "applications", "{{application_id}}", "decision"]
+						}
+					}
+				},
+				{
+					"name": "List Credit Accounts",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/microcredit/accounts",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "microcredit", "accounts"]
+						}
+					}
+				},
+				{
+					"name": "Disburse Credit",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"disbursement_method\": \"bank_transfer\",\n    \"destination_account\": \"123456789\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/microcredit/accounts/{{account_id}}/disburse",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "microcredit", "accounts", "{{account_id}}", "disburse"]
+						}
+					}
+				},
+				{
+					"name": "Make Payment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"payment_amount\": 400000,\n    \"payment_method\": \"bank_transfer\",\n    \"reference_number\": \"REF123456\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/microcredit/accounts/{{account_id}}/payments",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "microcredit", "accounts", "{{account_id}}", "payments"]
+						}
+					}
+				},
+				{
+					"name": "Get Credit Score",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/microcredit/credit-score/{{customer_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "microcredit", "credit-score", "{{customer_id}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Analytics & Reporting",
+			"item": [
+				{
+					"name": "Get Dashboard Metrics",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/analytics/dashboard?days=30",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "analytics", "dashboard"],
+							"query": [
+								{
+									"key": "days",
+									"value": "30"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Ingest Metric",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"metric_type\": \"revenue\",\n    \"name\": \"daily_revenue\",\n    \"value\": 1500000,\n    \"unit\": \"COP\",\n    \"tags\": {\n        \"source\": \"orders\",\n        \"period\": \"daily\"\n    },\n    \"source_service\": \"order-service\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/analytics/metrics",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "analytics", "metrics"]
+						}
+					}
+				},
+				{
+					"name": "Query Analytics",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"metric_type\": \"revenue\",\n    \"start_date\": \"2025-07-01\",\n    \"end_date\": \"2025-07-31\",\n    \"granularity\": \"daily\",\n    \"aggregation\": \"sum\",\n    \"filters\": {\n        \"source_service\": \"order-service\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/analytics/query",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "analytics", "query"]
+						}
+					}
+				},
+				{
+					"name": "Generate Report",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Monthly Revenue Report\",\n    \"report_type\": \"revenue\",\n    \"parameters\": {\n        \"period\": \"monthly\",\n        \"include_charts\": true\n    },\n    \"date_range\": {\n        \"start_date\": \"2025-07-01\",\n        \"end_date\": \"2025-07-31\"\n    },\n    \"format\": \"json\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/analytics/reports",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "analytics", "reports"]
+						}
+					}
+				},
+				{
+					"name": "Get Report Status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/analytics/reports/{{report_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "analytics", "reports", "{{report_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Get Business Trends",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/analytics/trends?days=30",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "analytics", "trends"],
+							"query": [
+								{
+									"key": "days",
+									"value": "30"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Reverse Logistics",
+			"item": [
+				{
+					"name": "Create Return Request",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"original_order_id\": \"{{order_id}}\",\n    \"customer_id\": \"{{customer_id}}\",\n    \"return_type\": \"refund\",\n    \"return_reason\": \"defective\",\n    \"description\": \"Product arrived damaged\",\n    \"preferred_resolution\": \"refund\",\n    \"return_address\": {\n        \"street\": \"Calle 123 #45-67\",\n        \"city\": \"Bogotá\",\n        \"state\": \"Cundinamarca\",\n        \"country\": \"Colombia\",\n        \"postal_code\": \"110111\"\n    },\n    \"items\": [\n        {\n            \"product_id\": \"{{product_id}}\",\n            \"quantity\": 1,\n            \"reason\": \"arrived_damaged\"\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/returns",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "returns"]
+						}
+					}
+				},
+				{
+					"name": "List Returns",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/returns?limit=20&offset=0",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "returns"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Approve Return",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"approval_notes\": \"Return approved due to product defect\",\n    \"estimated_pickup_date\": \"2025-07-26\",\n    \"pickup_address\": {\n        \"street\": \"Calle 123 #45-67\",\n        \"city\": \"Bogotá\",\n        \"state\": \"Cundinamarca\",\n        \"country\": \"Colombia\",\n        \"postal_code\": \"110111\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/returns/{{return_id}}/approve",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "returns", "{{return_id}}", "approve"]
+						}
+					}
+				},
+				{
+					"name": "Schedule Return Pickup",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"pickup_date\": \"2025-07-26\",\n    \"time_window\": \"09:00-17:00\",\n    \"special_instructions\": \"Ring doorbell\",\n    \"pickup_address\": {\n        \"street\": \"Calle 123 #45-67\",\n        \"city\": \"Bogotá\",\n        \"state\": \"Cundinamarca\",\n        \"country\": \"Colombia\",\n        \"postal_code\": \"110111\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/returns/{{return_id}}/schedule-pickup",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "returns", "{{return_id}}", "schedule-pickup"]
+						}
+					}
+				},
+				{
+					"name": "Create Inspection Report",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"overall_condition\": \"damaged\",\n    \"condition_details\": \"Screen cracked, otherwise functional\",\n    \"photos\": [\"inspection_photo_1.jpg\", \"inspection_photo_2.jpg\"],\n    \"resale_value\": 1000000,\n    \"refurbishment_cost\": 200000,\n    \"recommendation\": \"partial_refund\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/returns/{{return_id}}/inspection",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "returns", "{{return_id}}", "inspection"]
+						}
+					}
+				},
+				{
+					"name": "Process Return",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"processing_action\": \"approve_partial_refund\",\n    \"refund_amount\": 2800000,\n    \"processing_fee\": 50000,\n    \"processing_notes\": \"Partial refund due to product damage\",\n    \"requires_customer_action\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/returns/{{return_id}}/process",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "returns", "{{return_id}}", "process"]
+						}
+					}
+				},
+				{
+					"name": "Track Return",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/returns/{{return_id}}/tracking",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "returns", "{{return_id}}", "tracking"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Franchise Management",
+			"item": [
+				{
+					"name": "Create Franchise",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Quenty Bogotá Norte\",\n    \"franchisee_name\": \"Maria Rodriguez\",\n    \"franchisee_email\": \"maria@quantybog.com\",\n    \"franchisee_phone\": \"+573001234567\",\n    \"territory_code\": \"BOG002\",\n    \"investment_amount\": 150000000,\n    \"monthly_fee\": 2500000,\n    \"status\": \"active\",\n    \"start_date\": \"2024-01-15\",\n    \"contract_end_date\": \"2029-01-15\",\n    \"address\": \"Av. Calle 127 #15-30\",\n    \"city\": \"Bogotá\",\n    \"state\": \"Cundinamarca\",\n    \"country\": \"Colombia\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/franchises",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "franchises"]
+						}
+					}
+				},
+				{
+					"name": "List Franchises",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/franchises?limit=20&offset=0",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "franchises"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Franchise Status",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"active\",\n    \"notes\": \"Franchise activated after successful onboarding\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/franchises/{{franchise_id}}/status",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "franchises", "{{franchise_id}}", "status"]
+						}
+					}
+				},
+				{
+					"name": "List Territories",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/territories",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "territories"]
+						}
+					}
+				},
+				{
+					"name": "Get Territory by Code",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/territories/{{territory_code}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "territories", "{{territory_code}}"]
+						}
+					}
+				},
+				{
+					"name": "Get Franchise Performance",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/franchises/{{franchise_id}}/performance?period_type=monthly&start_date=2025-01-01&end_date=2025-07-31",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "franchises", "{{franchise_id}}", "performance"],
+							"query": [
+								{
+									"key": "period_type",
+									"value": "monthly"
+								},
+								{
+									"key": "start_date",
+									"value": "2025-01-01"
+								},
+								{
+									"key": "end_date",
+									"value": "2025-07-31"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "System Health & Monitoring",
+			"item": [
+				{
+					"name": "API Gateway Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": ["{{base_url}}"],
+							"path": ["health"]
+						}
+					}
+				},
+				{
+					"name": "All Services Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/services/health",
+							"host": ["{{base_url}}"],
+							"path": ["services", "health"]
+						}
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refresh_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "customer_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "product_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "order_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "pickup_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "carrier_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "manifest_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "application_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "account_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "return_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "franchise_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "territory_code",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "report_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "tracking_number",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
