@@ -12,7 +12,7 @@ router = APIRouter(prefix="/rates", tags=["rates"])
 async def get_rate(rate_id: int, db: AsyncSession = Depends(get_db)):
     service = RateService(db)
     try:
-        rate = await service.get_rate_by_id(rate_id)
+        rate = await service.get_by_id(rate_id)
         return TypeAdapter(RateOut).validate_python(rate, from_attributes=True)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
@@ -25,7 +25,7 @@ async def list_rates(
     # current_user=Depends(require_permissions("rates:list"))
 ):
     service = RateService(db)
-    total, filtered, rates = await service.list_rates(request)
+    total, filtered, rates = await service.list_datatables(request)
     print(f"Total rates: {total}, Filtered rates: {filtered}")
     print(f"{rates}")
 
