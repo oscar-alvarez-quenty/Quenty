@@ -3,7 +3,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, delete
 from pydantic import BaseModel, Field
-from pydantic_settings import BaseSettings
+from .core.config import settings
 import structlog
 from typing import Optional, List, Dict, Any
 import consul
@@ -17,8 +17,10 @@ import uuid
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from starlette.responses import Response
 import time
-from .models import Manifest, ManifestItem, ShippingRate, Country, ShippingCarrier, Base, ManifestStatus, ShippingZone
+from .models.models import Manifest, ManifestItem, Rate, Country, ShippingCarrier, Base, ManifestStatus, ShippingZone
 from .database import get_db, create_tables, engine
+from .core.auth import get_current_user, require_permissions
+from .controller import rate_controller
 
 # Import logging configuration
 try:
@@ -50,21 +52,6 @@ log_level = os.getenv("LOG_LEVEL", "INFO").upper()
 logging.basicConfig(level=getattr(logging, log_level))
 logger = structlog.get_logger("international-shipping-service")
 
-class Settings(BaseSettings):
-    service_name: str = "international-shipping-service"
-    database_url: str = "postgresql+asyncpg://intlship:intlship_pass@intl-shipping-db:5432/intl_shipping_db"
-    redis_url: str = "redis://redis:6379/4"
-    consul_host: str = "consul"
-    consul_port: int = 8500
-    auth_service_url: str = "http://auth-service:8003"
-
-    class Config:
-        env_file = ".env"
-
-settings = Settings()
-
-# HTTP Bearer for token extraction
-security = HTTPBearer()
 
 app = FastAPI(
     title="International Shipping Service",
@@ -87,53 +74,6 @@ http_requests_total = Counter(
     'Total number of HTTP requests',
     ['service', 'method', 'endpoint', 'status']
 )
-
-# Auth dependency
-async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Verify token with auth service and return user info"""
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                f"{settings.auth_service_url}/api/v1/profile",
-                headers={"Authorization": f"Bearer {credentials.credentials}"}
-            )
-            if response.status_code != 200:
-                raise HTTPException(status_code=401, detail="Invalid token")
-            return response.json()
-    except httpx.RequestError:
-        raise HTTPException(status_code=503, detail="Auth service unavailable")
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid token")
-
-async def get_current_user(user_info = Depends(verify_token)):
-    """Get current authenticated user"""
-    return user_info
-
-def require_permissions(permissions: list[str]):
-    """Require specific permissions"""
-    def permission_checker(current_user = Depends(get_current_user)):
-        user_permissions = set(current_user.get('permissions', []))
-        required_permissions = set(permissions)
-        
-        # Superusers have all permissions
-        if current_user.get('is_superuser'):
-            return current_user
-        
-        # Check for wildcard permission
-        if '*' in user_permissions:
-            return current_user
-        
-        # Check if user has required permissions
-        if not required_permissions.issubset(user_permissions):
-            missing_perms = required_permissions - user_permissions
-            raise HTTPException(
-                status_code=403,
-                detail=f"Missing permissions: {', '.join(missing_perms)}"
-            )
-        
-        return current_user
-    
-    return permission_checker
 
 # Pydantic models for API
 class ManifestCreate(BaseModel):
@@ -183,19 +123,6 @@ class ManifestItemCreate(BaseModel):
     country_of_origin: Optional[str] = None
     product_id: Optional[int] = None
 
-class ShippingRateCreate(BaseModel):
-    manifest_id: int
-    carrier_name: str
-    service_type: str
-    base_rate: float
-    weight_rate: Optional[float] = 0.0
-    volume_rate: Optional[float] = 0.0
-    fuel_surcharge: Optional[float] = 0.0
-    insurance_rate: Optional[float] = 0.0
-    total_cost: float
-    currency: Optional[str] = "USD"
-    transit_days: Optional[int] = None
-
 class CountryCreate(BaseModel):
     name: str
     iso_code: str
@@ -215,6 +142,9 @@ async def health_check():
 async def get_metrics():
     """Prometheus metrics endpoint"""
     return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
+
+app.include_router(rate_controller.router, prefix="/api/v1")
 
 # Manifest endpoints
 @app.get("/api/v1/manifests", response_model=Dict[str, Any])
@@ -407,100 +337,6 @@ async def create_manifest_item(
         }
     except Exception as e:
         logger.error(f"Error creating manifest item: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
-
-# Shipping rates endpoints
-@app.get("/api/v1/shipping/rates", response_model=List[Dict[str, Any]])
-async def get_shipping_rates(
-    origin: str = Query(...),
-    destination: str = Query(...),
-    weight: float = Query(...),
-    value: float = Query(...),
-    current_user = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
-    try:
-        mock_rates = [
-            {
-                "carrier_name": "DHL Express",
-                "service_type": "Express Worldwide",
-                "base_rate": 45.0,
-                "weight_rate": 8.5,
-                "volume_rate": 0.0,
-                "fuel_surcharge": 5.5,
-                "insurance_rate": value * 0.005,
-                "total_cost": 45.0 + (weight * 8.5) + 5.5 + (value * 0.005),
-                "currency": "USD",
-                "transit_days": 3,
-                "valid_until": datetime.utcnow() + timedelta(hours=24)
-            },
-            {
-                "carrier_name": "FedEx International",
-                "service_type": "International Priority",
-                "base_rate": 42.0,
-                "weight_rate": 7.8,
-                "volume_rate": 0.0,
-                "fuel_surcharge": 4.8,
-                "insurance_rate": value * 0.004,
-                "total_cost": 42.0 + (weight * 7.8) + 4.8 + (value * 0.004),
-                "currency": "USD",
-                "transit_days": 4,
-                "valid_until": datetime.utcnow() + timedelta(hours=24)
-            },
-            {
-                "carrier_name": "UPS Worldwide",
-                "service_type": "Express Plus",
-                "base_rate": 48.0,
-                "weight_rate": 9.2,
-                "volume_rate": 0.0,
-                "fuel_surcharge": 6.0,
-                "insurance_rate": value * 0.006,
-                "total_cost": 48.0 + (weight * 9.2) + 6.0 + (value * 0.006),
-                "currency": "USD",
-                "transit_days": 2,
-                "valid_until": datetime.utcnow() + timedelta(hours=24)
-            }
-        ]
-        return mock_rates
-    except Exception as e:
-        logger.error(f"Error fetching shipping rates: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
-
-@app.post("/api/v1/shipping/validate", response_model=Dict[str, Any])
-async def validate_shipping(
-    origin: str,
-    destination: str,
-    weight: float,
-    value: float,
-    current_user = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
-    try:
-        # Shipping validation logic
-        validation_results = {
-            "valid": True,
-            "origin_country": origin,
-            "destination_country": destination,
-            "weight_kg": weight,
-            "value_usd": value,
-            "shipping_zone": "Zone_2",
-            "restricted_items": [],
-            "required_documents": ["Commercial Invoice", "Packing List"],
-            "estimated_transit_days": 3,
-            "customs_value_limit": 2500.0,
-            "weight_limit_kg": 70.0,
-            "warnings": []
-        }
-        
-        # Add warnings based on validation
-        if value > 2000:
-            validation_results["warnings"].append("High value shipment - additional insurance recommended")
-        if weight > 30:
-            validation_results["warnings"].append("Heavy shipment - additional handling charges may apply")
-        
-        return validation_results
-    except Exception as e:
-        logger.error(f"Error validating shipping: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
 # Countries endpoints

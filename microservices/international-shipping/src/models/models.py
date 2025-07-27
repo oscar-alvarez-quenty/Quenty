@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey, Float, JSON
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey, Float, Numeric, JSON
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -48,7 +48,7 @@ class Manifest(Base):
     
     # Relationships
     manifest_items = relationship("ManifestItem", back_populates="manifest")
-    shipping_rates = relationship("ShippingRate", back_populates="manifest")
+    
 
 class ManifestItem(Base):
     __tablename__ = "manifest_items"
@@ -70,28 +70,6 @@ class ManifestItem(Base):
     # Relationships
     manifest = relationship("Manifest", back_populates="manifest_items")
 
-class ShippingRate(Base):
-    __tablename__ = "shipping_rates"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    carrier_name = Column(String(255), nullable=False)
-    service_type = Column(String(255), nullable=False)
-    base_rate = Column(Float, nullable=False)
-    weight_rate = Column(Float, default=0.0)
-    volume_rate = Column(Float, default=0.0)
-    fuel_surcharge = Column(Float, default=0.0)
-    insurance_rate = Column(Float, default=0.0)
-    total_cost = Column(Float, nullable=False)
-    currency = Column(String(10), default="USD")
-    transit_days = Column(Integer)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    valid_until = Column(DateTime)
-    
-    # Foreign Keys
-    manifest_id = Column(Integer, ForeignKey("manifests.id"), nullable=False)
-    
-    # Relationships
-    manifest = relationship("Manifest", back_populates="shipping_rates")
 
 class Country(Base):
     __tablename__ = "countries"
@@ -114,3 +92,81 @@ class ShippingCarrier(Base):
     active = Column(Boolean, default=True)
     supported_services = Column(JSON)  # List of service types
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class Rate(Base):
+    __tablename__ = "rates"
+
+    id = Column(Integer, primary_key=True, index=True)
+    operator_id = Column(String, nullable=False)
+    service_id = Column(String, nullable=False)
+    name = Column(String(255), nullable=False)
+    weight_min = Column(Numeric, nullable=False)
+    weight_max = Column(Numeric, nullable=False)
+    fixed_fee = Column(Numeric, nullable=False)
+    percentage = Column(Boolean, default=False)
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    deleted_at = Column(DateTime, nullable=True)
+
+    catalogs = relationship("CatalogRate", back_populates="rate", cascade="all, delete-orphan")
+
+
+
+class Catalog(Base):
+    __tablename__ = "catalogs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), nullable=False)
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    deleted_at = Column(DateTime, nullable=True)
+
+    rates = relationship("CatalogRate", back_populates="catalog", cascade="all, delete-orphan")
+
+
+
+class CatalogRate(Base):
+    __tablename__ = "catalog_rates"
+
+    catalog_id = Column(Integer, ForeignKey("catalogs.id"), primary_key=True)
+    rate_id = Column(Integer, ForeignKey("rates.id"), primary_key=True)
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    deleted_at = Column(DateTime, nullable=True)
+
+    catalog = relationship("Catalog", back_populates="rates")
+    rate = relationship("Rate", back_populates="catalogs")
+
+
+
+class ClientRatebook(Base):
+    __tablename__ = "client_ratebooks"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    client_id = Column(String, nullable=False)
+    warehouse_id = Column(String, nullable=False)
+
+    catalog_id = Column(Integer, ForeignKey("catalogs.id"), nullable=True)
+    rate_id = Column(Integer, ForeignKey("rates.id"), nullable=True)
+
+    operator_id = Column(String, nullable=False)
+    service_id = Column(String, nullable=False)
+
+    name = Column(String(255), nullable=False)
+    weight_min = Column(Numeric, nullable=False)
+    weight_max = Column(Numeric, nullable=False)
+    fixed_fee = Column(Numeric, nullable=False)
+    percentage = Column(Boolean, default=False)
+    dependent = Column(Boolean, default=True)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    deleted_at = Column(DateTime, nullable=True)
+
+    catalog = relationship("Catalog", backref="client_ratebooks", foreign_keys=[catalog_id])
+    rate = relationship("Rate", backref="client_ratebooks", foreign_keys=[rate_id])
