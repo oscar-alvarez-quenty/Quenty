@@ -20,7 +20,7 @@ import time
 from .models.models import Manifest, ManifestItem, Rate, Country, ShippingCarrier, Base, ManifestStatus, ShippingZone
 from .database import get_db, create_tables, engine
 from .core.auth import get_current_user, require_permissions
-from .controller import rate_controller
+from .controller import rate_controller, catalog_controller, client_ratebook_controller
 
 # Import logging configuration
 try:
@@ -144,7 +144,9 @@ async def get_metrics():
     return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
+app.include_router(catalog_controller.router, prefix="/api/v1")
 app.include_router(rate_controller.router, prefix="/api/v1")
+app.include_router(client_ratebook_controller.router, prefix="/api/v1")
 
 # Manifest endpoints
 @app.get("/api/v1/manifests", response_model=Dict[str, Any])

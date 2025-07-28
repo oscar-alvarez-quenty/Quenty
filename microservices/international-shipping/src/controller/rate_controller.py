@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession 
 from src.services.rate_service import RateService
 from src.schemas.datatables_schema import ListRequest
-from src.schemas.rate_schema import RateListResponse, RateOut, RateCreate, RateUpdate
+from src.schemas.rate_schema import AssignRateToClientInput, RateListResponse, RateOut, RateCreate, RateUpdate
 from pydantic import TypeAdapter
 from src.database import get_db
 
@@ -26,9 +26,6 @@ async def list_rates(
 ):
     service = RateService(db)
     total, filtered, rates = await service.list_datatables(request)
-    print(f"Total rates: {total}, Filtered rates: {filtered}")
-    print(f"{rates}")
-
     # Mapear a Pydantic
     data = [TypeAdapter(RateOut).validate_python(r, from_attributes=True) for r in rates]
 
@@ -70,3 +67,13 @@ async def delete_rate(rate_id: int, db: AsyncSession = Depends(get_db)):
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     return None
+
+@router.post("/assign-to-client", response_model=RateOut)
+async def assign_rate_to_client(
+    payload: AssignRateToClientInput, db: AsyncSession = Depends(get_db)):
+    service = RateService(db)
+    try:
+        client_rate = await service.assign_rate_to_client(payload.rate_id, payload.client_id, payload.warehouse_id)
+        return TypeAdapter(RateOut).validate_python(client_rate, from_attributes=True)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

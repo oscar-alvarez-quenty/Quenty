@@ -33,3 +33,8 @@ class RateUpdate(BaseModel):
     weight_max: Optional[float]
     fixed_fee: Optional[float]
     percentage: Optional[bool]
+
+class AssignRateToClientInput(BaseModel):
+    rate_id: int
+    client_id: int
+    warehouse_id: int
