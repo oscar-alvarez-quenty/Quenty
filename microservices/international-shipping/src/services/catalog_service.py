@@ -28,7 +28,7 @@ class CatalogService(BaseService):
 
     async def update_catalog(self, catalog_id: int, data: CatalogUpdate) -> Catalog:
         catalog = await self.get_by_id(catalog_id)
-        for field, value in data.dict(exclude_unset=True).items():
+        for field, value in data.model_dump(exclude_unset=True).items():
             setattr(catalog, field, value)
         catalog.updated_at = datetime.utcnow()
         await self.db.commit()
@@ -48,6 +48,7 @@ class CatalogService(BaseService):
 
     async def assign_single_rate_to_catalog(self, catalog_id: int, rate_id: int):
         now = datetime.utcnow()
+        print(f"Hola 2")
         await self.catalog_rate_service.assign(catalog_id, rate_id, now)
 
         # Propagar a clientes dependientes

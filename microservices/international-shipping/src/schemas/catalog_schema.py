@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from datetime import datetime
 from typing import List, Optional
+from pydantic.config import ConfigDict
 
 class CatalogCreate(BaseModel):
     name: str
@@ -13,8 +14,7 @@ class CatalogOut(CatalogCreate):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 class CatalogListResponse(BaseModel):
     records_total: int
@@ -28,16 +28,19 @@ class AssignRateInput(BaseModel):
 
 class RateOut(BaseModel):
     id: int
+    operator_id: str
+    service_id: str
     name: str
-    description: Optional[str] = None
-    price: float
+    weight_min: float
+    weight_max: float
+    fixed_fee: float
+    percentage: bool
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class CatalogRateWithRateOut(BaseModel):
-    id: int  # ID de la asignación en CatalogRate
+    rate_id: int  # ID de la asignación en CatalogRate
     catalog_id: int
     rate: RateOut

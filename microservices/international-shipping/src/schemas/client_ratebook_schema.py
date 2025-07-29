@@ -1,30 +1,29 @@
-# src/schemas/client_ratebook_schema.py
-
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
+from pydantic.config import ConfigDict
 
 
 class ClientRatebookBase(BaseModel):
-    operator_id: Optional[str]
-    service_id: Optional[str]
-    name: Optional[str]
-    weight_min: Optional[float]
-    weight_max: Optional[float]
-    fixed_fee: Optional[float]
-    percentage: Optional[bool]
+    operator_id: Optional[str] = Field(default=None)
+    service_id: Optional[str] = Field(default=None)
+    name: Optional[str] = Field(default=None)
+    weight_min: Optional[float] = Field(default=None)
+    weight_max: Optional[float] = Field(default=None)
+    fixed_fee: Optional[float] = Field(default=None)
+    percentage: Optional[bool] = Field(default=None)
 
 class ClientRatebookCreate(ClientRatebookBase):
-    client_id: int
-    warehouse_id: int
+    client_id: str
+    warehouse_id: str
 
 class ClientRatebookUpdate(ClientRatebookBase):
     pass
 
 class ClientRatebookOut(ClientRatebookBase):
     id: int
-    client_id: int
-    warehouse_id: int
+    client_id: str
+    warehouse_id: str
     catalog_id: Optional[int]
     rate_id: Optional[int]
     dependent: bool
@@ -32,8 +31,7 @@ class ClientRatebookOut(ClientRatebookBase):
     updated_at: datetime
     deleted_at: Optional[datetime]
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ClientRatebookMatchRequest(BaseModel):
     client_id: str

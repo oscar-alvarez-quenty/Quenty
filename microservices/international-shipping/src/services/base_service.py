@@ -11,9 +11,13 @@ class BaseService:
         self.model = model
 
     async def get_by_id(self, entity_id: Any):
+        print(f"Fetching ratebook with ID: {entity_id}")
         stmt = select(self.model).where(self.model.id == entity_id, self.model.deleted_at.is_(None))
+        print(f"Executing query: {stmt}")
         result = await self.db.execute(stmt)
-        instance = result.scalar_one_or_none()
+        instances = result.scalars().all()
+        print(f"Found instances: {instances}")
+        instance = instances[0] if instances else None
         if not instance:
             raise ValueError(f"{self.model.__name__} {entity_id} not found")
         return instance
