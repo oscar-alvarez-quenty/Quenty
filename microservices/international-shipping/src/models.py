@@ -114,3 +114,57 @@ class ShippingCarrier(Base):
     active = Column(Boolean, default=True)
     supported_services = Column(JSON)  # List of service types
     created_at = Column(DateTime, default=datetime.utcnow)
+
+class BulkUploadStatus(PyEnum):
+    PENDING = "pending"
+    PROCESSING = "processing"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+class BulkUpload(Base):
+    __tablename__ = "bulk_uploads"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    unique_id = Column(String(255), unique=True, nullable=False)
+    filename = Column(String(255), nullable=False)
+    status = Column(String(50), default=BulkUploadStatus.PENDING.value)
+    total_rows = Column(Integer, default=0)
+    valid_rows = Column(Integer, default=0)
+    invalid_rows = Column(Integer, default=0)
+    processed_rows = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    completed_at = Column(DateTime)
+    error_summary = Column(JSON)  # Summary of validation errors
+    
+    # Foreign Keys
+    company_id = Column(String(255), nullable=False)
+    uploaded_by = Column(String(255), nullable=False)
+    
+    # Relationships
+    bulk_items = relationship("BulkUploadItem", back_populates="bulk_upload")
+
+class BulkUploadItem(Base):
+    __tablename__ = "bulk_upload_items"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    row_number = Column(Integer, nullable=False)  # Original row number in file
+    status = Column(String(50), default="pending")  # pending, valid, invalid, processed
+    description = Column(Text)
+    quantity = Column(Integer)
+    weight = Column(Float)
+    volume = Column(Float)
+    value = Column(Float)
+    hs_code = Column(String(50))
+    country_of_origin = Column(String(100))
+    destination_country = Column(String(100))
+    validation_errors = Column(JSON)  # List of validation error messages
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Foreign Keys
+    bulk_upload_id = Column(Integer, ForeignKey("bulk_uploads.id"), nullable=False)
+    manifest_id = Column(Integer, ForeignKey("manifests.id"))  # Set when successfully processed
+    manifest_item_id = Column(Integer)  # References the created manifest item
+    
+    # Relationships
+    bulk_upload = relationship("BulkUpload", back_populates="bulk_items")

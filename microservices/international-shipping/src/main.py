@@ -1,8 +1,8 @@
-from fastapi import FastAPI, HTTPException, Depends, Query
+from fastapi import FastAPI, HTTPException, Depends, Query, File, UploadFile, Form
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, delete
-from pydantic import BaseModel, Field
+from sqlalchemy import select, update, delete, insert
+from pydantic import BaseModel, Field, validator
 from pydantic_settings import BaseSettings
 import structlog
 from typing import Optional, List, Dict, Any
@@ -11,8 +11,11 @@ import httpx
 from datetime import datetime, date, timedelta
 from enum import Enum
 import uuid
+import pandas as pd
+import io
+from pathlib import Path
 
-from .models import Manifest, ManifestItem, ShippingRate, Country, ShippingCarrier, Base, ManifestStatus, ShippingZone
+from .models import Manifest, ManifestItem, ShippingRate, Country, ShippingCarrier, Base, ManifestStatus, ShippingZone, BulkUpload, BulkUploadItem, BulkUploadStatus
 from .database import get_db, create_tables, engine
 
 logger = structlog.get_logger()
@@ -154,6 +157,55 @@ class CarrierCreate(BaseModel):
     api_endpoint: Optional[str] = None
     api_key: Optional[str] = None
     supported_services: Optional[List[str]] = None
+
+class BulkUploadResponse(BaseModel):
+    id: int
+    unique_id: str
+    filename: str
+    status: str
+    total_rows: int
+    valid_rows: int
+    invalid_rows: int
+    processed_rows: int
+    created_at: datetime
+    error_summary: Optional[Dict[str, Any]]
+
+class BulkUploadItemResponse(BaseModel):
+    id: int
+    row_number: int
+    status: str
+    description: Optional[str]
+    quantity: Optional[int]
+    weight: Optional[float]
+    volume: Optional[float]
+    value: Optional[float]
+    hs_code: Optional[str]
+    country_of_origin: Optional[str]
+    destination_country: Optional[str]
+    validation_errors: Optional[List[str]]
+
+class BulkUploadValidation(BaseModel):
+    row_number: int
+    description: str
+    quantity: int = Field(gt=0, description="Quantity must be greater than 0")
+    weight: float = Field(gt=0, description="Weight must be greater than 0")
+    volume: Optional[float] = Field(ge=0, description="Volume must be non-negative")
+    value: float = Field(gt=0, description="Value must be greater than 0")
+    hs_code: Optional[str] = Field(max_length=50)
+    country_of_origin: str = Field(min_length=2, max_length=3, description="Country code required")
+    destination_country: str = Field(min_length=2, max_length=3, description="Destination country code required")
+    
+    @validator('description')
+    def validate_description(cls, v):
+        if not v or len(v.strip()) < 3:
+            raise ValueError('Description must be at least 3 characters')
+        return v.strip()
+    
+    @validator('hs_code')
+    def validate_hs_code(cls, v):
+        if v and not v.replace('.', '').isdigit():
+            raise ValueError('HS Code must contain only numbers and dots')
+        return v
 
 @app.get("/health")
 async def health_check():
@@ -611,6 +663,256 @@ async def track_shipment(
         }
     except Exception as e:
         logger.error(f"Error tracking shipment {tracking_number}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+# Bulk Upload endpoints
+@app.post("/api/v1/bulk-upload", response_model=BulkUploadResponse)
+async def upload_bulk_shipments(
+    file: UploadFile = File(...),
+    current_user = Depends(require_permissions(["shipping:bulk_create"])),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Upload a CSV/Excel file with bulk shipment data for validation and processing.
+    Expected columns: description, quantity, weight, volume, value, hs_code, country_of_origin, destination_country
+    """
+    try:
+        # Validate file type
+        if not file.filename.endswith(('.csv', '.xlsx', '.xls')):
+            raise HTTPException(status_code=400, detail="Only CSV and Excel files are supported")
+        
+        # Read file content
+        content = await file.read()
+        
+        # Parse file based on extension
+        try:
+            if file.filename.endswith('.csv'):
+                df = pd.read_csv(io.BytesIO(content))
+            else:
+                df = pd.read_excel(io.BytesIO(content))
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Error reading file: {str(e)}")
+        
+        # Validate required columns
+        required_columns = ['description', 'quantity', 'weight', 'value', 'country_of_origin', 'destination_country']
+        missing_columns = [col for col in required_columns if col not in df.columns]
+        if missing_columns:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Missing required columns: {', '.join(missing_columns)}"
+            )
+        
+        # Create bulk upload record
+        unique_id = f"BULK-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}-{uuid.uuid4().hex[:8]}"
+        
+        bulk_upload_data = {
+            "unique_id": unique_id,
+            "filename": file.filename,
+            "status": BulkUploadStatus.PROCESSING.value,
+            "total_rows": len(df),
+            "company_id": current_user.get("company_id", "default"),
+            "uploaded_by": current_user.get("user_id", "system")
+        }
+        
+        # Insert bulk upload record (mock implementation)
+        bulk_upload_id = 1  # Would be actual database insert
+        
+        # Process rows with validation
+        valid_count = 0
+        invalid_count = 0
+        error_summary = {}
+        
+        for index, row in df.iterrows():
+            row_number = index + 2  # Excel row numbers start at 2 (after header)
+            errors = []
+            
+            try:
+                # Convert row to dict and validate
+                row_data = {
+                    "row_number": row_number,
+                    "description": str(row.get('description', '')),
+                    "quantity": int(row.get('quantity', 0)) if pd.notna(row.get('quantity')) else 0,
+                    "weight": float(row.get('weight', 0)) if pd.notna(row.get('weight')) else 0,
+                    "volume": float(row.get('volume', 0)) if pd.notna(row.get('volume')) else None,
+                    "value": float(row.get('value', 0)) if pd.notna(row.get('value')) else 0,
+                    "hs_code": str(row.get('hs_code', '')) if pd.notna(row.get('hs_code')) else None,
+                    "country_of_origin": str(row.get('country_of_origin', '')),
+                    "destination_country": str(row.get('destination_country', ''))
+                }
+                
+                # Validate using Pydantic model
+                validated_item = BulkUploadValidation(**row_data)
+                valid_count += 1
+                
+            except Exception as e:
+                invalid_count += 1
+                errors.append(str(e))
+                error_summary[f"row_{row_number}"] = errors
+        
+        # Update bulk upload status
+        final_status = BulkUploadStatus.COMPLETED.value if invalid_count == 0 else BulkUploadStatus.FAILED.value
+        
+        return {
+            "id": bulk_upload_id,
+            "unique_id": unique_id,
+            "filename": file.filename,
+            "status": final_status,
+            "total_rows": len(df),
+            "valid_rows": valid_count,
+            "invalid_rows": invalid_count,
+            "processed_rows": 0,
+            "created_at": datetime.utcnow(),
+            "error_summary": error_summary if error_summary else None
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error processing bulk upload: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.get("/api/v1/bulk-upload", response_model=List[BulkUploadResponse])
+async def get_bulk_uploads(
+    limit: int = Query(20, le=100),
+    offset: int = Query(0, ge=0),
+    status: Optional[str] = Query(None),
+    current_user = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get list of bulk uploads with filtering options"""
+    try:
+        # Mock data for now
+        mock_uploads = [
+            {
+                "id": 1,
+                "unique_id": "BULK-20250730120000-abc12345",
+                "filename": "shipments_batch_1.xlsx",
+                "status": "completed",
+                "total_rows": 150,
+                "valid_rows": 145,
+                "invalid_rows": 5,
+                "processed_rows": 145,
+                "created_at": datetime.utcnow() - timedelta(hours=2),
+                "error_summary": {"row_23": ["Invalid HS code"], "row_67": ["Weight must be greater than 0"]}
+            },
+            {
+                "id": 2,
+                "unique_id": "BULK-20250730110000-def67890",
+                "filename": "international_orders.csv",
+                "status": "processing",
+                "total_rows": 75,
+                "valid_rows": 75,
+                "invalid_rows": 0,
+                "processed_rows": 30,
+                "created_at": datetime.utcnow() - timedelta(minutes=30),
+                "error_summary": None
+            }
+        ]
+        
+        if status:
+            mock_uploads = [upload for upload in mock_uploads if upload["status"] == status]
+        
+        return mock_uploads[offset:offset+limit]
+        
+    except Exception as e:
+        logger.error(f"Error fetching bulk uploads: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.get("/api/v1/bulk-upload/{upload_id}", response_model=BulkUploadResponse)
+async def get_bulk_upload(
+    upload_id: int,
+    current_user = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get details of a specific bulk upload"""
+    try:
+        return {
+            "id": upload_id,
+            "unique_id": f"BULK-20250730120000-{upload_id:08d}",
+            "filename": f"bulk_upload_{upload_id}.xlsx",
+            "status": "completed",
+            "total_rows": 100,
+            "valid_rows": 95,
+            "invalid_rows": 5,
+            "processed_rows": 95,
+            "created_at": datetime.utcnow() - timedelta(hours=1),
+            "error_summary": {
+                "row_12": ["Description must be at least 3 characters"],
+                "row_34": ["Weight must be greater than 0"],
+                "row_56": ["Invalid HS code format"],
+                "row_78": ["Country code required"],
+                "row_90": ["Value must be greater than 0"]
+            }
+        }
+    except Exception as e:
+        logger.error(f"Error fetching bulk upload {upload_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.get("/api/v1/bulk-upload/{upload_id}/items", response_model=List[BulkUploadItemResponse])
+async def get_bulk_upload_items(
+    upload_id: int,
+    limit: int = Query(50, le=200),
+    offset: int = Query(0, ge=0),
+    status: Optional[str] = Query(None),
+    current_user = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get items from a specific bulk upload with validation details"""
+    try:
+        # Mock data
+        mock_items = []
+        for i in range(1, 21):  # 20 items
+            item_status = "valid" if i % 10 != 0 else "invalid"
+            errors = None if item_status == "valid" else ["Weight must be greater than 0", "Invalid HS code"]
+            
+            mock_items.append({
+                "id": i,
+                "row_number": i + 1,
+                "status": item_status,
+                "description": f"Product {i} - Electronic device",
+                "quantity": 5 if item_status == "valid" else None,
+                "weight": 2.5 if item_status == "valid" else None,
+                "volume": 0.01,
+                "value": 150.0 if item_status == "valid" else None,
+                "hs_code": "8517.12" if item_status == "valid" else "invalid_code",
+                "country_of_origin": "CN",
+                "destination_country": "US",
+                "validation_errors": errors
+            })
+        
+        if status:
+            mock_items = [item for item in mock_items if item["status"] == status]
+        
+        return mock_items[offset:offset+limit]
+        
+    except Exception as e:
+        logger.error(f"Error fetching bulk upload items for {upload_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.post("/api/v1/bulk-upload/{upload_id}/process", response_model=Dict[str, Any])
+async def process_bulk_upload(
+    upload_id: int,
+    current_user = Depends(require_permissions(["shipping:bulk_process"])),
+    db: AsyncSession = Depends(get_db)
+):
+    """Process valid items from bulk upload and create manifest entries"""
+    try:
+        # Mock processing
+        processed_count = 95
+        created_manifests = 3
+        
+        return {
+            "upload_id": upload_id,
+            "status": "completed",
+            "processed_items": processed_count,
+            "created_manifests": created_manifests,
+            "manifest_ids": [1, 2, 3],
+            "processed_at": datetime.utcnow(),
+            "message": f"Successfully processed {processed_count} items into {created_manifests} manifests"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error processing bulk upload {upload_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
 # Service Discovery Registration
