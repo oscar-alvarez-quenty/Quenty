@@ -613,6 +613,211 @@ async def track_shipment(
         logger.error(f"Error tracking shipment {tracking_number}: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
+# Exchange Rate API Endpoints (SCRUM-14)
+from .exchange_rate.banrep import ExchangeRateService
+from .exchange_rate.scheduler import get_scheduler, ExchangeRateModel
+
+# Global exchange rate service instance
+exchange_rate_service = ExchangeRateService()
+
+@app.get("/api/v1/exchange-rates/current", response_model=Dict[str, Any])
+async def get_current_exchange_rate(
+    from_currency: str = Query("USD", description="Source currency code"),
+    to_currency: str = Query("COP", description="Target currency code"),
+    current_user = Depends(get_current_user)
+):
+    """Get current exchange rate between two currencies"""
+    try:
+        rate = await exchange_rate_service.get_exchange_rate(from_currency, to_currency)
+        
+        if rate:
+            return {
+                "from_currency": rate.currency_from,
+                "to_currency": rate.currency_to,
+                "rate": rate.rate,
+                "date": rate.date.isoformat(),
+                "source": rate.source,
+                "timestamp": rate.created_at.isoformat()
+            }
+        else:
+            raise HTTPException(
+                status_code=404, 
+                detail=f"Exchange rate not available for {from_currency} to {to_currency}"
+            )
+            
+    except Exception as e:
+        logger.error(f"Error fetching exchange rate: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.get("/api/v1/exchange-rates/history", response_model=List[Dict[str, Any]])
+async def get_exchange_rate_history(
+    from_currency: str = Query("USD", description="Source currency code"),
+    to_currency: str = Query("COP", description="Target currency code"),
+    start_date: date = Query(..., description="Start date (YYYY-MM-DD)"),
+    end_date: date = Query(..., description="End date (YYYY-MM-DD)"),
+    current_user = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get exchange rate history for date range"""
+    try:
+        # Validate date range
+        if start_date > end_date:
+            raise HTTPException(status_code=400, detail="Start date must be before end date")
+        
+        if (end_date - start_date).days > 365:
+            raise HTTPException(status_code=400, detail="Date range cannot exceed 365 days")
+        
+        # Query database for historical rates
+        result = await db.execute(
+            select(ExchangeRateModel)
+            .where(
+                ExchangeRateModel.currency_from == from_currency,
+                ExchangeRateModel.currency_to == to_currency,
+                ExchangeRateModel.date >= start_date,
+                ExchangeRateModel.date <= end_date
+            )
+            .order_by(ExchangeRateModel.date.desc())
+        )
+        
+        rates = result.scalars().all()
+        
+        return [
+            {
+                "from_currency": rate.currency_from,
+                "to_currency": rate.currency_to,
+                "rate": rate.rate,
+                "date": rate.date.isoformat(),
+                "source": rate.source,
+                "created_at": rate.created_at.isoformat(),
+                "updated_at": rate.updated_at.isoformat()
+            }
+            for rate in rates
+        ]
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching exchange rate history: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.post("/api/v1/exchange-rates/convert", response_model=Dict[str, Any])
+async def convert_currency(
+    amount: float = Query(..., description="Amount to convert"),
+    from_currency: str = Query(..., description="Source currency code"),
+    to_currency: str = Query(..., description="Target currency code"),
+    target_date: Optional[date] = Query(None, description="Date for conversion rate (YYYY-MM-DD)"),
+    current_user = Depends(get_current_user)
+):
+    """Convert amount between currencies"""
+    try:
+        if amount <= 0:
+            raise HTTPException(status_code=400, detail="Amount must be positive")
+        
+        converted_amount = await exchange_rate_service.convert_amount(
+            amount, from_currency, to_currency, target_date
+        )
+        
+        if converted_amount is not None:
+            # Get the rate used for transparency
+            rate = await exchange_rate_service.get_exchange_rate(from_currency, to_currency, target_date)
+            
+            return {
+                "original_amount": amount,
+                "converted_amount": round(converted_amount, 2),
+                "from_currency": from_currency,
+                "to_currency": to_currency,
+                "exchange_rate": rate.rate if rate else None,
+                "rate_date": rate.date.isoformat() if rate else None,
+                "rate_source": rate.source if rate else None,
+                "conversion_date": (target_date or date.today()).isoformat()
+            }
+        else:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Exchange rate not available for {from_currency} to {to_currency}"
+            )
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error converting currency: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.get("/api/v1/exchange-rates/trm", response_model=Dict[str, Any])
+async def get_current_trm(
+    current_user = Depends(get_current_user)
+):
+    """Get current TRM (Tasa Representativa del Mercado) - USD to COP rate"""
+    try:
+        trm_rate = await exchange_rate_service.get_current_usd_cop_rate()
+        
+        if trm_rate:
+            return {
+                "trm": trm_rate,
+                "date": date.today().isoformat(),
+                "source": "Banco de la República",
+                "currency_pair": "USD/COP",
+                "description": "Tasa Representativa del Mercado"
+            }
+        else:
+            raise HTTPException(status_code=404, detail="Current TRM not available")
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching current TRM: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.post("/api/v1/exchange-rates/update", response_model=Dict[str, Any])
+async def manual_exchange_rate_update(
+    target_date: Optional[date] = Query(None, description="Date to update (YYYY-MM-DD)"),
+    current_user = Depends(require_permissions(["admin:exchange_rates"]))
+):
+    """Manually trigger exchange rate update"""
+    try:
+        scheduler = await get_scheduler()
+        result = await scheduler.manual_update(target_date)
+        
+        if result["success"]:
+            return {
+                "success": True,
+                "message": result["message"],
+                "date": result["date"],
+                "rate": result.get("rate"),
+                "source": result.get("source"),
+                "updated_at": datetime.utcnow().isoformat()
+            }
+        else:
+            return {
+                "success": False,
+                "message": result["message"],
+                "date": result.get("date"),
+                "error": result.get("error"),
+                "updated_at": datetime.utcnow().isoformat()
+            }
+            
+    except Exception as e:
+        logger.error(f"Error in manual exchange rate update: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.get("/api/v1/exchange-rates/health", response_model=Dict[str, Any])
+async def exchange_rate_health_check(
+    current_user = Depends(get_current_user)
+):
+    """Health check for exchange rate service"""
+    try:
+        health_status = await exchange_rate_service.health_check()
+        return health_status
+        
+    except Exception as e:
+        logger.error(f"Error in exchange rate health check: {str(e)}")
+        return {
+            "service": "exchange_rate",
+            "status": "unhealthy",
+            "error": str(e),
+            "timestamp": datetime.utcnow().isoformat()
+        }
+
 # Service Discovery Registration
 async def register_with_consul():
     c = consul.Consul(host=settings.consul_host, port=settings.consul_port)
@@ -636,10 +841,28 @@ async def register_with_consul():
 async def startup_event():
     await create_tables()
     await register_with_consul()
+    
+    # Start exchange rate scheduler
+    try:
+        scheduler = await get_scheduler()
+        await scheduler.start()
+        logger.info("Exchange rate scheduler started")
+    except Exception as e:
+        logger.error(f"Failed to start exchange rate scheduler: {str(e)}")
+    
     logger.info(f"{settings.service_name} started")
 
 @app.on_event("shutdown")
 async def shutdown_event():
+    # Stop exchange rate scheduler
+    try:
+        scheduler = await get_scheduler()
+        await scheduler.stop()
+        logger.info("Exchange rate scheduler stopped")
+    except Exception as e:
+        logger.error(f"Failed to stop exchange rate scheduler: {str(e)}")
+    
+    # Deregister from Consul
     c = consul.Consul(host=settings.consul_host, port=settings.consul_port)
     try:
         c.agent.service.deregister(f"{settings.service_name}-1")
