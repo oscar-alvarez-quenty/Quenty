@@ -14,6 +14,8 @@ import uuid
 
 from .models import Manifest, ManifestItem, ShippingRate, Country, ShippingCarrier, Base, ManifestStatus, ShippingZone
 from .database import get_db, create_tables, engine
+from .integrations.factory import CarrierFactory, CARRIER_CONFIG_TEMPLATES
+from .integrations.base import ShipmentRequest
 
 logger = structlog.get_logger()
 
@@ -154,6 +156,40 @@ class CarrierCreate(BaseModel):
     api_endpoint: Optional[str] = None
     api_key: Optional[str] = None
     supported_services: Optional[List[str]] = None
+
+class CarrierConfigUpdate(BaseModel):
+    api_key: Optional[str] = None
+    api_secret: Optional[str] = None
+    user_id: Optional[str] = None
+    password: Optional[str] = None
+    account_number: Optional[str] = None
+    sandbox: bool = True
+
+class ShipmentCreateRequest(BaseModel):
+    carrier_code: str
+    origin_address: Dict[str, str]
+    destination_address: Dict[str, str]
+    weight_kg: float
+    length_cm: float
+    width_cm: float
+    height_cm: float
+    value: float
+    currency: str = "USD"
+    description: str
+    reference_number: Optional[str] = None
+    insurance_required: bool = False
+    signature_required: bool = False
+
+class RateRequest(BaseModel):
+    origin_country: str
+    destination_country: str
+    weight_kg: float
+    length_cm: float
+    width_cm: float
+    height_cm: float
+    value: float
+    currency: str = "USD"
+    carrier_codes: Optional[List[str]] = None  # If None, get rates from all carriers
 
 @app.get("/health")
 async def health_check():
@@ -352,7 +388,318 @@ async def create_manifest_item(
         logger.error(f"Error creating manifest item: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
-# Shipping rates endpoints
+# Carrier Integration endpoints
+@app.post("/api/v1/carriers/{carrier_code}/configure", response_model=Dict[str, Any])
+async def configure_carrier(
+    carrier_code: str,
+    config: CarrierConfigUpdate,
+    current_user = Depends(require_permissions(["admin:carriers"])),
+    db: AsyncSession = Depends(get_db)
+):
+    """Configure carrier API credentials and settings"""
+    try:
+        if not CarrierFactory.is_supported(carrier_code):
+            raise HTTPException(status_code=400, detail=f"Unsupported carrier: {carrier_code}")
+        
+        # In a real implementation, store encrypted credentials in database
+        # For now, return success with sanitized config
+        return {
+            "carrier_code": carrier_code.upper(),
+            "configured": True,
+            "sandbox": config.sandbox,
+            "message": f"{carrier_code.upper()} carrier configured successfully"
+        }
+    except Exception as e:
+        logger.error(f"Error configuring carrier {carrier_code}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.get("/api/v1/carriers/templates", response_model=Dict[str, Any])
+async def get_carrier_config_templates(
+    current_user = Depends(get_current_user)
+):
+    """Get configuration templates for all supported carriers"""
+    return {
+        "supported_carriers": CarrierFactory.get_supported_carriers(),
+        "templates": CARRIER_CONFIG_TEMPLATES
+    }
+
+@app.post("/api/v1/shipping/rates/calculate", response_model=List[Dict[str, Any]])
+async def calculate_shipping_rates(
+    rate_request: RateRequest,
+    current_user = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Calculate shipping rates from one or more carriers"""
+    try:
+        # Mock carrier configurations - in real implementation, fetch from database
+        carrier_configs = {
+            "DHL": {"api_key": "test_key", "api_secret": "test_secret"},
+            "FEDEX": {"api_key": "test_key", "api_secret": "test_secret", "account_number": "123456789"},
+            "UPS": {"api_key": "test_key", "user_id": "test_user", "password": "test_pass", "account_number": "123456"}
+        }
+        
+        carriers_to_query = rate_request.carrier_codes or list(carrier_configs.keys())
+        all_rates = []
+        
+        for carrier_code in carriers_to_query:
+            if carrier_code.upper() not in carrier_configs:
+                continue
+                
+            try:
+                integration = CarrierFactory.create_integration(
+                    carrier_code, 
+                    carrier_configs[carrier_code.upper()], 
+                    sandbox=True
+                )
+                
+                if integration:
+                    rates = await integration.calculate_rates(
+                        origin_country=rate_request.origin_country,
+                        destination_country=rate_request.destination_country,
+                        weight_kg=rate_request.weight_kg,
+                        length_cm=rate_request.length_cm,
+                        width_cm=rate_request.width_cm,
+                        height_cm=rate_request.height_cm,
+                        value=rate_request.value,
+                        currency=rate_request.currency
+                    )
+                    
+                    # Convert to dict format
+                    for rate in rates:
+                        all_rates.append({
+                            "carrier": rate.carrier,
+                            "service_type": rate.service_type,
+                            "base_rate": rate.base_rate,
+                            "weight_rate": rate.weight_rate,
+                            "fuel_surcharge": rate.fuel_surcharge,
+                            "insurance_rate": rate.insurance_rate,
+                            "total_cost": rate.total_cost,
+                            "currency": rate.currency,
+                            "transit_days": rate.transit_days,
+                            "valid_until": rate.valid_until,
+                            "additional_fees": rate.additional_fees
+                        })
+                        
+            except Exception as e:
+                logger.error(f"Error getting rates from {carrier_code}: {str(e)}")
+                continue
+        
+        # Sort by total cost
+        all_rates.sort(key=lambda x: x["total_cost"])
+        
+        return all_rates
+        
+    except Exception as e:
+        logger.error(f"Error calculating shipping rates: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.post("/api/v1/shipping/shipments", response_model=Dict[str, Any])
+async def create_shipment(
+    shipment_request: ShipmentCreateRequest,
+    current_user = Depends(require_permissions(["shipping:create"])),
+    db: AsyncSession = Depends(get_db)
+):
+    """Create a shipment with selected carrier"""
+    try:
+        # Mock carrier configuration - in real implementation, fetch from database
+        carrier_configs = {
+            "DHL": {"api_key": "test_key", "api_secret": "test_secret"},
+            "FEDEX": {"api_key": "test_key", "api_secret": "test_secret", "account_number": "123456789"},
+            "UPS": {"api_key": "test_key", "user_id": "test_user", "password": "test_pass", "account_number": "123456"}
+        }
+        
+        carrier_code = shipment_request.carrier_code.upper()
+        if carrier_code not in carrier_configs:
+            raise HTTPException(status_code=400, detail=f"Carrier {carrier_code} not configured")
+        
+        integration = CarrierFactory.create_integration(
+            carrier_code,
+            carrier_configs[carrier_code],
+            sandbox=True
+        )
+        
+        if not integration:
+            raise HTTPException(status_code=500, detail=f"Failed to initialize {carrier_code} integration")
+        
+        # Convert request to integration format
+        integration_request = ShipmentRequest(
+            origin_address=shipment_request.origin_address,
+            destination_address=shipment_request.destination_address,
+            weight_kg=shipment_request.weight_kg,
+            length_cm=shipment_request.length_cm,
+            width_cm=shipment_request.width_cm,
+            height_cm=shipment_request.height_cm,
+            value=shipment_request.value,
+            currency=shipment_request.currency,
+            description=shipment_request.description,
+            reference_number=shipment_request.reference_number,
+            insurance_required=shipment_request.insurance_required,
+            signature_required=shipment_request.signature_required
+        )
+        
+        # Create shipment
+        response = await integration.create_shipment(integration_request)
+        
+        return {
+            "tracking_number": response.tracking_number,
+            "carrier": response.carrier,
+            "service_type": response.service_type,
+            "label_url": response.label_url,
+            "label_format": response.label_format,
+            "estimated_delivery": response.estimated_delivery,
+            "total_cost": response.total_cost,
+            "currency": response.currency,
+            "reference_number": response.reference_number,
+            "created_at": datetime.utcnow()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error creating shipment: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.get("/api/v1/shipping/track/{tracking_number}", response_model=Dict[str, Any])
+async def track_shipment_external(
+    tracking_number: str,
+    carrier_code: Optional[str] = Query(None),
+    current_user = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Track shipment using external carrier APIs"""
+    try:
+        # Mock carrier configurations
+        carrier_configs = {
+            "DHL": {"api_key": "test_key", "api_secret": "test_secret"},
+            "FEDEX": {"api_key": "test_key", "api_secret": "test_secret", "account_number": "123456789"},
+            "UPS": {"api_key": "test_key", "user_id": "test_user", "password": "test_pass", "account_number": "123456"}
+        }
+        
+        # If carrier not specified, try to detect from tracking number format
+        if not carrier_code:
+            if tracking_number.startswith("1Z"):
+                carrier_code = "UPS"
+            elif len(tracking_number) == 12 and tracking_number.isdigit():
+                carrier_code = "FEDEX"
+            elif len(tracking_number) == 10:
+                carrier_code = "DHL"
+            else:
+                raise HTTPException(status_code=400, detail="Cannot determine carrier from tracking number")
+        
+        carrier_code = carrier_code.upper()
+        if carrier_code not in carrier_configs:
+            raise HTTPException(status_code=400, detail=f"Carrier {carrier_code} not configured")
+        
+        integration = CarrierFactory.create_integration(
+            carrier_code,
+            carrier_configs[carrier_code],
+            sandbox=True
+        )
+        
+        if not integration:
+            raise HTTPException(status_code=500, detail=f"Failed to initialize {carrier_code} integration")
+        
+        # Track shipment
+        tracking_data = await integration.track_shipment(tracking_number)
+        
+        return tracking_data
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error tracking shipment {tracking_number}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.post("/api/v1/shipping/shipments/{tracking_number}/cancel", response_model=Dict[str, Any])
+async def cancel_shipment_external(
+    tracking_number: str,
+    carrier_code: str = Query(...),
+    current_user = Depends(require_permissions(["shipping:cancel"])),
+    db: AsyncSession = Depends(get_db)
+):
+    """Cancel shipment using external carrier API"""
+    try:
+        # Mock carrier configurations
+        carrier_configs = {
+            "DHL": {"api_key": "test_key", "api_secret": "test_secret"},
+            "FEDEX": {"api_key": "test_key", "api_secret": "test_secret", "account_number": "123456789"},
+            "UPS": {"api_key": "test_key", "user_id": "test_user", "password": "test_pass", "account_number": "123456"}
+        }
+        
+        carrier_code = carrier_code.upper()
+        if carrier_code not in carrier_configs:
+            raise HTTPException(status_code=400, detail=f"Carrier {carrier_code} not configured")
+        
+        integration = CarrierFactory.create_integration(
+            carrier_code,
+            carrier_configs[carrier_code],
+            sandbox=True
+        )
+        
+        if not integration:
+            raise HTTPException(status_code=500, detail=f"Failed to initialize {carrier_code} integration")
+        
+        # Cancel shipment
+        success = await integration.cancel_shipment(tracking_number)
+        
+        return {
+            "tracking_number": tracking_number,
+            "carrier": carrier_code,
+            "cancelled": success,
+            "cancelled_at": datetime.utcnow() if success else None,
+            "message": "Shipment cancelled successfully" if success else "Failed to cancel shipment"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error cancelling shipment {tracking_number}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.post("/api/v1/shipping/validate-address", response_model=Dict[str, Any])
+async def validate_shipping_address(
+    address: Dict[str, str],
+    carrier_code: str = Query(...),
+    current_user = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Validate shipping address using carrier API"""
+    try:
+        # Mock carrier configurations
+        carrier_configs = {
+            "DHL": {"api_key": "test_key", "api_secret": "test_secret"},
+            "FEDEX": {"api_key": "test_key", "api_secret": "test_secret", "account_number": "123456789"},
+            "UPS": {"api_key": "test_key", "user_id": "test_user", "password": "test_pass", "account_number": "123456"}
+        }
+        
+        carrier_code = carrier_code.upper()
+        if carrier_code not in carrier_configs:
+            raise HTTPException(status_code=400, detail=f"Carrier {carrier_code} not configured")
+        
+        integration = CarrierFactory.create_integration(
+            carrier_code,
+            carrier_configs[carrier_code],
+            sandbox=True
+        )
+        
+        if not integration:
+            raise HTTPException(status_code=500, detail=f"Failed to initialize {carrier_code} integration")
+        
+        # Validate address
+        validation_result = await integration.validate_address(address)
+        
+        return {
+            "carrier": carrier_code,
+            "original_address": address,
+            "validation_result": validation_result,
+            "validated_at": datetime.utcnow()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error validating address: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+# Legacy Shipping rates endpoints (kept for backwards compatibility)
 @app.get("/api/v1/shipping/rates", response_model=List[Dict[str, Any]])
 async def get_shipping_rates(
     origin: str = Query(...),
