@@ -613,6 +613,352 @@ async def track_shipment(
         logger.error(f"Error tracking shipment {tracking_number}: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
+# Multi-Carrier Quotation API Endpoints (SCRUM-39)
+from .quotation.multi_carrier import MultiCarrierQuotationService, QuotationRequest, QuotationResponse, CarrierQuote
+
+# Global quotation service instance  
+quotation_service = MultiCarrierQuotationService()
+
+# Mock carrier configurations for demonstration
+MOCK_CARRIER_CONFIGS = {
+    "DHL": {"api_key": "demo_dhl_key", "api_secret": "demo_dhl_secret"},
+    "FEDEX": {"api_key": "demo_fedex_key", "api_secret": "demo_fedex_secret", "account_number": "123456789"},
+    "UPS": {"api_key": "demo_ups_key", "user_id": "demo_user", "password": "demo_pass", "account_number": "123456"}
+}
+
+# Configure the quotation service (would use real configs in production)
+for carrier_code, config in MOCK_CARRIER_CONFIGS.items():
+    quotation_service.set_carrier_config(carrier_code, config)
+
+@app.post("/api/v1/quotations/multi-carrier", response_model=QuotationResponse)
+async def get_multi_carrier_quotation(
+    origin_country: str = Query(..., description="Origin country code (e.g., MX)"),
+    destination_country: str = Query(..., description="Destination country code (e.g., US)"),
+    weight_kg: float = Query(..., gt=0, description="Package weight in kilograms"),
+    length_cm: float = Query(..., gt=0, description="Package length in centimeters"),
+    width_cm: float = Query(..., gt=0, description="Package width in centimeters"),
+    height_cm: float = Query(..., gt=0, description="Package height in centimeters"),
+    value: float = Query(..., gt=0, description="Package value for insurance"),
+    currency: str = Query("USD", description="Currency code"),
+    origin_city: Optional[str] = Query(None, description="Origin city"),
+    destination_city: Optional[str] = Query(None, description="Destination city"),
+    origin_postal_code: Optional[str] = Query(None, description="Origin postal code"),
+    destination_postal_code: Optional[str] = Query(None, description="Destination postal code"),
+    carriers: Optional[str] = Query(None, description="Comma-separated carrier codes (DHL,FEDEX,UPS)"),
+    services: Optional[str] = Query(None, description="Comma-separated service types to include"),
+    current_user = Depends(get_current_user)
+):
+    """Get comprehensive quotations from multiple carriers (DHL, FedEx, UPS)"""
+    try:
+        # Parse carrier and service filters
+        carrier_codes = None
+        if carriers:
+            carrier_codes = [c.strip().upper() for c in carriers.split(",")]
+        
+        service_types = None
+        if services:
+            service_types = [s.strip() for s in services.split(",")]
+        
+        # Create quotation request
+        request = QuotationRequest(
+            origin_country=origin_country,
+            destination_country=destination_country,
+            origin_city=origin_city,
+            destination_city=destination_city,
+            origin_postal_code=origin_postal_code,
+            destination_postal_code=destination_postal_code,
+            weight_kg=weight_kg,
+            length_cm=length_cm,
+            width_cm=width_cm,
+            height_cm=height_cm,
+            value=value,
+            currency=currency,
+            carrier_codes=carrier_codes,
+            service_types=service_types
+        )
+        
+        # Set up carrier factory for the service (mock implementation)
+        class MockCarrierFactory:
+            @staticmethod
+            def create_integration(carrier_code, config, sandbox=True):
+                # This would normally return real carrier integration instances
+                # For now, return mock implementations
+                from datetime import datetime, timedelta
+                
+                class MockCarrierIntegration:
+                    def __init__(self, carrier_name, services_data):
+                        self.carrier_name = carrier_name
+                        self.services_data = services_data
+                    
+                    async def calculate_rates(self, origin_country, destination_country, weight_kg, 
+                                            length_cm, width_cm, height_cm, value, currency="USD"):
+                        from .integrations.base import ShippingRate
+                        
+                        # Generate mock rates based on carrier and package details
+                        rates = []
+                        for service_name, base_multiplier, transit_days in self.services_data:
+                            base_rate = 35.0 * base_multiplier
+                            weight_rate = weight_kg * 6.5
+                            fuel_surcharge = (base_rate + weight_rate) * 0.12
+                            insurance_rate = value * 0.005
+                            total_cost = base_rate + weight_rate + fuel_surcharge + insurance_rate
+                            
+                            rate = ShippingRate(
+                                carrier=self.carrier_name,
+                                service_type=service_name,
+                                base_rate=base_rate,
+                                weight_rate=weight_rate,
+                                fuel_surcharge=fuel_surcharge,
+                                insurance_rate=insurance_rate,
+                                total_cost=total_cost,
+                                currency=currency,
+                                transit_days=transit_days,
+                                valid_until=datetime.utcnow() + timedelta(hours=24)
+                            )
+                            rates.append(rate)
+                        
+                        return rates
+                
+                # Mock carrier services data
+                carrier_services = {
+                    "DHL": [
+                        ("DHL Express Worldwide", 1.2, 3),
+                        ("DHL Express 12:00", 1.4, 2),
+                        ("DHL Express 9:00", 1.6, 1)
+                    ],
+                    "FEDEX": [
+                        ("FedEx International Priority", 1.1, 3),
+                        ("FedEx International Economy", 0.9, 5),
+                        ("FedEx International First", 1.5, 1)
+                    ],
+                    "UPS": [
+                        ("UPS Worldwide Express", 1.15, 3),
+                        ("UPS Worldwide Express Plus", 1.3, 2),
+                        ("UPS Worldwide Saver", 1.0, 4)
+                    ]
+                }
+                
+                if carrier_code in carrier_services:
+                    return MockCarrierIntegration(carrier_code, carrier_services[carrier_code])
+                return None
+        
+        quotation_service.set_carrier_factory(MockCarrierFactory())
+        
+        # Get quotations
+        response = await quotation_service.get_quotations(request)
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"Error generating multi-carrier quotation: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.post("/api/v1/quotations/comparison", response_model=Dict[str, Any])
+async def get_quotation_comparison(
+    origin_country: str = Query(..., description="Origin country code"),
+    destination_country: str = Query(..., description="Destination country code"),
+    weight_kg: float = Query(..., gt=0, description="Package weight in kilograms"),
+    length_cm: float = Query(..., gt=0, description="Package length in centimeters"),
+    width_cm: float = Query(..., gt=0, description="Package width in centimeters"),
+    height_cm: float = Query(..., gt=0, description="Package height in centimeters"),
+    value: float = Query(..., gt=0, description="Package value"),
+    currency: str = Query("USD", description="Currency code"),
+    current_user = Depends(get_current_user)
+):
+    """Get detailed carrier comparison analysis"""
+    try:
+        request = QuotationRequest(
+            origin_country=origin_country,
+            destination_country=destination_country,
+            weight_kg=weight_kg,
+            length_cm=length_cm,
+            width_cm=width_cm,
+            height_cm=height_cm,
+            value=value,
+            currency=currency
+        )
+        
+        # Use the same mock factory as above
+        class MockCarrierFactory:
+            @staticmethod
+            def create_integration(carrier_code, config, sandbox=True):
+                from datetime import datetime, timedelta
+                
+                class MockCarrierIntegration:
+                    def __init__(self, carrier_name, services_data):
+                        self.carrier_name = carrier_name
+                        self.services_data = services_data
+                    
+                    async def calculate_rates(self, origin_country, destination_country, weight_kg, 
+                                            length_cm, width_cm, height_cm, value, currency="USD"):
+                        from .integrations.base import ShippingRate
+                        
+                        rates = []
+                        for service_name, base_multiplier, transit_days in self.services_data:
+                            base_rate = 35.0 * base_multiplier
+                            weight_rate = weight_kg * 6.5
+                            fuel_surcharge = (base_rate + weight_rate) * 0.12
+                            insurance_rate = value * 0.005
+                            total_cost = base_rate + weight_rate + fuel_surcharge + insurance_rate
+                            
+                            rate = ShippingRate(
+                                carrier=self.carrier_name,
+                                service_type=service_name,
+                                base_rate=base_rate,
+                                weight_rate=weight_rate,
+                                fuel_surcharge=fuel_surcharge,
+                                insurance_rate=insurance_rate,
+                                total_cost=total_cost,
+                                currency=currency,
+                                transit_days=transit_days,
+                                valid_until=datetime.utcnow() + timedelta(hours=24)
+                            )
+                            rates.append(rate)
+                        
+                        return rates
+                
+                carrier_services = {
+                    "DHL": [
+                        ("DHL Express Worldwide", 1.2, 3),
+                        ("DHL Express 12:00", 1.4, 2),
+                        ("DHL Express 9:00", 1.6, 1)
+                    ],
+                    "FEDEX": [
+                        ("FedEx International Priority", 1.1, 3),
+                        ("FedEx International Economy", 0.9, 5),
+                        ("FedEx International First", 1.5, 1)
+                    ],
+                    "UPS": [
+                        ("UPS Worldwide Express", 1.15, 3),
+                        ("UPS Worldwide Express Plus", 1.3, 2),
+                        ("UPS Worldwide Saver", 1.0, 4)
+                    ]
+                }
+                
+                if carrier_code in carrier_services:
+                    return MockCarrierIntegration(carrier_code, carrier_services[carrier_code])
+                return None
+        
+        quotation_service.set_carrier_factory(MockCarrierFactory())
+        
+        # Get detailed comparison
+        comparison = await quotation_service.get_carrier_quote_comparison(request)
+        
+        return comparison
+        
+    except Exception as e:
+        logger.error(f"Error generating quotation comparison: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.get("/api/v1/quotations/carriers", response_model=Dict[str, Any])
+async def get_available_carriers(
+    current_user = Depends(get_current_user)
+):
+    """Get list of available carriers and their service types"""
+    try:
+        carriers_info = {
+            "DHL": {
+                "name": "DHL Express",
+                "code": "DHL",
+                "services": [
+                    {"code": "EXPRESS_WORLDWIDE", "name": "Express Worldwide", "typical_transit_days": 3},
+                    {"code": "EXPRESS_1200", "name": "Express 12:00", "typical_transit_days": 2},
+                    {"code": "EXPRESS_0900", "name": "Express 9:00", "typical_transit_days": 1}
+                ],
+                "countries": ["MX", "US", "CA", "DE", "GB", "FR", "ES", "IT", "JP", "CN", "AU"],
+                "features": ["Express delivery", "Door-to-door", "Online tracking", "Signature service"]
+            },
+            "FEDEX": {
+                "name": "FedEx",
+                "code": "FEDEX",
+                "services": [
+                    {"code": "INTERNATIONAL_PRIORITY", "name": "International Priority", "typical_transit_days": 3},
+                    {"code": "INTERNATIONAL_ECONOMY", "name": "International Economy", "typical_transit_days": 5},
+                    {"code": "INTERNATIONAL_FIRST", "name": "International First", "typical_transit_days": 1}
+                ],
+                "countries": ["MX", "US", "CA", "DE", "GB", "FR", "ES", "IT", "JP", "CN", "AU"],
+                "features": ["Money-back guarantee", "FedEx tracking", "Delivery options", "Special handling"]
+            },
+            "UPS": {
+                "name": "UPS",
+                "code": "UPS",
+                "services": [
+                    {"code": "WORLDWIDE_EXPRESS", "name": "Worldwide Express", "typical_transit_days": 3},
+                    {"code": "WORLDWIDE_EXPRESS_PLUS", "name": "Worldwide Express Plus", "typical_transit_days": 2},
+                    {"code": "WORLDWIDE_SAVER", "name": "Worldwide Saver", "typical_transit_days": 4}
+                ],
+                "countries": ["MX", "US", "CA", "DE", "GB", "FR", "ES", "IT", "JP", "CN", "AU"],
+                "features": ["UPS tracking", "Delivery confirmation", "Insurance options", "Flexible delivery"]
+            }
+        }
+        
+        return {
+            "carriers": carriers_info,
+            "total_carriers": len(carriers_info),
+            "supported_countries": list(set().union(*[c["countries"] for c in carriers_info.values()])),
+            "quotation_features": [
+                "Multi-carrier comparison",
+                "Real-time rate calculation", 
+                "Service level options",
+                "Transit time estimates",
+                "Cost breakdown analysis",
+                "Best value recommendations"
+            ]
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting carrier information: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.get("/api/v1/quotations/countries", response_model=Dict[str, Any])
+async def get_supported_countries(
+    current_user = Depends(get_current_user)
+):
+    """Get list of supported countries for international shipping quotations"""
+    try:
+        supported_countries = {
+            "MX": {"name": "Mexico", "region": "North America", "zone": "Zone_1"},
+            "US": {"name": "United States", "region": "North America", "zone": "Zone_1"},
+            "CA": {"name": "Canada", "region": "North America", "zone": "Zone_1"},
+            "DE": {"name": "Germany", "region": "Europe", "zone": "Zone_2"},
+            "GB": {"name": "United Kingdom", "region": "Europe", "zone": "Zone_2"},
+            "FR": {"name": "France", "region": "Europe", "zone": "Zone_2"},
+            "ES": {"name": "Spain", "region": "Europe", "zone": "Zone_2"},
+            "IT": {"name": "Italy", "region": "Europe", "zone": "Zone_2"},
+            "JP": {"name": "Japan", "region": "Asia", "zone": "Zone_3"},
+            "CN": {"name": "China", "region": "Asia", "zone": "Zone_3"},
+            "AU": {"name": "Australia", "region": "Oceania", "zone": "Zone_3"},
+            "CO": {"name": "Colombia", "region": "South America", "zone": "Zone_2"},
+            "BR": {"name": "Brazil", "region": "South America", "zone": "Zone_2"}
+        }
+        
+        # Group by region
+        regions = {}
+        for code, info in supported_countries.items():
+            region = info["region"]
+            if region not in regions:
+                regions[region] = []
+            regions[region].append({
+                "code": code,
+                "name": info["name"],
+                "zone": info["zone"]
+            })
+        
+        return {
+            "countries": supported_countries,
+            "regions": regions,
+            "total_countries": len(supported_countries),
+            "shipping_zones": {
+                "Zone_1": "North America (Mexico, US, Canada)",
+                "Zone_2": "Europe & South America",
+                "Zone_3": "Asia & Oceania"
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting supported countries: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
 # Service Discovery Registration
 async def register_with_consul():
     c = consul.Consul(host=settings.consul_host, port=settings.consul_port)
