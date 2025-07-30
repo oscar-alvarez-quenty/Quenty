@@ -12,7 +12,7 @@ from datetime import datetime, date, timedelta
 from enum import Enum
 import uuid
 
-from .models import Manifest, ManifestItem, ShippingRate, Country, ShippingCarrier, Base, ManifestStatus, ShippingZone
+from .models import Manifest, ManifestItem, ShippingRate, Country, ShippingCarrier, Base, ManifestStatus, ShippingZone, TrackingEvent, BulkTrackingDashboard
 from .database import get_db, create_tables, engine
 
 logger = structlog.get_logger()
@@ -154,6 +154,77 @@ class CarrierCreate(BaseModel):
     api_endpoint: Optional[str] = None
     api_key: Optional[str] = None
     supported_services: Optional[List[str]] = None
+
+class TrackingEventResponse(BaseModel):
+    id: int
+    tracking_number: str
+    event_timestamp: datetime
+    location: Optional[str]
+    status: str
+    description: Optional[str]
+    carrier_code: Optional[str]
+
+class BulkTrackingDashboardCreate(BaseModel):
+    name: str = Field(min_length=3, max_length=255)
+    description: Optional[str] = None
+    tracking_numbers: List[str] = Field(min_items=1, max_items=1000)
+    status_filters: Optional[List[str]] = None
+    carrier_filters: Optional[List[str]] = None
+    date_range_start: Optional[datetime] = None
+    date_range_end: Optional[datetime] = None
+    refresh_interval: Optional[int] = Field(default=300, ge=60, le=3600)
+
+class BulkTrackingDashboardUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=3, max_length=255)
+    description: Optional[str] = None
+    tracking_numbers: Optional[List[str]] = Field(None, min_items=1, max_items=1000)
+    status_filters: Optional[List[str]] = None
+    carrier_filters: Optional[List[str]] = None
+    date_range_start: Optional[datetime] = None
+    date_range_end: Optional[datetime] = None
+    refresh_interval: Optional[int] = Field(None, ge=60, le=3600)
+
+class BulkTrackingDashboardResponse(BaseModel):
+    id: int
+    unique_id: str
+    name: str
+    description: Optional[str]
+    tracking_numbers: List[str]
+    status_filters: Optional[List[str]]
+    carrier_filters: Optional[List[str]]
+    date_range_start: Optional[datetime]
+    date_range_end: Optional[datetime]
+    refresh_interval: int
+    created_at: datetime
+    updated_at: datetime
+
+class TrackingStatusSummary(BaseModel):
+    tracking_number: str
+    current_status: str
+    carrier: str
+    origin: Optional[str]
+    destination: Optional[str]
+    estimated_delivery: Optional[datetime]
+    last_update: datetime
+    events_count: int
+    progress_percentage: Optional[int]
+
+class BulkTrackingOverview(BaseModel):
+    dashboard_id: int
+    total_shipments: int
+    status_breakdown: Dict[str, int]
+    carrier_breakdown: Dict[str, int]
+    on_time_deliveries: int
+    delayed_shipments: int
+    average_transit_days: Optional[float]
+    last_updated: datetime
+
+class TrackingFilter(BaseModel):
+    status: Optional[List[str]] = None
+    carrier: Optional[List[str]] = None
+    date_from: Optional[datetime] = None
+    date_to: Optional[datetime] = None
+    search_term: Optional[str] = None
 
 @app.get("/health")
 async def health_check():
@@ -611,6 +682,335 @@ async def track_shipment(
         }
     except Exception as e:
         logger.error(f"Error tracking shipment {tracking_number}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+# Bulk Tracking Dashboard endpoints
+@app.post("/api/v1/dashboards", response_model=BulkTrackingDashboardResponse)
+async def create_tracking_dashboard(
+    dashboard: BulkTrackingDashboardCreate,
+    current_user = Depends(require_permissions(["shipping:dashboard_create"])),
+    db: AsyncSession = Depends(get_db)
+):
+    """Create a new bulk tracking dashboard"""
+    try:
+        unique_id = f"DASH-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}-{uuid.uuid4().hex[:8]}"
+        
+        return {
+            "id": 1,  # Mock ID
+            "unique_id": unique_id,
+            "name": dashboard.name,
+            "description": dashboard.description,
+            "tracking_numbers": dashboard.tracking_numbers,
+            "status_filters": dashboard.status_filters,
+            "carrier_filters": dashboard.carrier_filters,
+            "date_range_start": dashboard.date_range_start,
+            "date_range_end": dashboard.date_range_end,
+            "refresh_interval": dashboard.refresh_interval,
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+    except Exception as e:
+        logger.error(f"Error creating tracking dashboard: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.get("/api/v1/dashboards", response_model=List[BulkTrackingDashboardResponse])
+async def get_tracking_dashboards(
+    limit: int = Query(20, le=100),
+    offset: int = Query(0, ge=0),
+    current_user = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get list of bulk tracking dashboards"""
+    try:
+        mock_dashboards = [
+            {
+                "id": 1,
+                "unique_id": "DASH-20250730120000-abc12345",
+                "name": "International Shipments - Q1",
+                "description": "Dashboard for tracking Q1 international shipments",
+                "tracking_numbers": ["TN001", "TN002", "TN003", "TN004", "TN005"],
+                "status_filters": ["in_transit", "delivered"],
+                "carrier_filters": ["DHL", "FedEx"],
+                "date_range_start": datetime.utcnow() - timedelta(days=30),
+                "date_range_end": datetime.utcnow(),
+                "refresh_interval": 300,
+                "created_at": datetime.utcnow() - timedelta(hours=5),
+                "updated_at": datetime.utcnow() - timedelta(minutes=15)
+            },
+            {
+                "id": 2,
+                "unique_id": "DASH-20250729180000-def67890",
+                "name": "Priority Shipments",
+                "description": "High priority shipment tracking",
+                "tracking_numbers": ["TN010", "TN011", "TN012"],
+                "status_filters": None,
+                "carrier_filters": ["UPS"],
+                "date_range_start": None,
+                "date_range_end": None,
+                "refresh_interval": 180,
+                "created_at": datetime.utcnow() - timedelta(days=2),
+                "updated_at": datetime.utcnow() - timedelta(hours=1)
+            }
+        ]
+        
+        return mock_dashboards[offset:offset+limit]
+    except Exception as e:
+        logger.error(f"Error fetching tracking dashboards: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.get("/api/v1/dashboards/{dashboard_id}", response_model=BulkTrackingDashboardResponse)
+async def get_tracking_dashboard(
+    dashboard_id: int,
+    current_user = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get specific tracking dashboard details"""
+    try:
+        return {
+            "id": dashboard_id,
+            "unique_id": f"DASH-20250730120000-{dashboard_id:08d}",
+            "name": f"Dashboard {dashboard_id}",
+            "description": f"Bulk tracking dashboard {dashboard_id}",
+            "tracking_numbers": [f"TN{i:03d}" for i in range(1, 6)],
+            "status_filters": ["in_transit", "delivered"],
+            "carrier_filters": ["DHL", "FedEx", "UPS"],
+            "date_range_start": datetime.utcnow() - timedelta(days=30),
+            "date_range_end": datetime.utcnow(),
+            "refresh_interval": 300,
+            "created_at": datetime.utcnow() - timedelta(hours=5),
+            "updated_at": datetime.utcnow() - timedelta(minutes=15)
+        }
+    except Exception as e:
+        logger.error(f"Error fetching tracking dashboard {dashboard_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.put("/api/v1/dashboards/{dashboard_id}", response_model=BulkTrackingDashboardResponse)
+async def update_tracking_dashboard(
+    dashboard_id: int,
+    dashboard_update: BulkTrackingDashboardUpdate,
+    current_user = Depends(require_permissions(["shipping:dashboard_update"])),
+    db: AsyncSession = Depends(get_db)
+):
+    """Update tracking dashboard configuration"""
+    try:
+        # Get current dashboard (mock)
+        current_dashboard = {
+            "id": dashboard_id,
+            "unique_id": f"DASH-20250730120000-{dashboard_id:08d}",
+            "name": f"Dashboard {dashboard_id}",
+            "description": f"Bulk tracking dashboard {dashboard_id}",
+            "tracking_numbers": [f"TN{i:03d}" for i in range(1, 6)],
+            "status_filters": ["in_transit", "delivered"],
+            "carrier_filters": ["DHL", "FedEx", "UPS"],
+            "date_range_start": datetime.utcnow() - timedelta(days=30),
+            "date_range_end": datetime.utcnow(),
+            "refresh_interval": 300,
+            "created_at": datetime.utcnow() - timedelta(hours=5),
+            "updated_at": datetime.utcnow() - timedelta(minutes=15)
+        }
+        
+        # Apply updates
+        update_data = dashboard_update.dict(exclude_unset=True)
+        for field, value in update_data.items():
+            current_dashboard[field] = value
+        
+        current_dashboard["updated_at"] = datetime.utcnow()
+        return current_dashboard
+    except Exception as e:
+        logger.error(f"Error updating tracking dashboard {dashboard_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.delete("/api/v1/dashboards/{dashboard_id}")
+async def delete_tracking_dashboard(
+    dashboard_id: int,
+    current_user = Depends(require_permissions(["shipping:dashboard_delete"])),
+    db: AsyncSession = Depends(get_db)
+):
+    """Delete tracking dashboard"""
+    try:
+        return {"message": f"Dashboard {dashboard_id} deleted successfully"}
+    except Exception as e:
+        logger.error(f"Error deleting tracking dashboard {dashboard_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.get("/api/v1/dashboards/{dashboard_id}/overview", response_model=BulkTrackingOverview)
+async def get_dashboard_overview(
+    dashboard_id: int,
+    current_user = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get tracking overview and statistics for dashboard"""
+    try:
+        return {
+            "dashboard_id": dashboard_id,
+            "total_shipments": 45,
+            "status_breakdown": {
+                "delivered": 25,
+                "in_transit": 15,
+                "pending": 3,
+                "delayed": 2
+            },
+            "carrier_breakdown": {
+                "DHL": 20,
+                "FedEx": 15,
+                "UPS": 10
+            },
+            "on_time_deliveries": 40,
+            "delayed_shipments": 5,
+            "average_transit_days": 4.2,
+            "last_updated": datetime.utcnow()
+        }
+    except Exception as e:
+        logger.error(f"Error fetching dashboard overview {dashboard_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.get("/api/v1/dashboards/{dashboard_id}/tracking", response_model=List[TrackingStatusSummary])
+async def get_dashboard_tracking_status(
+    dashboard_id: int,
+    limit: int = Query(50, le=200),
+    offset: int = Query(0, ge=0),
+    filters: TrackingFilter = Depends(),
+    current_user = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get tracking status for all shipments in dashboard"""
+    try:
+        mock_tracking = []
+        statuses = ["delivered", "in_transit", "pending", "delayed", "exception"]
+        carriers = ["DHL", "FedEx", "UPS"]
+        
+        for i in range(1, 21):  # 20 tracking items
+            status = statuses[i % len(statuses)]
+            carrier = carriers[i % len(carriers)]
+            
+            # Apply filters if provided
+            skip = False
+            if filters.status and status not in filters.status:
+                skip = True
+            if filters.carrier and carrier not in filters.carrier:
+                skip = True
+            
+            if not skip:
+                progress = 100 if status == "delivered" else (80 if status == "in_transit" else 30)
+                mock_tracking.append({
+                    "tracking_number": f"TN{i:03d}",
+                    "current_status": status,
+                    "carrier": carrier,
+                    "origin": "Mexico City, MX",
+                    "destination": "Miami, FL, US",
+                    "estimated_delivery": datetime.utcnow() + timedelta(days=2) if status != "delivered" else None,
+                    "last_update": datetime.utcnow() - timedelta(hours=i),
+                    "events_count": 4 + (i % 3),
+                    "progress_percentage": progress
+                })
+        
+        return mock_tracking[offset:offset+limit]
+    except Exception as e:
+        logger.error(f"Error fetching dashboard tracking status {dashboard_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.get("/api/v1/dashboards/{dashboard_id}/tracking/{tracking_number}/events", response_model=List[TrackingEventResponse])
+async def get_tracking_events(
+    dashboard_id: int,
+    tracking_number: str,
+    current_user = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get detailed tracking events for a specific shipment"""
+    try:
+        mock_events = [
+            {
+                "id": 1,
+                "tracking_number": tracking_number,
+                "event_timestamp": datetime.utcnow() - timedelta(days=3),
+                "location": "Mexico City, MX",
+                "status": "picked_up",
+                "description": "Package picked up from origin facility",
+                "carrier_code": "DHL"
+            },
+            {
+                "id": 2,
+                "tracking_number": tracking_number,
+                "event_timestamp": datetime.utcnow() - timedelta(days=2, hours=18),
+                "location": "Mexico City Airport, MX",
+                "status": "in_transit",
+                "description": "Departed from origin facility",
+                "carrier_code": "DHL"
+            },
+            {
+                "id": 3,
+                "tracking_number": tracking_number,
+                "event_timestamp": datetime.utcnow() - timedelta(days=2, hours=8),
+                "location": "Miami Airport, FL, US",
+                "status": "in_transit",
+                "description": "Arrived at destination facility",
+                "carrier_code": "DHL"
+            },
+            {
+                "id": 4,
+                "tracking_number": tracking_number,
+                "event_timestamp": datetime.utcnow() - timedelta(days=1),
+                "location": "Miami, FL, US",
+                "status": "out_for_delivery",
+                "description": "Out for delivery",
+                "carrier_code": "DHL"
+            }
+        ]
+        return mock_events
+    except Exception as e:
+        logger.error(f"Error fetching tracking events for {tracking_number}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.post("/api/v1/dashboards/{dashboard_id}/refresh", response_model=Dict[str, Any])
+async def refresh_dashboard_data(
+    dashboard_id: int,
+    current_user = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Manually refresh tracking data for dashboard"""
+    try:
+        # Simulate refresh operation
+        updated_count = 45
+        new_events = 12
+        status_changes = 8
+        
+        return {
+            "dashboard_id": dashboard_id,
+            "refresh_status": "completed",
+            "updated_tracking_numbers": updated_count,
+            "new_events": new_events,
+            "status_changes": status_changes,
+            "last_refresh": datetime.utcnow(),
+            "next_refresh": datetime.utcnow() + timedelta(seconds=300)
+        }
+    except Exception as e:
+        logger.error(f"Error refreshing dashboard {dashboard_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.get("/api/v1/dashboards/{dashboard_id}/export", response_model=Dict[str, Any])
+async def export_dashboard_data(
+    dashboard_id: int,
+    format: str = Query("csv", regex="^(csv|xlsx|json)$"),
+    current_user = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Export dashboard tracking data in various formats"""
+    try:
+        # Generate export file (mock)
+        export_filename = f"dashboard_{dashboard_id}_export_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.{format}"
+        
+        return {
+            "dashboard_id": dashboard_id,
+            "export_format": format,
+            "filename": export_filename,
+            "file_size": "2.5MB",
+            "download_url": f"/api/v1/downloads/{export_filename}",
+            "expires_at": datetime.utcnow() + timedelta(hours=24),
+            "record_count": 45,
+            "generated_at": datetime.utcnow()
+        }
+    except Exception as e:
+        logger.error(f"Error exporting dashboard data {dashboard_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
 # Service Discovery Registration

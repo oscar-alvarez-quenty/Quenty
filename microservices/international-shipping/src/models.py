@@ -49,6 +49,7 @@ class Manifest(Base):
     # Relationships
     manifest_items = relationship("ManifestItem", back_populates="manifest")
     shipping_rates = relationship("ShippingRate", back_populates="manifest")
+    tracking_events = relationship("TrackingEvent", back_populates="manifest")
 
 class ManifestItem(Base):
     __tablename__ = "manifest_items"
@@ -114,3 +115,41 @@ class ShippingCarrier(Base):
     active = Column(Boolean, default=True)
     supported_services = Column(JSON)  # List of service types
     created_at = Column(DateTime, default=datetime.utcnow)
+
+class TrackingEvent(Base):
+    __tablename__ = "tracking_events"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    tracking_number = Column(String(255), nullable=False, index=True)
+    event_timestamp = Column(DateTime, nullable=False)
+    location = Column(String(255))
+    status = Column(String(100), nullable=False)
+    description = Column(Text)
+    carrier_code = Column(String(50))
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Foreign Keys
+    manifest_id = Column(Integer, ForeignKey("manifests.id"))
+    
+    # Relationships
+    manifest = relationship("Manifest", back_populates="tracking_events")
+
+class BulkTrackingDashboard(Base):
+    __tablename__ = "bulk_tracking_dashboards"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    unique_id = Column(String(255), unique=True, nullable=False)
+    name = Column(String(255), nullable=False)
+    description = Column(Text)
+    tracking_numbers = Column(JSON)  # List of tracking numbers to monitor
+    status_filters = Column(JSON)  # Status filters for dashboard
+    carrier_filters = Column(JSON)  # Carrier filters
+    date_range_start = Column(DateTime)
+    date_range_end = Column(DateTime)
+    refresh_interval = Column(Integer, default=300)  # Refresh interval in seconds
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Foreign Keys
+    company_id = Column(String(255), nullable=False)
+    created_by = Column(String(255), nullable=False)
