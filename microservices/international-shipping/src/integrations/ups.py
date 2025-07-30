@@ -416,7 +416,7 @@ class UPSIntegration(CarrierIntegrationBase):
                 tracking_event = TrackingEvent(
                     timestamp=datetime.fromisoformat(f"{activity.get('date', '')}T{activity.get('time', '')}"),
                     location=f"{location.get('address', {}).get('city', '')}, {location.get('address', {}).get('stateProvince', '')}",
-                    status=self._normalize_status(activity.get("status', {}).get('type', '')),
+                    status=self._normalize_status(activity.get("status", {}).get("type", "")),
                     description=activity.get("status", {}).get("description", ""),
                     raw_status=activity.get("status", {}).get("type", "")
                 )
