@@ -7,7 +7,7 @@ from sqlalchemy.pool import NullPool
 from fastapi import FastAPI
 from src.main import app
 from src.database import get_db
-from src.models.models import Base, Rate, Catalog, CatalogRate, ClientRatebook
+from src.models.models import Base, Rate, Catalog, CatalogRate, ClientRatebook, DocumentType, Document
 from sqlalchemy import delete
 
 # Crea una base de datos SQLite temporal basada en archivo

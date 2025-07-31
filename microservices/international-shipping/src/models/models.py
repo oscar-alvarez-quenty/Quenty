@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey, Float, Numeric, JSON
+import uuid
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -170,3 +171,46 @@ class ClientRatebook(Base):
 
     catalog = relationship("Catalog", backref="client_ratebooks", foreign_keys=[catalog_id])
     rate = relationship("Rate", backref="client_ratebooks", foreign_keys=[rate_id])
+
+
+class DocumentType(Base):
+    __tablename__ = "document_types"
+
+    id = Column(Integer, primary_key=True, index=True)
+    code = Column(String(50), unique=True, nullable=False)  # ej: 'FACTURA', 'ID'
+    name = Column(String(255), nullable=False)
+    description = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    deleted_at = Column(DateTime, nullable=True)
+
+    documents = relationship(
+        "Document",
+        back_populates="document_type",
+        cascade="all, delete-orphan"
+    )
+
+
+class Document(Base):
+    __tablename__ = "documents"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), nullable=False)  # Nombre original
+    unique_name = Column(String(36), default=lambda: str(uuid.uuid4()), unique=True, nullable=False)
+    extension = Column(String(10), nullable=False)
+    storage_url = Column(String(1024), nullable=False)
+
+    client_id = Column(String(100), nullable=False)
+    user_id = Column(String(100), nullable=False)
+    envio_id = Column(String(100), nullable=True)
+    document_type_id = Column(Integer, ForeignKey("document_types.id"), nullable=False)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    deleted_at = Column(DateTime, nullable=True)
+
+    # Relación
+    document_type = relationship("DocumentType", back_populates="documents")
+
+
+
+
