@@ -17,10 +17,10 @@ import uuid
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from starlette.responses import Response
 import time
-from .models.models import Manifest, ManifestItem, Rate, Country, ShippingCarrier, Base, ManifestStatus, ShippingZone
+from .models.models import Manifest, ManifestItem, Rate, Country, ShippingCarrier, Base, ManifestStatus, ShippingZone, Document, DocumentType, Catalog, CatalogRate, ClientSignature
 from .database import get_db, create_tables, engine
 from .core.auth import get_current_user, require_permissions
-from .controller import rate_controller, catalog_controller, client_ratebook_controller, document_type_controller, document_controller
+from .controller import rate_controller, catalog_controller, client_ratebook_controller, document_type_controller, document_controller, signature_controller, letter_controller
 
 # Import logging configuration
 try:
@@ -149,6 +149,8 @@ app.include_router(rate_controller.router, prefix="/api/v1")
 app.include_router(client_ratebook_controller.router, prefix="/api/v1")
 app.include_router(document_type_controller.router, prefix="/api/v1")
 app.include_router(document_controller.router, prefix="/api/v1")
+app.include_router(signature_controller.router, prefix="/api/v1")
+app.include_router(letter_controller.router, prefix="/api/v1")
 
 # Manifest endpoints
 @app.get("/api/v1/manifests", response_model=Dict[str, Any])

@@ -212,5 +212,15 @@ class Document(Base):
     document_type = relationship("DocumentType", back_populates="documents")
 
 
+class ClientSignature(Base):
+    __tablename__ = "client_signatures"
+
+    id = Column(Integer, primary_key=True)
+    client_id = Column(String(100), nullable=False, unique=True)
+    image_base64 = Column(Text, nullable=False)  # PNG en base64
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    deleted_at = Column(DateTime, nullable=True)
+
 
 
