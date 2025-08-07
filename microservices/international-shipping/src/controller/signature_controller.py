@@ -5,6 +5,7 @@ import base64
 from src.database import get_db
 from src.services.signature_service import SignatureService
 from src.schemas.signature_schema import SignatureOut
+from src.core.auth import get_current_user
 
 router = APIRouter(prefix="/signatures", tags=["signatures"])
 
@@ -12,7 +13,8 @@ router = APIRouter(prefix="/signatures", tags=["signatures"])
 async def upload_signature(
     client_id: str = Form(...),
     image: UploadFile = File(...),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user = Depends(get_current_user)
 ):
     if image.content_type != "image/png":
         raise HTTPException(status_code=400, detail="Only PNG images are allowed")

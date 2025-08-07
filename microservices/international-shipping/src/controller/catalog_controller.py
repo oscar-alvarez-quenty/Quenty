@@ -8,14 +8,15 @@ from src.schemas.catalog_schema import (
 from src.schemas.datatables_schema import ListRequest
 from pydantic import TypeAdapter
 from typing import List
+from src.core.auth import get_current_user
 
 router = APIRouter(prefix="/catalogs", tags=["catalogs"])
-
 
 @router.post("/", response_model=CatalogListResponse)
 async def list_catalogs(
     request: ListRequest, 
-    db: AsyncSession = Depends(get_db)):
+    db: AsyncSession = Depends(get_db),
+    current_user = Depends(get_current_user)):
     service = CatalogService(db)
     total, filtered, catalogs = await service.list_datatables(request)
     data = [TypeAdapter(CatalogOut).validate_python(cat, from_attributes=True) for cat in catalogs]
@@ -27,7 +28,8 @@ async def list_catalogs(
 
 
 @router.get("/{catalog_id}", response_model=CatalogOut)
-async def get_catalog(catalog_id: int, db: AsyncSession = Depends(get_db)):
+async def get_catalog(catalog_id: int, db: AsyncSession = Depends(get_db),
+    current_user = Depends(get_current_user)):
     service = CatalogService(db)
     try:
         catalog = await service.get_by_id(catalog_id)
@@ -37,14 +39,16 @@ async def get_catalog(catalog_id: int, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/create", response_model=CatalogOut)
-async def create_catalog(data: CatalogCreate, db: AsyncSession = Depends(get_db)):
+async def create_catalog(data: CatalogCreate, db: AsyncSession = Depends(get_db),
+    current_user = Depends(get_current_user)):
     service = CatalogService(db)
     catalog = await service.create_catalog(data)
     return TypeAdapter(CatalogOut).validate_python(catalog, from_attributes=True)
 
 
 @router.put("/{catalog_id}", response_model=CatalogOut)
-async def update_catalog(catalog_id: int, data: CatalogUpdate, db: AsyncSession = Depends(get_db)):
+async def update_catalog(catalog_id: int, data: CatalogUpdate, db: AsyncSession = Depends(get_db),
+    current_user = Depends(get_current_user)):
     service = CatalogService(db)
     try:
         catalog = await service.update_catalog(catalog_id, data)
@@ -54,7 +58,8 @@ async def update_catalog(catalog_id: int, data: CatalogUpdate, db: AsyncSession 
 
 
 @router.delete("/{catalog_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_catalog(catalog_id: int, db: AsyncSession = Depends(get_db)):
+async def delete_catalog(catalog_id: int, db: AsyncSession = Depends(get_db),
+    current_user = Depends(get_current_user)):
     service = CatalogService(db)
     try:
         await service.delete_catalog(catalog_id)
@@ -68,6 +73,7 @@ async def assign_single_rate_to_catalog(
     catalog_id: int,
     data: AssignRateInput,
     db: AsyncSession = Depends(get_db),
+    current_user = Depends(get_current_user)
 ):
     service = CatalogService(db)
     if data.assign:
@@ -80,7 +86,8 @@ async def assign_single_rate_to_catalog(
 
 
 @router.get("/{catalog_id}/assigned-rates", response_model=List[CatalogRateWithRateOut])
-async def list_assigned_rates(catalog_id: int, db: AsyncSession = Depends(get_db)):
+async def list_assigned_rates(catalog_id: int, db: AsyncSession = Depends(get_db),
+    current_user = Depends(get_current_user)):
     service = CatalogService(db)
     return await service.get_assigned_rates(catalog_id)
 

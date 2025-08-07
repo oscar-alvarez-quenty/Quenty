@@ -8,19 +8,22 @@ from src.schemas.client_ratebook_schema import (
     ClientRatebookCreate,
     ClientRatebookUpdate
 )
+from src.core.auth import get_current_user
 from pydantic import TypeAdapter
 
 router = APIRouter(prefix="/client-ratebook", tags=["client-ratebook"])
 
 @router.post("/", response_model=ClientRatebookOut)
-async def create_client_rate(data: ClientRatebookCreate, db: AsyncSession = Depends(get_db)):
+async def create_client_rate(data: ClientRatebookCreate, db: AsyncSession = Depends(get_db),
+    current_user = Depends(get_current_user)):
     service = ClientRatebookService(db)
     rate = await service.create_client_rate(data.model_dump())
     return TypeAdapter(ClientRatebookOut).validate_python(rate, from_attributes=True)
 
 
 @router.post("/match", response_model=ClientRatebookOut)
-async def match_client_rate(data: ClientRatebookMatchRequest, db: AsyncSession = Depends(get_db)):
+async def match_client_rate(data: ClientRatebookMatchRequest, db: AsyncSession = Depends(get_db),
+    current_user = Depends(get_current_user)):
     service = ClientRatebookService(db)
     try:
         rate = await service.find_matching_rate(
@@ -35,7 +38,8 @@ async def match_client_rate(data: ClientRatebookMatchRequest, db: AsyncSession =
         raise HTTPException(status_code=404, detail=str(e))
 
 @router.get("/detail/{ratebook_id}", response_model=ClientRatebookOut)
-async def get_client_rate(ratebook_id: int, db: AsyncSession = Depends(get_db)):
+async def get_client_rate(ratebook_id: int, db: AsyncSession = Depends(get_db),
+    current_user = Depends(get_current_user)):
     print(f"Fetching ratebook with ID 1: {ratebook_id}")
     service = ClientRatebookService(db)
     try:
@@ -47,14 +51,16 @@ async def get_client_rate(ratebook_id: int, db: AsyncSession = Depends(get_db)):
     
 
 @router.get("/{client_id}/{warehouse_id}", response_model=list[ClientRatebookOut])
-async def list_client_rates(client_id: str, warehouse_id: str, db: AsyncSession = Depends(get_db)):
+async def list_client_rates(client_id: str, warehouse_id: str, db: AsyncSession = Depends(get_db),
+    current_user = Depends(get_current_user)):
     service = ClientRatebookService(db)
     rates = await service.list_by_client_and_warehouse(client_id, warehouse_id)
     return [TypeAdapter(ClientRatebookOut).validate_python(r, from_attributes=True) for r in rates]
 
 
 @router.put("/{ratebook_id}", response_model=ClientRatebookOut)
-async def update_client_rate(ratebook_id: int, data: ClientRatebookUpdate, db: AsyncSession = Depends(get_db)):
+async def update_client_rate(ratebook_id: int, data: ClientRatebookUpdate, db: AsyncSession = Depends(get_db),
+    current_user = Depends(get_current_user)):
     service = ClientRatebookService(db)
     try:
         rate = await service.update_client_rate(ratebook_id, data.model_dump(exclude_unset=True))
@@ -64,7 +70,8 @@ async def update_client_rate(ratebook_id: int, data: ClientRatebookUpdate, db: A
 
 
 @router.delete("/{ratebook_id}", status_code=204)
-async def delete_client_rate(ratebook_id: int, db: AsyncSession = Depends(get_db)):
+async def delete_client_rate(ratebook_id: int, db: AsyncSession = Depends(get_db),
+    current_user = Depends(get_current_user)):
     service = ClientRatebookService(db)
     try:
         await service.soft_delete(ratebook_id)

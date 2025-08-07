@@ -6,13 +6,15 @@ from io import BytesIO
 from src.database import get_db
 from src.services.responsibility_letter_service import ResponsibilityLetterService
 from src.schemas.signature_schema import ResponsibilityLetterRequest
+from src.core.auth import get_current_user
 
 router = APIRouter(prefix="/letters", tags=["letters"])
 
 @router.post("/responsibility/pdf")
 async def get_responsibility_letter_pdf(
     request: ResponsibilityLetterRequest,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user = Depends(get_current_user)
 ):
     try:
         pdf_bytes = await ResponsibilityLetterService.generate_pdf(
