@@ -1,10 +1,11 @@
 {
 	"info": {
-		"_postman_id": "quenty-microservices-api",
+		"_postman_id": "66005244-75e4-476f-8ff5-1e3c3c74a559",
 		"name": "Quenty Microservices API Collection",
 		"description": "Complete API collection for all Quenty microservices including authentication, customer management, orders, shipping, and more. Updated with fully tested endpoints and Prometheus metrics support.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "quenty-api"
+		"_exporter_id": "6679850",
+		"_collection_link": "https://jonathan-mateo.postman.co/workspace/Quenty_Micro~46c00829-5e3b-4f13-bcbb-89eb9df2f6b2/collection/6679850-66005244-75e4-476f-8ff5-1e3c3c74a559?action=share&source=collection_link&creator=6679850"
 	},
 	"item": [
 		{
@@ -41,10 +42,18 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/auth/login",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "auth", "login"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"login"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Register User",
@@ -66,10 +75,18 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/auth/register",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "auth", "register"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"register"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Get Profile",
@@ -83,10 +100,17 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/profile",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "profile"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"profile"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "List Users",
@@ -100,8 +124,14 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/users?limit=20&offset=0",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "users"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"users"
+							],
 							"query": [
 								{
 									"key": "limit",
@@ -113,7 +143,8 @@
 								}
 							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Refresh Token",
@@ -131,10 +162,18 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/auth/refresh",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "auth", "refresh"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"refresh"
+							]
 						}
-					}
+					},
+					"response": []
 				}
 			]
 		},
@@ -161,10 +200,17 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/customers",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "customers"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"customers"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "List Customers",
@@ -178,8 +224,14 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/customers?limit=20&offset=0",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "customers"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"customers"
+							],
 							"query": [
 								{
 									"key": "limit",
@@ -191,7 +243,8 @@
 								}
 							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Get Customer by ID",
@@ -205,10 +258,18 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "customers", "{{customer_id}}"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"customers",
+								"{{customer_id}}"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Create Support Ticket",
@@ -230,10 +291,19 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}/tickets",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "customers", "{{customer_id}}", "tickets"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"customers",
+								"{{customer_id}}",
+								"tickets"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Get Customer Analytics",
@@ -247,10 +317,18 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/customers/analytics",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "customers", "analytics"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"customers",
+								"analytics"
+							]
 						}
-					}
+					},
+					"response": []
 				}
 			]
 		},
@@ -277,10 +355,17 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/products",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "products"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"products"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "List Products",
@@ -294,8 +379,14 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/products?limit=20&offset=0",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "products"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"products"
+							],
 							"query": [
 								{
 									"key": "limit",
@@ -307,7 +398,8 @@
 								}
 							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Create Order",
@@ -329,10 +421,17 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/orders",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "orders"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"orders"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "List Orders",
@@ -346,8 +445,14 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/orders?limit=20&offset=0",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "orders"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"orders"
+							],
 							"query": [
 								{
 									"key": "limit",
@@ -359,7 +464,8 @@
 								}
 							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Update Order Status",
@@ -381,10 +487,19 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/orders/{{order_id}}/status",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "orders", "{{order_id}}", "status"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"orders",
+								"{{order_id}}",
+								"status"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Get Inventory",
@@ -398,8 +513,14 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/inventory?limit=20&offset=0",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "inventory"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"inventory"
+							],
 							"query": [
 								{
 									"key": "limit",
@@ -411,7 +532,8 @@
 								}
 							]
 						}
-					}
+					},
+					"response": []
 				}
 			]
 		},
@@ -438,10 +560,17 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/pickups",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "pickups"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"pickups"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "List Pickups",
@@ -455,8 +584,14 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/pickups?limit=20&offset=0",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "pickups"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"pickups"
+							],
 							"query": [
 								{
 									"key": "limit",
@@ -468,7 +603,8 @@
 								}
 							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Assign Pickup",
@@ -490,10 +626,19 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/pickups/{{pickup_id}}/assign",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "pickups", "{{pickup_id}}", "assign"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"pickups",
+								"{{pickup_id}}",
+								"assign"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Complete Pickup",
@@ -507,10 +652,19 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/pickups/{{pickup_id}}/complete",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "pickups", "{{pickup_id}}", "complete"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"pickups",
+								"{{pickup_id}}",
+								"complete"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Check Pickup Availability",
@@ -524,8 +678,15 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/pickups/availability?date=2025-07-25&city=Bogotá",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "pickups", "availability"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"pickups",
+								"availability"
+							],
 							"query": [
 								{
 									"key": "date",
@@ -537,7 +698,8 @@
 								}
 							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Create Route",
@@ -559,16 +721,1108 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/routes",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "routes"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"routes"
+							]
 						}
-					}
+					},
+					"response": []
 				}
 			]
 		},
 		{
 			"name": "International Shipping",
 			"item": [
+				{
+					"name": "Catalog",
+					"item": [
+						{
+							"name": "Get Catalog",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/catalogs/{{catalog_id}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalogs",
+										"{{catalog_id}}"
+									]
+								}
+							},
+							"response": [
+								{
+									"name": "Catalog",
+									"originalRequest": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{access_token}}"
+											}
+										],
+										"url": {
+											"raw": "{{base_url}}/api/v1/catalogs/{{catalog_id}}",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"catalogs",
+												"{{catalog_id}}"
+											]
+										}
+									},
+									"_postman_previewlanguage": null,
+									"header": null,
+									"cookie": [],
+									"body": null
+								}
+							]
+						},
+						{
+							"name": "List Assigned Rates",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/catalogs/{{catalog_id}}/assigned-rates",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalogs",
+										"{{catalog_id}}",
+										"assigned-rates"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Catalogs",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"start\": 0,\n  \"length\": 10,\n  \"search\": { \"value\": \"30\" },\n  \"order\": [\n    { \"column\": 1, \"dir\": \"asc\" }\n  ],\n  \"columns\": [\n    { \"data\": \"name\", \"name\": \"\", \"searchable\": false },\n    { \"data\": \"operator_id\", \"name\": \"\", \"searchable\": false},\n    { \"data\": \"fixed_fee\", \"name\": \"\", \"searchable\": true }\n  ]\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/catalogs",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalogs"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Catalogs",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"start\": 0,\n  \"length\": 10,\n  \"search\": { \"value\": \"30\" },\n  \"order\": [\n    { \"column\": 1, \"dir\": \"asc\" }\n  ],\n  \"columns\": [\n    { \"data\": \"name\", \"name\": \"\", \"searchable\": false },\n    { \"data\": \"operator_id\", \"name\": \"\", \"searchable\": false},\n    { \"data\": \"fixed_fee\", \"name\": \"\", \"searchable\": true }\n  ]\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/catalogs/create",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalogs",
+										"create"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Assign Rate To Catalog",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"rate_id\": 0,\n  \"assign\": true\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/catalogs/{{catalog_id}}/assign-rate",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalogs",
+										"{{catalog_id}}",
+										"assign-rate"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Catalogs",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"string\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/catalogs/{{catalog_id}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalogs",
+										"{{catalog_id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Deleted Catalogs",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/catalogs/{{catalog_id}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"catalogs",
+										"{{catalog_id}}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Rates",
+					"item": [
+						{
+							"name": "Get Rate",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/rates/{{rate_id}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"rates",
+										"{{rate_id}}"
+									]
+								}
+							},
+							"response": [
+								{
+									"name": "Catalog",
+									"originalRequest": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{access_token}}"
+											}
+										],
+										"url": {
+											"raw": "{{base_url}}/api/v1/catalogs/{{catalog_id}}",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"catalogs",
+												"{{catalog_id}}"
+											]
+										}
+									},
+									"_postman_previewlanguage": null,
+									"header": null,
+									"cookie": [],
+									"body": null
+								}
+							]
+						},
+						{
+							"name": "Update Rate",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"operator_id\": \"string\",\n  \"service_id\": \"string\",\n  \"name\": \"string\",\n  \"weight_min\": 0,\n  \"weight_max\": 0,\n  \"fixed_fee\": 0,\n  \"percentage\": true\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/rates/{{rate_id}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"rates",
+										"{{rate_id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Deleted Rate",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/rates/{{rate_id}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"rates",
+										"{{rate_id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Rate",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"start\": 0,\n  \"length\": 10,\n  \"search\": { \"value\": \"30\" },\n  \"order\": [\n    { \"column\": 1, \"dir\": \"asc\" }\n  ],\n  \"columns\": [\n    { \"data\": \"name\", \"name\": \"\", \"searchable\": false },\n    { \"data\": \"operator_id\", \"name\": \"\", \"searchable\": false},\n    { \"data\": \"fixed_fee\", \"name\": \"\", \"searchable\": true }\n  ]\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/rates/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"rates",
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Rate",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"operator_id\": \"string\",\n  \"service_id\": \"string\",\n  \"name\": \"string\",\n  \"weight_min\": 0,\n  \"weight_max\": 0,\n  \"fixed_fee\": 0,\n  \"percentage\": true\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/rates/create",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"rates",
+										"create"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Assign to Client",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"rate_id\": 0,\n  \"client_id\": 0,\n  \"warehouse_id\": 0\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/rates/assign-to-client",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"rates",
+										"assign-to-client"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Client Ratebook",
+					"item": [
+						{
+							"name": "Create Client Ratebook",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"operator_id\": \"string\",\n  \"service_id\": \"string\",\n  \"name\": \"string\",\n  \"weight_min\": 0,\n  \"weight_max\": 0,\n  \"fixed_fee\": 0,\n  \"percentage\": true,\n  \"client_id\": \"string\",\n  \"warehouse_id\": \"string\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/client-ratebook/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"client-ratebook",
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Match Client Ratebook",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"client_id\": \"string\",\n  \"warehouse_id\": \"string\",\n  \"operator_id\": \"string\",\n  \"service_id\": \"string\",\n  \"weight\": 0\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/client-ratebook/match",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"client-ratebook",
+										"match"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Client Rate",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/client-ratebook/detail/{{ratebook_id}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"client-ratebook",
+										"detail",
+										"{{ratebook_id}}"
+									]
+								}
+							},
+							"response": [
+								{
+									"name": "Catalog",
+									"originalRequest": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{access_token}}"
+											}
+										],
+										"url": {
+											"raw": "{{base_url}}/api/v1/catalogs/{{catalog_id}}",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"catalogs",
+												"{{catalog_id}}"
+											]
+										}
+									},
+									"_postman_previewlanguage": null,
+									"header": null,
+									"cookie": [],
+									"body": null
+								}
+							]
+						},
+						{
+							"name": "List Rate Client by Wharehouse",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/client-ratebook/{{client_id}}/{{warehouse_id}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"client-ratebook",
+										"{{client_id}}",
+										"{{warehouse_id}}"
+									]
+								}
+							},
+							"response": [
+								{
+									"name": "Catalog",
+									"originalRequest": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{access_token}}"
+											}
+										],
+										"url": {
+											"raw": "{{base_url}}/api/v1/catalogs/{{catalog_id}}",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"catalogs",
+												"{{catalog_id}}"
+											]
+										}
+									},
+									"_postman_previewlanguage": null,
+									"header": null,
+									"cookie": [],
+									"body": null
+								}
+							]
+						},
+						{
+							"name": "Update Client Rate",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"operator_id\": \"string\",\n  \"service_id\": \"string\",\n  \"name\": \"string\",\n  \"weight_min\": 0,\n  \"weight_max\": 0,\n  \"fixed_fee\": 0,\n  \"percentage\": true\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/client-ratebook/{{ratebook_id}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"client-ratebook",
+										"{{ratebook_id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Deleted Client Rate",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/client-ratebook/{{ratebook_id}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"client-ratebook",
+										"{{ratebook_id}}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Document Type",
+					"item": [
+						{
+							"name": "Get Document Type",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/document-types/{{document_type_id}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"document-types",
+										"{{document_type_id}}"
+									]
+								}
+							},
+							"response": [
+								{
+									"name": "Catalog",
+									"originalRequest": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{access_token}}"
+											}
+										],
+										"url": {
+											"raw": "{{base_url}}/api/v1/catalogs/{{catalog_id}}",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"catalogs",
+												"{{catalog_id}}"
+											]
+										}
+									},
+									"_postman_previewlanguage": null,
+									"header": null,
+									"cookie": [],
+									"body": null
+								}
+							]
+						},
+						{
+							"name": "Update Document Type",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"code\": \"string\",\n  \"name\": \"string\",\n  \"description\": \"string\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/document-types/{{document_type_id}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"document-types",
+										"{{document_type_id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Deleted Document Type",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/document-types/{{document_type_id}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"document-types",
+										"{{document_type_id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Document Type",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"start\": 0,\n  \"length\": 10,\n  \"search\": { \"value\": \"30\" },\n  \"order\": [\n    { \"column\": 1, \"dir\": \"asc\" }\n  ],\n  \"columns\": [\n    { \"data\": \"name\", \"name\": \"\", \"searchable\": false },\n    { \"data\": \"operator_id\", \"name\": \"\", \"searchable\": false},\n    { \"data\": \"fixed_fee\", \"name\": \"\", \"searchable\": true }\n  ]\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/document-types/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"document-types",
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Document Type",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"code\": \"string\",\n  \"name\": \"string\",\n  \"description\": \"string\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/document-types/create",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"document-types",
+										"create"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Document",
+					"item": [
+						{
+							"name": "List Documents",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/documents/filter?client_id={{client_id}}&envio_id={{envio_id}}&document_type_id={{document_type_id}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"documents",
+										"filter"
+									],
+									"query": [
+										{
+											"key": "client_id",
+											"value": "{{client_id}}"
+										},
+										{
+											"key": "envio_id",
+											"value": "{{envio_id}}"
+										},
+										{
+											"key": "document_type_id",
+											"value": "{{document_type_id}}"
+										}
+									]
+								}
+							},
+							"response": [
+								{
+									"name": "Catalog",
+									"originalRequest": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{access_token}}"
+											}
+										],
+										"url": {
+											"raw": "{{base_url}}/api/v1/catalogs/{{catalog_id}}",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"catalogs",
+												"{{catalog_id}}"
+											]
+										}
+									},
+									"_postman_previewlanguage": null,
+									"header": null,
+									"cookie": [],
+									"body": null
+								}
+							]
+						},
+						{
+							"name": "Get Document by id",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/documents/{{document_id}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"documents",
+										"{{document_id}}"
+									]
+								}
+							},
+							"response": [
+								{
+									"name": "Catalog",
+									"originalRequest": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{access_token}}"
+											}
+										],
+										"url": {
+											"raw": "{{base_url}}/api/v1/catalogs/{{catalog_id}}",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"v1",
+												"catalogs",
+												"{{catalog_id}}"
+											]
+										}
+									},
+									"_postman_previewlanguage": null,
+									"header": null,
+									"cookie": [],
+									"body": null
+								}
+							]
+						},
+						{
+							"name": "Delete Document",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/documents/{{document_id}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"documents",
+										"{{document_id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Updated Document",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"file\": \"{{file}}\",\n  \"client_id\": \"{{client_id}}\",\n  \"user_id\": \"{{user_id}}\",\n  \"envio_id\": \"{{envio_id}}\",\n  \"document_type_id\": {{document_type_id}}\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/documents/upload",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"documents",
+										"upload"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
 				{
 					"name": "Create Country",
 					"request": {
@@ -589,10 +1843,17 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/countries",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "countries"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"countries"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "List Countries",
@@ -606,10 +1867,17 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/countries",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "countries"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"countries"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Create Carrier",
@@ -631,10 +1899,17 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/carriers",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "carriers"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"carriers"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "List Carriers",
@@ -648,10 +1923,17 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/carriers",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "carriers"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"carriers"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Create Manifest",
@@ -673,10 +1955,17 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/manifests",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "manifests"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"manifests"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "List Manifests",
@@ -690,10 +1979,17 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/manifests",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "manifests"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"manifests"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Get Shipping Rates",
@@ -707,8 +2003,15 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/shipping/rates?origin=CO&destination=US&weight=2.5",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "shipping", "rates"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"shipping",
+								"rates"
+							],
 							"query": [
 								{
 									"key": "origin",
@@ -724,7 +2027,8 @@
 								}
 							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Track Shipment",
@@ -738,10 +2042,82 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/tracking/{{tracking_number}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "tracking", "{{tracking_number}}"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tracking",
+								"{{tracking_number}}"
+							]
 						}
-					}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Signature",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"client_id\": \"{{client_id}}\",\n  \"image\": \"{{image}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/manifests",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"manifests"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Responsability letter",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"envio_id\": \"ABC123\",\n  \"language\": \"esp\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/manifests",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"manifests"
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},
@@ -768,10 +2144,18 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/microcredit/applications",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "microcredit", "applications"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"microcredit",
+								"applications"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "List Credit Applications",
@@ -785,8 +2169,15 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/microcredit/applications?limit=20&offset=0",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "microcredit", "applications"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"microcredit",
+								"applications"
+							],
 							"query": [
 								{
 									"key": "limit",
@@ -798,7 +2189,8 @@
 								}
 							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Make Credit Decision",
@@ -820,10 +2212,20 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/microcredit/applications/{{application_id}}/decision",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "microcredit", "applications", "{{application_id}}", "decision"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"microcredit",
+								"applications",
+								"{{application_id}}",
+								"decision"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "List Credit Accounts",
@@ -837,10 +2239,18 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/microcredit/accounts",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "microcredit", "accounts"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"microcredit",
+								"accounts"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Disburse Credit",
@@ -862,10 +2272,20 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/microcredit/accounts/{{account_id}}/disburse",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "microcredit", "accounts", "{{account_id}}", "disburse"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"microcredit",
+								"accounts",
+								"{{account_id}}",
+								"disburse"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Make Payment",
@@ -887,10 +2307,20 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/microcredit/accounts/{{account_id}}/payments",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "microcredit", "accounts", "{{account_id}}", "payments"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"microcredit",
+								"accounts",
+								"{{account_id}}",
+								"payments"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Get Credit Score",
@@ -904,10 +2334,19 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/microcredit/credit-score/{{customer_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "microcredit", "credit-score", "{{customer_id}}"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"microcredit",
+								"credit-score",
+								"{{customer_id}}"
+							]
 						}
-					}
+					},
+					"response": []
 				}
 			]
 		},
@@ -926,8 +2365,15 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/analytics/dashboard?days=30",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "analytics", "dashboard"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"analytics",
+								"dashboard"
+							],
 							"query": [
 								{
 									"key": "days",
@@ -935,7 +2381,8 @@
 								}
 							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Ingest Metric",
@@ -957,10 +2404,18 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/analytics/metrics",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "analytics", "metrics"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"analytics",
+								"metrics"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Query Analytics",
@@ -982,10 +2437,18 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/analytics/query",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "analytics", "query"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"analytics",
+								"query"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Generate Report",
@@ -1007,10 +2470,18 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/analytics/reports",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "analytics", "reports"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"analytics",
+								"reports"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Get Report Status",
@@ -1024,10 +2495,19 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/analytics/reports/{{report_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "analytics", "reports", "{{report_id}}"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"analytics",
+								"reports",
+								"{{report_id}}"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Get Business Trends",
@@ -1041,8 +2521,15 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/analytics/trends?days=30",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "analytics", "trends"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"analytics",
+								"trends"
+							],
 							"query": [
 								{
 									"key": "days",
@@ -1050,7 +2537,8 @@
 								}
 							]
 						}
-					}
+					},
+					"response": []
 				}
 			]
 		},
@@ -1077,10 +2565,17 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/returns",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "returns"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"returns"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "List Returns",
@@ -1094,8 +2589,14 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/returns?limit=20&offset=0",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "returns"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"returns"
+							],
 							"query": [
 								{
 									"key": "limit",
@@ -1107,7 +2608,8 @@
 								}
 							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Approve Return",
@@ -1129,10 +2631,19 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/returns/{{return_id}}/approve",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "returns", "{{return_id}}", "approve"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"returns",
+								"{{return_id}}",
+								"approve"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Schedule Return Pickup",
@@ -1154,10 +2665,19 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/returns/{{return_id}}/schedule-pickup",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "returns", "{{return_id}}", "schedule-pickup"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"returns",
+								"{{return_id}}",
+								"schedule-pickup"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Create Inspection Report",
@@ -1179,10 +2699,19 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/returns/{{return_id}}/inspection",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "returns", "{{return_id}}", "inspection"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"returns",
+								"{{return_id}}",
+								"inspection"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Process Return",
@@ -1204,10 +2733,19 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/returns/{{return_id}}/process",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "returns", "{{return_id}}", "process"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"returns",
+								"{{return_id}}",
+								"process"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Track Return",
@@ -1221,10 +2759,19 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/returns/{{return_id}}/tracking",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "returns", "{{return_id}}", "tracking"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"returns",
+								"{{return_id}}",
+								"tracking"
+							]
 						}
-					}
+					},
+					"response": []
 				}
 			]
 		},
@@ -1251,10 +2798,17 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/franchises",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "franchises"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"franchises"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "List Franchises",
@@ -1268,8 +2822,14 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/franchises?limit=20&offset=0",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "franchises"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"franchises"
+							],
 							"query": [
 								{
 									"key": "limit",
@@ -1281,7 +2841,8 @@
 								}
 							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Update Franchise Status",
@@ -1303,10 +2864,19 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/franchises/{{franchise_id}}/status",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "franchises", "{{franchise_id}}", "status"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"franchises",
+								"{{franchise_id}}",
+								"status"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "List Territories",
@@ -1320,10 +2890,17 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/territories",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "territories"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"territories"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Get Territory by Code",
@@ -1337,10 +2914,18 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/territories/{{territory_code}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "territories", "{{territory_code}}"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"territories",
+								"{{territory_code}}"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Get Franchise Performance",
@@ -1354,8 +2939,16 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/franchises/{{franchise_id}}/performance?period_type=monthly&start_date=2025-01-01&end_date=2025-07-31",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "franchises", "{{franchise_id}}", "performance"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"franchises",
+								"{{franchise_id}}",
+								"performance"
+							],
 							"query": [
 								{
 									"key": "period_type",
@@ -1371,7 +2964,8 @@
 								}
 							]
 						}
-					}
+					},
+					"response": []
 				}
 			]
 		},
@@ -1385,10 +2979,15 @@
 						"header": [],
 						"url": {
 							"raw": "{{base_url}}/health",
-							"host": ["{{base_url}}"],
-							"path": ["health"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"health"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "API Gateway Health (Direct Port 8000)",
@@ -1398,11 +2997,16 @@
 						"url": {
 							"raw": "http://localhost:8000/health",
 							"protocol": "http",
-							"host": ["localhost"],
+							"host": [
+								"localhost"
+							],
 							"port": "8000",
-							"path": ["health"]
+							"path": [
+								"health"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "API Gateway Metrics",
@@ -1412,11 +3016,16 @@
 						"url": {
 							"raw": "http://localhost:8000/metrics",
 							"protocol": "http",
-							"host": ["localhost"],
+							"host": [
+								"localhost"
+							],
 							"port": "8000",
-							"path": ["metrics"]
+							"path": [
+								"metrics"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Auth Service Health",
@@ -1426,11 +3035,16 @@
 						"url": {
 							"raw": "http://localhost:8009/health",
 							"protocol": "http",
-							"host": ["localhost"],
+							"host": [
+								"localhost"
+							],
 							"port": "8009",
-							"path": ["health"]
+							"path": [
+								"health"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Auth Service Metrics",
@@ -1440,11 +3054,16 @@
 						"url": {
 							"raw": "http://localhost:8009/metrics",
 							"protocol": "http",
-							"host": ["localhost"],
+							"host": [
+								"localhost"
+							],
 							"port": "8009",
-							"path": ["metrics"]
+							"path": [
+								"metrics"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Customer Service Health",
@@ -1454,11 +3073,16 @@
 						"url": {
 							"raw": "http://localhost:8001/health",
 							"protocol": "http",
-							"host": ["localhost"],
+							"host": [
+								"localhost"
+							],
 							"port": "8001",
-							"path": ["health"]
+							"path": [
+								"health"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Customer Service Metrics",
@@ -1468,11 +3092,16 @@
 						"url": {
 							"raw": "http://localhost:8001/metrics",
 							"protocol": "http",
-							"host": ["localhost"],
+							"host": [
+								"localhost"
+							],
 							"port": "8001",
-							"path": ["metrics"]
+							"path": [
+								"metrics"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Order Service Health",
@@ -1482,11 +3111,16 @@
 						"url": {
 							"raw": "http://localhost:8002/health",
 							"protocol": "http",
-							"host": ["localhost"],
+							"host": [
+								"localhost"
+							],
 							"port": "8002",
-							"path": ["health"]
+							"path": [
+								"health"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Order Service Metrics",
@@ -1496,11 +3130,16 @@
 						"url": {
 							"raw": "http://localhost:8002/metrics",
 							"protocol": "http",
-							"host": ["localhost"],
+							"host": [
+								"localhost"
+							],
 							"port": "8002",
-							"path": ["metrics"]
+							"path": [
+								"metrics"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Pickup Service Health",
@@ -1510,11 +3149,16 @@
 						"url": {
 							"raw": "http://localhost:8003/health",
 							"protocol": "http",
-							"host": ["localhost"],
+							"host": [
+								"localhost"
+							],
 							"port": "8003",
-							"path": ["health"]
+							"path": [
+								"health"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Pickup Service Metrics",
@@ -1524,11 +3168,16 @@
 						"url": {
 							"raw": "http://localhost:8003/metrics",
 							"protocol": "http",
-							"host": ["localhost"],
+							"host": [
+								"localhost"
+							],
 							"port": "8003",
-							"path": ["metrics"]
+							"path": [
+								"metrics"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "International Shipping Service Health",
@@ -1538,11 +3187,16 @@
 						"url": {
 							"raw": "http://localhost:8004/health",
 							"protocol": "http",
-							"host": ["localhost"],
+							"host": [
+								"localhost"
+							],
 							"port": "8004",
-							"path": ["health"]
+							"path": [
+								"health"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "International Shipping Service Metrics",
@@ -1552,11 +3206,16 @@
 						"url": {
 							"raw": "http://localhost:8004/metrics",
 							"protocol": "http",
-							"host": ["localhost"],
+							"host": [
+								"localhost"
+							],
 							"port": "8004",
-							"path": ["metrics"]
+							"path": [
+								"metrics"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Microcredit Service Health",
@@ -1566,11 +3225,16 @@
 						"url": {
 							"raw": "http://localhost:8005/health",
 							"protocol": "http",
-							"host": ["localhost"],
+							"host": [
+								"localhost"
+							],
 							"port": "8005",
-							"path": ["health"]
+							"path": [
+								"health"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Microcredit Service Metrics",
@@ -1580,11 +3244,16 @@
 						"url": {
 							"raw": "http://localhost:8005/metrics",
 							"protocol": "http",
-							"host": ["localhost"],
+							"host": [
+								"localhost"
+							],
 							"port": "8005",
-							"path": ["metrics"]
+							"path": [
+								"metrics"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Analytics Service Health",
@@ -1594,11 +3263,16 @@
 						"url": {
 							"raw": "http://localhost:8006/health",
 							"protocol": "http",
-							"host": ["localhost"],
+							"host": [
+								"localhost"
+							],
 							"port": "8006",
-							"path": ["health"]
+							"path": [
+								"health"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Analytics Service Metrics",
@@ -1608,11 +3282,16 @@
 						"url": {
 							"raw": "http://localhost:8006/metrics",
 							"protocol": "http",
-							"host": ["localhost"],
+							"host": [
+								"localhost"
+							],
 							"port": "8006",
-							"path": ["metrics"]
+							"path": [
+								"metrics"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Reverse Logistics Service Health",
@@ -1622,11 +3301,16 @@
 						"url": {
 							"raw": "http://localhost:8007/health",
 							"protocol": "http",
-							"host": ["localhost"],
+							"host": [
+								"localhost"
+							],
 							"port": "8007",
-							"path": ["health"]
+							"path": [
+								"health"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Reverse Logistics Service Metrics",
@@ -1636,11 +3320,16 @@
 						"url": {
 							"raw": "http://localhost:8007/metrics",
 							"protocol": "http",
-							"host": ["localhost"],
+							"host": [
+								"localhost"
+							],
 							"port": "8007",
-							"path": ["metrics"]
+							"path": [
+								"metrics"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Franchise Service Health",
@@ -1650,11 +3339,16 @@
 						"url": {
 							"raw": "http://localhost:8008/health",
 							"protocol": "http",
-							"host": ["localhost"],
+							"host": [
+								"localhost"
+							],
 							"port": "8008",
-							"path": ["health"]
+							"path": [
+								"health"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Franchise Service Metrics",
@@ -1664,11 +3358,16 @@
 						"url": {
 							"raw": "http://localhost:8008/metrics",
 							"protocol": "http",
-							"host": ["localhost"],
+							"host": [
+								"localhost"
+							],
 							"port": "8008",
-							"path": ["metrics"]
+							"path": [
+								"metrics"
+							]
 						}
-					}
+					},
+					"response": []
 				}
 			]
 		}
@@ -1772,6 +3471,11 @@
 		{
 			"key": "tracking_number",
 			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "rate_id",
+			"value": "1",
 			"type": "string"
 		}
 	]
