@@ -86,7 +86,7 @@ _HTML_TEMPLATE = """
     <td class="label-text center">Recepción</td>
     <td colspan="2" class="normal-text center">{{ fecha_recepcion }} {{ hora_recepcion }}</td>
     <td class="label-text center">Entrega</td>
-    <td colspan="2" class="normal-text center">{{ entrega }}</td>
+    <td colspan="2" class="normal-text center">{{ fecha_estimada_entrega }}</td>
   </tr>
 
   <!-- Pesos y piezas -->
@@ -223,7 +223,7 @@ _HTML_TEMPLATE = """
     <td colspan="5" class="normal-text">{{ destinatario.direccion }}</td>
 
     <td class="label-text center">Entrega</td>
-    <td colspan="2" class="normal-text center">{{ entrega }}</td>
+    <td colspan="2" class="normal-text center">{{ fecha_estimada_entrega }}</td>
   </tr>
 
   <!-- Datos destinatario fila 4 -->
