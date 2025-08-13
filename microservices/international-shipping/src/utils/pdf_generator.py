@@ -85,7 +85,8 @@ _HTML_TEMPLATE = """
   <tr>
     <td class="label-text center">Recepción</td>
     <td colspan="2" class="normal-text center">{{ fecha_recepcion }} {{ hora_recepcion }}</td>
-    
+    <td class="label-text center">Entrega</td>
+    <td colspan="2" class="normal-text center">{{ entrega }}</td>
   </tr>
 
   <!-- Pesos y piezas -->
