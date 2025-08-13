@@ -580,6 +580,206 @@ async def track_shipment(tracking_number: str, request: Request):
     headers = dict(request.headers)
     return await resilient_request("international-shipping", f"/api/v1/tracking/{tracking_number}", headers=headers)
 
+#Catalog endpoints
+@app.post("/api/v1/catalogs")
+async def list_catalogs(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("international-shipping", "/api/v1/catalogs", method="POST", json=body, headers=headers)
+
+@app.get("/api/v1/catalogs/{catalog_id}")
+async def get_catalog(catalog_id: int, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("international-shipping", f"/api/v1/catalogs/{catalog_id}", headers=headers)
+
+@app.post("/api/v1/catalogs/create")
+async def create_catalog(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("international-shipping", "/api/v1/catalogs/create", method="POST", json=body, headers=headers)
+
+@app.put("/api/v1/catalogs/{catalog_id}")
+async def update_catalog(catalog_id: int, request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("international-shipping", f"/api/v1/catalogs/{catalog_id}", method="PUT", json=body, headers=headers)
+
+@app.delete("/api/v1/catalogs/{catalog_id}")
+async def delete_catalog(catalog_id: int, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("international-shipping", f"/api/v1/catalogs/{catalog_id}", method="DELETE", headers=headers)
+
+@app.post("/api/v1/catalogs/{catalog_id}/assign-rate")
+async def assign_single_rate_to_catalog(catalog_id: int, request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("international-shipping", f"/api/v1/catalogs/{catalog_id}/assign-rate", method="POST", json=body, headers=headers)
+
+
+@app.get("/api/v1/catalogs/{catalog_id}/assigned-rates")
+async def list_assigned_rates(catalog_id: int, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("international-shipping", f"/api/v1/catalogs/{catalog_id}/assigned-rates", headers=headers)
+
+    #client_ratebook endpoints
+@app.post("/api/v1/client-ratebook/")
+async def create_client_rate(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("international-shipping", "/api/v1/client-ratebook/", method="POST", json=body, headers=headers)
+
+@app.post("/api/v1/client-ratebook/match")
+async def match_client_rate(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("international-shipping", "/api/v1/client-ratebook/match", method="POST", json=body, headers=headers)
+
+@app.get("/api/v1/client-ratebook/detail/{ratebook_id}")
+async def get_client_rate(ratebook_id: int, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("international-shipping", f"/api/v1/client-ratebook/detail/{ratebook_id}", headers=headers)
+
+@app.get("/api/v1/client-ratebook/{client_id}/{warehouse_id}")
+async def list_client_rates(client_id: str, warehouse_id: str, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("international-shipping", f"/api/v1/client-ratebook/{client_id}/{warehouse_id}", headers=headers)
+
+@app.put("/api/v1/client-ratebook/{ratebook_id}")
+async def update_client_rate(ratebook_id: int, request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("international-shipping", f"/api/v1/client-ratebook/{ratebook_id}", method="PUT", json=body, headers=headers)
+
+@app.delete("/api/v1/client-ratebook/{ratebook_id}")
+async def delete_client_rate(ratebook_id: int, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("international-shipping", f"/api/v1/client-ratebook/{ratebook_id}", method="DELETE", headers=headers)
+
+    #document endpoints
+@app.post("/api/v1/documents/upload")
+async def upload_document(request: Request):
+    form = await request.form()
+    file = form.get("file")
+    input_data = {key: form[key] for key in form if key != "file"}
+    headers = dict(request.headers)
+    files = {"file": (file.filename, await file.read(), file.content_type)}
+    return await resilient_request(
+        "international-shipping",
+        "/api/v1/documents/upload",
+        method="POST",
+        data=input_data,
+        files=files,
+        headers=headers,
+    )
+
+@app.get("/api/v1/documents/filter")
+async def list_documents(request: Request):
+    headers = dict(request.headers)
+    query_string = str(request.query_params)
+    url = f"/api/v1/documents/filter"
+    if query_string:
+        url += f"?{query_string}"
+    return await resilient_request("international-shipping", url, headers=headers)
+
+@app.get("/api/v1/documents/{document_id}")
+async def get_document_by_id(document_id: int, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("international-shipping", f"/api/v1/documents/{document_id}", headers=headers)
+
+@app.delete("/api/v1/documents/{document_id}")
+async def delete_document(document_id: int, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("international-shipping", f"/api/v1/documents/{document_id}", method="DELETE", headers=headers)
+
+
+    #document_type_controller endpoints
+@app.get("/api/v1/document-types/{document_type_id}")
+async def get_document_type_by_id(document_type_id: int, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("international-shipping", f"/api/v1/document-types/{document_type_id}", headers=headers)
+
+@app.post("/api/v1/document-types/")
+async def list_document_types(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("international-shipping", "/api/v1/document-types/", method="POST", json=body, headers=headers)
+
+@app.post("/api/v1/document-types/create")
+async def create_document_type(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("international-shipping", "/api/v1/document-types/create", method="POST", json=body, headers=headers)
+
+@app.put("/api/v1/document-types/{document_type_id}")
+async def update_document_type(document_type_id: int, request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("international-shipping", f"/api/v1/document-types/{document_type_id}", method="PUT", json=body, headers=headers)
+
+@app.delete("/api/v1/document-types/{document_type_id}")
+async def delete_document_type(document_type_id: int, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("international-shipping", f"/api/v1/document-types/{document_type_id}", method="DELETE", headers=headers)
+
+    # letter endpoints
+@app.post("/api/v1/letters/responsibility/pdf")
+async def get_responsibility_letter_pdf(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("international-shipping", "/api/v1/letters/responsibility/pdf", method="POST", json=body, headers=headers)
+
+    # Rates endpoints
+@app.get("/api/v1/rates/{rate_id}")
+async def get_rate(rate_id: int, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("international-shipping", f"/api/v1/rates/{rate_id}", headers=headers)
+
+@app.post("/api/v1/rates/")
+async def list_rates(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("international-shipping", "/api/v1/rates/", method="POST", json=body, headers=headers)
+
+@app.post("/api/v1/rates/create")
+async def create_rate(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("international-shipping", "/api/v1/rates/create", method="POST", json=body, headers=headers)
+
+@app.put("/api/v1/rates/{rate_id}")
+async def update_rate(rate_id: int, request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("international-shipping", f"/api/v1/rates/{rate_id}", method="PUT", json=body, headers=headers)
+
+@app.delete("/api/v1/rates/{rate_id}")
+async def delete_rate(rate_id: int, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("international-shipping", f"/api/v1/rates/{rate_id}", method="DELETE", headers=headers)
+
+@app.post("/api/v1/rates/assign-to-client")
+async def assign_rate_to_client(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("international-shipping", "/api/v1/rates/assign-to-client", method="POST", json=body, headers=headers)
+
+ # signature endpoints
+@app.post("/api/v1/signatures/")
+async def upload_signature(request: Request):
+    form = await request.form()
+    image = form.get("image")
+    client_id = form.get("client_id")
+
+    if not image or not client_id:
+        raise HTTPException(status_code=400, detail="Missing 'image' or 'client_id'")
+
+    headers = dict(request.headers)
+    files = {"image": (image.filename, await image.read(), image.content_type)}
+    data = {"client_id": client_id}
+
+    return await resilient_request("international-shipping", "/api/v1/signatures/", method="POST", data=data, files=files, headers=headers)
+
+
 # Microcredit endpoints
 
 # Credit Application endpoints
