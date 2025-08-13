@@ -1,0 +1,535 @@
+=======================================================================
+🚀 QUENTY MICROSERVICES ENDPOINT TEST REPORT
+=======================================================================
+Timestamp: Wed Jul 23 09:56:06 PM -05 2025
+Test Environment: Linux 6.8.0-64-generic
+Docker Status: Docker version 27.5.1, build 27.5.1-0ubuntu3~24.04.2
+
+🔍 Checking service availability...
+✅ international-shipping:8004 - Running
+✅ api-gateway:8000 - Running
+✅ customer-service:8001 - Running
+✅ auth-service:8009 - Running
+✅ microcredit-service:8005 - Running
+✅ order-service:8002 - Running
+✅ reverse-logistics:8007 - Running
+✅ pickup-service:8003 - Running
+✅ franchise-service:8008 - Running
+✅ analytics-service:8006 - Running
+
+🏥 TESTING HEALTH ENDPOINTS
+=======================================================================
+Testing: GET http://localhost:8004/health
+✅ PASS: international-shipping /health (200)
+Response Body: {"status":"healthy","service":"international-shipping-service"}...
+
+Testing: GET http://localhost:8000/health
+✅ PASS: api-gateway /health (200)
+Response Body: {"status":"healthy","service":"api-gateway"}...
+
+Testing: GET http://localhost:8001/health
+✅ PASS: customer-service /health (200)
+Response Body: {"status":"healthy","service":"customer-service"}...
+
+Testing: GET http://localhost:8009/health
+✅ PASS: auth-service /health (200)
+Response Body: {"status":"healthy","service":"auth-service","version":"1.0.0","timestamp":"2025-07-24T02:56:06.6030...
+
+Testing: GET http://localhost:8005/health
+✅ PASS: microcredit-service /health (200)
+Response Body: {"status":"healthy","service":"microcredit-service"}...
+
+Testing: GET http://localhost:8002/health
+✅ PASS: order-service /health (200)
+Response Body: {"status":"healthy","service":"order-service"}...
+
+Testing: GET http://localhost:8007/health
+✅ PASS: reverse-logistics /health (200)
+Response Body: {"status":"healthy","service":"reverse-logistics-service","version":"2.0.0","timestamp":"2025-07-24T...
+
+Testing: GET http://localhost:8003/health
+✅ PASS: pickup-service /health (200)
+Response Body: {"status":"healthy","service":"pickup-service"}...
+
+Testing: GET http://localhost:8008/health
+✅ PASS: franchise-service /health (200)
+Response Body: {"status":"healthy","service":"franchise-service","version":"2.0.0","timestamp":"2025-07-24T02:56:06...
+
+Testing: GET http://localhost:8006/health
+✅ PASS: analytics-service /health (200)
+Response Body: {"status":"healthy","service":"analytics-service","version":"2.0.0","timestamp":"2025-07-24T02:56:06...
+
+
+🌐 TESTING API GATEWAY ENDPOINTS
+=======================================================================
+Testing: GET http://localhost:8000/docs
+✅ PASS: api-gateway /docs (200)
+Response Body: 
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/
+    <link rel="shortcut icon" href="https://fastapi.tiangolo.com/img/favicon.png">
+    <title>Quenty API Gateway - Swagger UI</title>
+    </head>
+    <body>
+    <div id="swagger-ui">
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui-bundle.js"></script>
+    <!-- `SwaggerUIBundle` is now available on the page -->
+    <script>
+    const ui = SwaggerUIBundle({
+        url: '/openapi.json',
+    "dom_id": "#swagger-ui",
+"layout": "BaseLayout",
+"deepLinking": true,
+"showExtensions": true,
+"showCommonExtensions": true,
+oauth2RedirectUrl: window.location.origin + '/docs/oauth2-redirect',
+    presets: [
+        SwaggerUIBundle.presets.apis,
+        SwaggerUIBundle.SwaggerUIStandalonePreset
+        ],
+    })
+    </script>
+    </body>
+    </html>
+    ...
+
+Testing: GET http://localhost:8000/openapi.json
+✅ PASS: api-gateway /openapi.json (200)
+Response Body: {"openapi":"3.1.0","info":{"title":"Quenty API Gateway","description":"API Gateway for Quenty Micros...
+
+Testing: GET http://localhost:8000/api/v1/status
+❌ FAIL: api-gateway /api/v1/status (Expected: 200, Got: 404)
+Response Body: {"detail":"Not Found"}...
+
+
+🔐 TESTING AUTH SERVICE ENDPOINTS
+=======================================================================
+Testing: GET http://localhost:8009/docs
+✅ PASS: auth-service /docs (200)
+Response Body: 
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/
+    <link rel="shortcut icon" href="https://fastapi.tiangolo.com/img/favicon.png">
+    <title>Quenty Authentication Service - Swagger UI</title>
+    </head>
+    <body>
+    <div id="swagger-ui">
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui-bundle.js"></script>
+    <!-- `SwaggerUIBundle` is now available on the page -->
+    <script>
+    const ui = SwaggerUIBundle({
+        url: '/openapi.json',
+    "dom_id": "#swagger-ui",
+"layout": "BaseLayout",
+"deepLinking": true,
+"showExtensions": true,
+"showCommonExtensions": true,
+oauth2RedirectUrl: window.location.origin + '/docs/oauth2-redirect',
+    presets: [
+        SwaggerUIBundle.presets.apis,
+        SwaggerUIBundle.SwaggerUIStandalonePreset
+        ],
+    })
+    </script>
+    </body>
+    </html>
+    ...
+
+Testing: POST http://localhost:8009/api/v1/register
+❌ FAIL: auth-service /api/v1/register (Expected: 422, Got: 404)
+Response Body: {"detail":"Not Found"}...
+
+Testing: POST http://localhost:8009/api/v1/login
+❌ FAIL: auth-service /api/v1/login (Expected: 422, Got: 404)
+Response Body: {"detail":"Not Found"}...
+
+Testing: GET http://localhost:8009/api/v1/users
+✅ PASS: auth-service /api/v1/users (403)
+Response Body: {"detail":"Not authenticated"}...
+
+
+👥 TESTING CUSTOMER SERVICE ENDPOINTS
+=======================================================================
+Testing: GET http://localhost:8001/docs
+✅ PASS: customer-service /docs (200)
+Response Body: 
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/
+    <link rel="shortcut icon" href="https://fastapi.tiangolo.com/img/favicon.png">
+    <title>Customer Service - Swagger UI</title>
+    </head>
+    <body>
+    <div id="swagger-ui">
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui-bundle.js"></script>
+    <!-- `SwaggerUIBundle` is now available on the page -->
+    <script>
+    const ui = SwaggerUIBundle({
+        url: '/openapi.json',
+    "dom_id": "#swagger-ui",
+"layout": "BaseLayout",
+"deepLinking": true,
+"showExtensions": true,
+"showCommonExtensions": true,
+oauth2RedirectUrl: window.location.origin + '/docs/oauth2-redirect',
+    presets: [
+        SwaggerUIBundle.presets.apis,
+        SwaggerUIBundle.SwaggerUIStandalonePreset
+        ],
+    })
+    </script>
+    </body>
+    </html>
+    ...
+
+Testing: GET http://localhost:8001/api/v1/customers
+✅ PASS: customer-service /api/v1/customers (403)
+Response Body: {"detail":"Not authenticated"}...
+
+Testing: GET http://localhost:8001/api/v1/customers/search
+✅ PASS: customer-service /api/v1/customers/search (403)
+Response Body: {"detail":"Not authenticated"}...
+
+
+📦 TESTING ORDER SERVICE ENDPOINTS
+=======================================================================
+Testing: GET http://localhost:8002/docs
+✅ PASS: order-service /docs (200)
+Response Body: 
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/
+    <link rel="shortcut icon" href="https://fastapi.tiangolo.com/img/favicon.png">
+    <title>Order Service - Swagger UI</title>
+    </head>
+    <body>
+    <div id="swagger-ui">
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui-bundle.js"></script>
+    <!-- `SwaggerUIBundle` is now available on the page -->
+    <script>
+    const ui = SwaggerUIBundle({
+        url: '/openapi.json',
+    "dom_id": "#swagger-ui",
+"layout": "BaseLayout",
+"deepLinking": true,
+"showExtensions": true,
+"showCommonExtensions": true,
+oauth2RedirectUrl: window.location.origin + '/docs/oauth2-redirect',
+    presets: [
+        SwaggerUIBundle.presets.apis,
+        SwaggerUIBundle.SwaggerUIStandalonePreset
+        ],
+    })
+    </script>
+    </body>
+    </html>
+    ...
+
+Testing: GET http://localhost:8002/api/v1/orders
+✅ PASS: order-service /api/v1/orders (403)
+Response Body: {"detail":"Not authenticated"}...
+
+Testing: GET http://localhost:8002/api/v1/orders/stats
+✅ PASS: order-service /api/v1/orders/stats (403)
+Response Body: {"detail":"Not authenticated"}...
+
+
+🚚 TESTING PICKUP SERVICE ENDPOINTS
+=======================================================================
+Testing: GET http://localhost:8003/docs
+✅ PASS: pickup-service /docs (200)
+Response Body: 
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/
+    <link rel="shortcut icon" href="https://fastapi.tiangolo.com/img/favicon.png">
+    <title>Pickup Service - Swagger UI</title>
+    </head>
+    <body>
+    <div id="swagger-ui">
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui-bundle.js"></script>
+    <!-- `SwaggerUIBundle` is now available on the page -->
+    <script>
+    const ui = SwaggerUIBundle({
+        url: '/openapi.json',
+    "dom_id": "#swagger-ui",
+"layout": "BaseLayout",
+"deepLinking": true,
+"showExtensions": true,
+"showCommonExtensions": true,
+oauth2RedirectUrl: window.location.origin + '/docs/oauth2-redirect',
+    presets: [
+        SwaggerUIBundle.presets.apis,
+        SwaggerUIBundle.SwaggerUIStandalonePreset
+        ],
+    })
+    </script>
+    </body>
+    </html>
+    ...
+
+Testing: GET http://localhost:8003/api/v1/pickups
+✅ PASS: pickup-service /api/v1/pickups (403)
+Response Body: {"detail":"Not authenticated"}...
+
+Testing: GET http://localhost:8003/api/v1/routes
+❌ FAIL: pickup-service /api/v1/routes (Expected: 403, Got: 405)
+Response Body: {"detail":"Method Not Allowed"}...
+
+
+🌍 TESTING INTERNATIONAL SHIPPING ENDPOINTS
+=======================================================================
+Testing: GET http://localhost:8004/docs
+✅ PASS: international-shipping /docs (200)
+Response Body: 
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/
+    <link rel="shortcut icon" href="https://fastapi.tiangolo.com/img/favicon.png">
+    <title>International Shipping Service - Swagger UI</title>
+    </head>
+    <body>
+    <div id="swagger-ui">
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui-bundle.js"></script>
+    <!-- `SwaggerUIBundle` is now available on the page -->
+    <script>
+    const ui = SwaggerUIBundle({
+        url: '/openapi.json',
+    "dom_id": "#swagger-ui",
+"layout": "BaseLayout",
+"deepLinking": true,
+"showExtensions": true,
+"showCommonExtensions": true,
+oauth2RedirectUrl: window.location.origin + '/docs/oauth2-redirect',
+    presets: [
+        SwaggerUIBundle.presets.apis,
+        SwaggerUIBundle.SwaggerUIStandalonePreset
+        ],
+    })
+    </script>
+    </body>
+    </html>
+    ...
+
+Testing: GET http://localhost:8004/api/v1/manifests
+✅ PASS: international-shipping /api/v1/manifests (403)
+Response Body: {"detail":"Not authenticated"}...
+
+Testing: GET http://localhost:8004/api/v1/countries
+✅ PASS: international-shipping /api/v1/countries (403)
+Response Body: {"detail":"Not authenticated"}...
+
+Testing: GET http://localhost:8004/api/v1/carriers
+✅ PASS: international-shipping /api/v1/carriers (403)
+Response Body: {"detail":"Not authenticated"}...
+
+
+💳 TESTING MICROCREDIT SERVICE ENDPOINTS
+=======================================================================
+Testing: GET http://localhost:8005/docs
+✅ PASS: microcredit-service /docs (200)
+Response Body: 
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/
+    <link rel="shortcut icon" href="https://fastapi.tiangolo.com/img/favicon.png">
+    <title>Microcredit Service - Swagger UI</title>
+    </head>
+    <body>
+    <div id="swagger-ui">
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui-bundle.js"></script>
+    <!-- `SwaggerUIBundle` is now available on the page -->
+    <script>
+    const ui = SwaggerUIBundle({
+        url: '/openapi.json',
+    "dom_id": "#swagger-ui",
+"layout": "BaseLayout",
+"deepLinking": true,
+"showExtensions": true,
+"showCommonExtensions": true,
+oauth2RedirectUrl: window.location.origin + '/docs/oauth2-redirect',
+    presets: [
+        SwaggerUIBundle.presets.apis,
+        SwaggerUIBundle.SwaggerUIStandalonePreset
+        ],
+    })
+    </script>
+    </body>
+    </html>
+    ...
+
+Testing: GET http://localhost:8005/api/v1/applications
+✅ PASS: microcredit-service /api/v1/applications (403)
+Response Body: {"detail":"Not authenticated"}...
+
+Testing: GET http://localhost:8005/api/v1/accounts
+✅ PASS: microcredit-service /api/v1/accounts (403)
+Response Body: {"detail":"Not authenticated"}...
+
+
+📊 TESTING ANALYTICS SERVICE ENDPOINTS
+=======================================================================
+Testing: GET http://localhost:8006/docs
+✅ PASS: analytics-service /docs (200)
+Response Body: 
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/
+    <link rel="shortcut icon" href="https://fastapi.tiangolo.com/img/favicon.png">
+    <title>Quenty Analytics Service - Swagger UI</title>
+    </head>
+    <body>
+    <div id="swagger-ui">
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui-bundle.js"></script>
+    <!-- `SwaggerUIBundle` is now available on the page -->
+    <script>
+    const ui = SwaggerUIBundle({
+        url: '/openapi.json',
+    "dom_id": "#swagger-ui",
+"layout": "BaseLayout",
+"deepLinking": true,
+"showExtensions": true,
+"showCommonExtensions": true,
+oauth2RedirectUrl: window.location.origin + '/docs/oauth2-redirect',
+    presets: [
+        SwaggerUIBundle.presets.apis,
+        SwaggerUIBundle.SwaggerUIStandalonePreset
+        ],
+    })
+    </script>
+    </body>
+    </html>
+    ...
+
+Testing: GET http://localhost:8006/api/v1/analytics/dashboard
+✅ PASS: analytics-service /api/v1/analytics/dashboard (403)
+Response Body: {"detail":"Not authenticated"}...
+
+Testing: GET http://localhost:8006/api/v1/analytics/trends
+✅ PASS: analytics-service /api/v1/analytics/trends (403)
+Response Body: {"detail":"Not authenticated"}...
+
+
+↩️ TESTING REVERSE LOGISTICS ENDPOINTS
+=======================================================================
+Testing: GET http://localhost:8007/docs
+✅ PASS: reverse-logistics /docs (200)
+Response Body: 
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/
+    <link rel="shortcut icon" href="https://fastapi.tiangolo.com/img/favicon.png">
+    <title>Quenty Reverse Logistics Service - Swagger UI</title>
+    </head>
+    <body>
+    <div id="swagger-ui">
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui-bundle.js"></script>
+    <!-- `SwaggerUIBundle` is now available on the page -->
+    <script>
+    const ui = SwaggerUIBundle({
+        url: '/openapi.json',
+    "dom_id": "#swagger-ui",
+"layout": "BaseLayout",
+"deepLinking": true,
+"showExtensions": true,
+"showCommonExtensions": true,
+oauth2RedirectUrl: window.location.origin + '/docs/oauth2-redirect',
+    presets: [
+        SwaggerUIBundle.presets.apis,
+        SwaggerUIBundle.SwaggerUIStandalonePreset
+        ],
+    })
+    </script>
+    </body>
+    </html>
+    ...
+
+Testing: GET http://localhost:8007/api/v1/returns
+✅ PASS: reverse-logistics /api/v1/returns (403)
+Response Body: {"detail":"Not authenticated"}...
+
+
+🏢 TESTING FRANCHISE SERVICE ENDPOINTS
+=======================================================================
+Testing: GET http://localhost:8008/docs
+✅ PASS: franchise-service /docs (200)
+Response Body: 
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/
+    <link rel="shortcut icon" href="https://fastapi.tiangolo.com/img/favicon.png">
+    <title>Quenty Franchise Service - Swagger UI</title>
+    </head>
+    <body>
+    <div id="swagger-ui">
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui-bundle.js"></script>
+    <!-- `SwaggerUIBundle` is now available on the page -->
+    <script>
+    const ui = SwaggerUIBundle({
+        url: '/openapi.json',
+    "dom_id": "#swagger-ui",
+"layout": "BaseLayout",
+"deepLinking": true,
+"showExtensions": true,
+"showCommonExtensions": true,
+oauth2RedirectUrl: window.location.origin + '/docs/oauth2-redirect',
+    presets: [
+        SwaggerUIBundle.presets.apis,
+        SwaggerUIBundle.SwaggerUIStandalonePreset
+        ],
+    })
+    </script>
+    </body>
+    </html>
+    ...
+
+Testing: GET http://localhost:8008/api/v1/franchises
+✅ PASS: franchise-service /api/v1/franchises (403)
+Response Body: {"detail":"Not authenticated"}...
+
+Testing: GET http://localhost:8008/api/v1/territories
+✅ PASS: franchise-service /api/v1/territories (403)
+Response Body: {"detail":"Not authenticated"}...
+
+
+🔍 TESTING MONITORING INFRASTRUCTURE
+=======================================================================
+✅ Grafana - Available at http://localhost:3000
+✅ Prometheus - Available at http://localhost:9090
+✅ Loki - Available at http://localhost:3100
+✅ Jaeger - Available at http://localhost:16686
+✅ Consul - Available at http://localhost:8500
+
+📋 TEST SUMMARY
+=======================================================================
+Total Tests: 41
+Passed: 37
+Failed: 4
+Success Rate: 90.24%
+
+⚠️  4 tests failed. Please check the detailed results above.
+
+📁 Report saved to: /home/jhunter/devel/QUENTY/Quenty/test-results/endpoint_test_report_20250723_215606.txt
+=======================================================================
