@@ -20,7 +20,7 @@ import time
 from .models.models import Manifest, ManifestItem, Rate, Country, ShippingCarrier, Base, ManifestStatus, ShippingZone, Document, DocumentType, Catalog, CatalogRate, ClientSignature
 from .database import get_db, create_tables, engine
 from .core.auth import get_current_user, require_permissions
-from .controller import rate_controller, catalog_controller, client_ratebook_controller, document_type_controller, document_controller, signature_controller, letter_controller
+from .controller import rate_controller, catalog_controller, client_ratebook_controller, document_type_controller, document_controller, signature_controller, letter_controller, label_controller
 
 # Import logging configuration
 try:
@@ -151,6 +151,7 @@ app.include_router(document_type_controller.router, prefix="/api/v1")
 app.include_router(document_controller.router, prefix="/api/v1")
 app.include_router(signature_controller.router, prefix="/api/v1")
 app.include_router(letter_controller.router, prefix="/api/v1")
+app.include_router(label_controller.router, prefix="/api/v1")
 
 # Manifest endpoints
 @app.get("/api/v1/manifests", response_model=Dict[str, Any])

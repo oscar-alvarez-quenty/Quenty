@@ -14,3 +14,4 @@ passlib[bcrypt]==1.7.4
 email-validator==2.1.0
 sqlalchemy[asyncio]
 pytest-mock
+weasyprint
