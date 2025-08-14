@@ -1,7 +1,7 @@
 import pytest
 
 @pytest.mark.anyio
-async def test_create_rate(client):
+async def test_create_rate(client_with_auth):
     rate_data = {
         "operator_id": "OP01",
         "service_id": "SVC01",
@@ -12,7 +12,7 @@ async def test_create_rate(client):
         "percentage": False
     }
 
-    response = await client.post("/api/v1/rates/create", json=rate_data)
+    response = await client_with_auth.post("/api/v1/rates/create", json=rate_data)
     assert response.status_code == 200
     data = response.json()
     assert data["name"] == rate_data["name"]
@@ -20,9 +20,9 @@ async def test_create_rate(client):
 
 
 @pytest.mark.anyio
-async def test_get_rate(client):
+async def test_get_rate(client_with_auth):
     # Crear tarifa primero
-    create_resp = await client.post("/api/v1/rates/create", json={
+    create_resp = await client_with_auth.post("/api/v1/rates/create", json={
         "operator_id": "OP01",
         "service_id": "SVC02",
         "name": "Tarifa para get",
@@ -35,16 +35,16 @@ async def test_get_rate(client):
     rate_id = rate["id"]
 
     # Obtener tarifa
-    get_resp = await client.get(f"/api/v1/rates/{rate_id}")
+    get_resp = await client_with_auth.get(f"/api/v1/rates/{rate_id}")
     assert get_resp.status_code == 200
     assert get_resp.json()["id"] == rate_id
 
 
 @pytest.mark.anyio
-async def test_list_rates(client):
+async def test_list_rates(client_with_auth):
     # Crear algunas tarifas
     for i in range(3):
-        await client.post("/api/v1/rates/create", json={
+        await client_with_auth.post("/api/v1/rates/create", json={
             "operator_id": f"OP{i}",
             "service_id": f"SVC{i}",
             "name": f"Tarifa {i}",
@@ -62,7 +62,7 @@ async def test_list_rates(client):
         "columns": [{"data": "string", "name": "string", "searchable": True}]
     }
 
-    response = await client.post("/api/v1/rates/", json=request_payload)
+    response = await client_with_auth.post("/api/v1/rates/", json=request_payload)
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data["data"], list)
@@ -70,9 +70,9 @@ async def test_list_rates(client):
 
 
 @pytest.mark.anyio
-async def test_update_rate(client):
+async def test_update_rate(client_with_auth):
     # Crear tarifa
-    create_resp = await client.post("/api/v1/rates/create", json={
+    create_resp = await client_with_auth.post("/api/v1/rates/create", json={
         "operator_id": "OP01",
         "service_id": "SVC01",
         "name": "Tarifa original",
@@ -89,7 +89,7 @@ async def test_update_rate(client):
         "fixed_fee": 99.99
     }
 
-    update_resp = await client.put(f"/api/v1/rates/{rate_id}", json=update_payload)
+    update_resp = await client_with_auth.put(f"/api/v1/rates/{rate_id}", json=update_payload)
     assert update_resp.status_code == 200
     updated = update_resp.json()
     assert updated["name"] == "Tarifa actualizada"
@@ -97,9 +97,9 @@ async def test_update_rate(client):
 
 
 @pytest.mark.anyio
-async def test_delete_rate(client):
+async def test_delete_rate(client_with_auth):
     # Crear tarifa
-    create_resp = await client.post("/api/v1/rates/create", json={
+    create_resp = await client_with_auth.post("/api/v1/rates/create", json={
         "operator_id": "OP03",
         "service_id": "SVC03",
         "name": "Tarifa a eliminar",
@@ -111,18 +111,18 @@ async def test_delete_rate(client):
     rate_id = create_resp.json()["id"]
 
     # Eliminar tarifa
-    delete_resp = await client.delete(f"/api/v1/rates/{rate_id}")
+    delete_resp = await client_with_auth.delete(f"/api/v1/rates/{rate_id}")
     assert delete_resp.status_code == 204
 
     # Verificar que ya no existe
-    get_resp = await client.get(f"/api/v1/rates/{rate_id}")
+    get_resp = await client_with_auth.get(f"/api/v1/rates/{rate_id}")
     assert get_resp.status_code == 404
 
 
 @pytest.mark.anyio
-async def test_assign_rate_to_client(client):
+async def test_assign_rate_to_client(client_with_auth):
     # Crear tarifa
-    create_resp = await client.post("/api/v1/rates/create", json={
+    create_resp = await client_with_auth.post("/api/v1/rates/create", json={
         "operator_id": "OP99",
         "service_id": "SVC99",
         "name": "Tarifa asignable",
@@ -140,7 +140,7 @@ async def test_assign_rate_to_client(client):
         "warehouse_id": 1
     }
 
-    assign_resp = await client.post("/api/v1/rates/assign-to-client", json=assign_payload)
+    assign_resp = await client_with_auth.post("/api/v1/rates/assign-to-client", json=assign_payload)
     assert assign_resp.status_code == 200
     assigned = assign_resp.json()
     assert assigned["operator_id"] == "OP99"
