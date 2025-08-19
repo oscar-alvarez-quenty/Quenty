@@ -10,8 +10,9 @@ from src.core.auth import get_current_user
 router = APIRouter(prefix="/labels", tags=["labels"])
 
 @router.post("/generate-labels")
-async def generate_labels_endpoint(request: LabelRequest,
-    current_user = Depends(get_current_user)):
+async def generate_labels_endpoint(request: LabelRequest
+    #,current_user = Depends(get_current_user)
+    ):
     try:
         pdf_bytes = await LabelService.generate_labels(request.envio_ids, request.format_type)
         return StreamingResponse(BytesIO(pdf_bytes), media_type="application/pdf", headers={
