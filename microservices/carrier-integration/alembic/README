@@ -1,0 +1,16 @@
+Generic single-database configuration for Carrier Integration Service.
+
+To create a new migration:
+```bash
+alembic revision --autogenerate -m "Description of changes"
+```
+
+To apply migrations:
+```bash
+alembic upgrade head
+```
+
+To view migration history:
+```bash
+alembic history
+```

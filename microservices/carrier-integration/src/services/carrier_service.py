@@ -7,6 +7,9 @@ from circuitbreaker import circuit
 from ..models import CarrierCredential, CarrierHealthStatus, CarrierType, ServiceStatus
 from ..carriers.dhl import DHLClient
 from ..carriers.fedex import FedExClient
+from ..carriers.ups import UPSClient
+from ..carriers.servientrega import ServientregaClient
+from ..carriers.interrapidisimo import InterrapidisimoClient
 from ..schemas import (
     QuoteRequest, QuoteResponse,
     LabelRequest, LabelResponse,
@@ -32,7 +35,12 @@ class CarrierService:
                 client = DHLClient(credentials, environment)
             elif carrier == "FedEx":
                 client = FedExClient(credentials, environment)
-            # Add other carriers here
+            elif carrier == "UPS":
+                client = UPSClient(credentials, environment)
+            elif carrier == "Servientrega":
+                client = ServientregaClient(credentials, environment)
+            elif carrier == "Interrapidisimo":
+                client = InterrapidisimoClient(credentials, environment)
             else:
                 raise ValueError(f"Unsupported carrier: {carrier}")
             
@@ -156,6 +164,12 @@ class CarrierService:
                 client = DHLClient(credentials.credentials, credentials.environment)
             elif carrier == "FedEx":
                 client = FedExClient(credentials.credentials, credentials.environment)
+            elif carrier == "UPS":
+                client = UPSClient(credentials.credentials, credentials.environment)
+            elif carrier == "Servientrega":
+                client = ServientregaClient(credentials.credentials, credentials.environment)
+            elif carrier == "Interrapidisimo":
+                client = InterrapidisimoClient(credentials.credentials, credentials.environment)
             else:
                 return False
             
