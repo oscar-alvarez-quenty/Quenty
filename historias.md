@@ -551,9 +551,55 @@
 - Debe generar relación de envíos para cierre de despacho
 - Debe validar ciudades de cobertura antes de generar guía
 
-### Epic 15: Integración con Servicios Financieros
+### Epic 15: Servicios de Casillero Internacional
 
-#### HU-039: Integración con Banco de la República - TRM
+#### HU-039: Integración con Pasarex
+**Como** cliente  
+**Quiero** usar servicios de casillero internacional de Pasarex  
+**Para** recibir compras desde Estados Unidos y Europa  
+
+**Criterios de Aceptación:**
+- Debe integrar con API REST de Pasarex Colombia
+- Debe autenticar mediante OAuth 2.0 con credenciales corporativas
+- Debe asignar casilleros virtuales únicos por cliente
+- Debe generar direcciones de envío en Miami (USA) y Madrid (España)
+- Debe consultar prealerta de paquetes recibidos en bodega origen
+- Debe calcular costos de nacionalización y transporte internacional
+- Debe soportar consolidación de múltiples paquetes en un solo envío
+- Debe rastrear paquetes desde origen hasta entrega final
+- Debe calcular impuestos de importación según categoría de producto
+- Debe notificar al cliente cuando el paquete llega a Colombia
+- Debe generar documentación aduanera automáticamente
+- Debe ofrecer servicios adicionales (reempaque, fotos del producto)
+- Debe manejar devoluciones internacionales
+- Debe integrar calculadora de costos totales (producto + envío + impuestos)
+- Debe soportar pagos anticipados y contra entrega
+
+#### HU-040: Integración con Aeropost
+**Como** cliente  
+**Quiero** usar servicios de courier internacional de Aeropost  
+**Para** realizar compras en línea desde el exterior  
+
+**Criterios de Aceptación:**
+- Debe integrar con Web Service SOAP/REST de Aeropost
+- Debe autenticar con API Key y Secret del convenio empresarial
+- Debe asignar número de casillero PO Box en Miami
+- Debe consultar estado de paquetes mediante tracking API
+- Debe calcular peso volumétrico según estándares IATA
+- Debe aplicar tarifas por libra o kilo según configuración
+- Debe soportar categorías de productos (General, Tecnología, Ropa)
+- Debe calcular automáticamente aranceles e IVA colombiano
+- Debe permitir declaración de contenido para aduana
+- Debe generar guías de importación con código de barras
+- Debe notificar llegada a bodega Miami y salida hacia Colombia
+- Debe estimar tiempos de entrega (5-8 días hábiles)
+- Debe manejar restricciones de productos prohibidos
+- Debe ofrecer seguro opcional para envíos de alto valor
+- Debe integrar con sistema de pagos para cobro de impuestos
+
+### Epic 16: Integración con Servicios Financieros
+
+#### HU-041: Integración con Banco de la República - TRM
 **Como** sistema  
 **Quiero** obtener la TRM oficial del Banco de la República  
 **Para** calcular correctamente valores en envíos internacionales  
@@ -570,7 +616,7 @@
 - Debe aplicar TRM + spread configurable para cotizaciones a clientes
 - Debe registrar en logs cada actualización de TRM
 
-#### HU-040: Configuración de Credenciales de Operadores
+#### HU-042: Configuración de Credenciales de Operadores
 **Como** administrador  
 **Quiero** gestionar credenciales de operadores logísticos  
 **Para** mantener las integraciones funcionando correctamente  
@@ -585,7 +631,7 @@
 - Debe mantener log de auditoría de cambios en credenciales
 - Debe soportar múltiples cuentas por operador (multi-tenant)
 
-#### HU-041: Monitoreo de Integraciones
+#### HU-043: Monitoreo de Integraciones
 **Como** administrador  
 **Quiero** monitorear el estado de las integraciones  
 **Para** garantizar disponibilidad del servicio  
@@ -602,7 +648,7 @@
 - Debe generar reporte mensual de SLA por operador
 - Debe permitir forzar reconexión manual desde panel admin
 
-#### HU-042: Gestión de Fallback entre Operadores
+#### HU-044: Gestión de Fallback entre Operadores
 **Como** sistema  
 **Quiero** usar operadores alternativos automáticamente  
 **Para** garantizar continuidad del servicio  
@@ -705,6 +751,23 @@
 - `validateCarrierCredentials(carrier, credentials): ValidationResult`
 - `getCarrierHealthStatus(carrier): HealthStatus`
 
+### InternationalMailboxService
+- `assignPasarexMailbox(customerId): PasarexMailbox`
+- `assignAeropostMailbox(customerId): AeropostPOBox`
+- `getPasarexPrealerts(customerId): PasarexPackage[]`
+- `getAeropostPackages(customerId): AeropostPackage[]`
+- `consolidatePasarexPackages(packageIds[], customerId): ConsolidationOrder`
+- `consolidateAeropostPackages(packageIds[], customerId): ConsolidationOrder`
+- `calculatePasarexImportCosts(package): ImportCostBreakdown`
+- `calculateAeropostImportCosts(package): ImportCostBreakdown`
+- `declarePasarexContent(packageId, declaration): CustomsDeclaration`
+- `declareAeropostContent(packageId, declaration): CustomsDeclaration`
+- `requestPasarexRepack(packageId, options): RepackRequest`
+- `requestAeropostPhotos(packageId): PhotoRequest`
+- `calculateCustomsDuties(value, category, weight): DutiesAndTaxes`
+- `trackInternationalPackage(trackingNumber, service): InternationalTracking`
+- `processInternationalReturn(packageId, reason): ReturnRequest`
+
 ### ExchangeRateService
 - `getCurrentTRM(): TRMRate`
 - `updateTRMFromBanRep(): TRMUpdate`
@@ -761,6 +824,19 @@
 - `TRMVariationDetected`
 - `ExchangeRateApplied`
 
+### International Mailbox Events
+- `MailboxAssigned`
+- `PackagePrealerted`
+- `PackageArrivedAtOrigin`
+- `ConsolidationRequested`
+- `ConsolidationCompleted`
+- `CustomsDeclarationSubmitted`
+- `ImportDutiesCalculated`
+- `PackageNationalized`
+- `InternationalReturnRequested`
+- `RepackRequested`
+- `PackagePhotosReady`
+
 ## Agregados Principales
 
 1. **Customer Aggregate**: Cliente, Wallet, Microcrédito
@@ -771,5 +847,6 @@
 6. **Policy Aggregate**: Política Comercial, Tarifa, Catálogo
 7. **Carrier Integration Aggregate**: Operador Externo, Credenciales, Estado de Servicio, Configuración de Fallback
 8. **Exchange Rate Aggregate**: TRM, Histórico de Tasas, Configuración de Spread
+9. **International Mailbox Aggregate**: Casillero Virtual, Prealerta, Consolidación, Declaración Aduanera, Costos de Importación
 
-Esta especificación proporciona una base sólida para implementar la plataforma Quenty siguiendo principios DDD, con historias de usuario claras y criterios de aceptación específicos que guiarán el desarrollo de cada funcionalidad, incluyendo las integraciones con operadores logísticos internacionales (DHL, FedEx, UPS) y nacionales colombianos (Servientrega, Interrapidisimo), así como la integración con el Banco de la República para obtener la TRM oficial.
+Esta especificación proporciona una base sólida para implementar la plataforma Quenty siguiendo principios DDD, con historias de usuario claras y criterios de aceptación específicos que guiarán el desarrollo de cada funcionalidad, incluyendo las integraciones con operadores logísticos internacionales (DHL, FedEx, UPS), nacionales colombianos (Servientrega, Interrapidisimo), servicios de casillero internacional (Pasarex, Aeropost), así como la integración con el Banco de la República para obtener la TRM oficial.
