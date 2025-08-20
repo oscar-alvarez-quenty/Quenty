@@ -16,9 +16,9 @@ def generate_file(name="test.txt", content=b"Contenido de prueba", mime_type="te
 
 
 @pytest.mark.anyio
-async def test_create_document(client):
+async def test_create_document(client_with_auth):
     # Crear tipo de documento
-    doc_type_resp = await client.post("/api/v1/document-types/create", json=generate_document_type_data())
+    doc_type_resp = await client_with_auth.post("/api/v1/document-types/create", json=generate_document_type_data())
     doc_type_id = doc_type_resp.json()["id"]
 
     data = {
@@ -29,7 +29,7 @@ async def test_create_document(client):
     }
 
     files = generate_file("archivo.txt", b"hola mundo", "text/plain")
-    response = await client.post("/api/v1/documents/upload", data=data, files=files)
+    response = await client_with_auth.post("/api/v1/documents/upload", data=data, files=files)
     assert response.status_code == 200
     result = response.json()
     assert "id" in result
@@ -40,8 +40,8 @@ async def test_create_document(client):
 
 
 @pytest.mark.anyio
-async def test_get_document_by_id(client):
-    doc_type_resp = await client.post("/api/v1/document-types/create", json=generate_document_type_data())
+async def test_get_document_by_id(client_with_auth):
+    doc_type_resp = await client_with_auth.post("/api/v1/document-types/create", json=generate_document_type_data())
     doc_type_id = doc_type_resp.json()["id"]
 
     files = generate_file("doc_get.pdf", b"content", "application/pdf")
@@ -52,17 +52,17 @@ async def test_get_document_by_id(client):
         "document_type_id": str(doc_type_id)
     }
 
-    created = await client.post("/api/v1/documents/upload", data=data, files=files)
+    created = await client_with_auth.post("/api/v1/documents/upload", data=data, files=files)
     doc_id = created.json()["id"]
 
-    response = await client.get(f"/api/v1/documents/{doc_id}")
+    response = await client_with_auth.get(f"/api/v1/documents/{doc_id}")
     assert response.status_code == 200
     assert response.json()["id"] == doc_id
 
 
 @pytest.mark.anyio
-async def test_filter_documents(client):
-    doc_type_resp = await client.post("/api/v1/document-types/create", json=generate_document_type_data())
+async def test_filter_documents(client_with_auth):
+    doc_type_resp = await client_with_auth.post("/api/v1/document-types/create", json=generate_document_type_data())
     doc_type_id = doc_type_resp.json()["id"]
 
     files = generate_file("filter.docx", b"filter content", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
@@ -73,9 +73,9 @@ async def test_filter_documents(client):
         "document_type_id": str(doc_type_id)
     }
 
-    await client.post("/api/v1/documents/upload", data=data, files=files)
+    await client_with_auth.post("/api/v1/documents/upload", data=data, files=files)
 
-    response = await client.get(
+    response = await client_with_auth.get(
         "/api/v1/documents/filter",
         params={
             "client_id": "FILTER_CLIENT",
@@ -95,8 +95,8 @@ async def test_filter_documents(client):
 
 
 @pytest.mark.anyio
-async def test_delete_document(client):
-    doc_type_resp = await client.post("/api/v1/document-types/create", json=generate_document_type_data())
+async def test_delete_document(client_with_auth):
+    doc_type_resp = await client_with_auth.post("/api/v1/document-types/create", json=generate_document_type_data())
     doc_type_id = doc_type_resp.json()["id"]
 
     files = generate_file("to_delete.pdf", b"bye", "application/pdf")
@@ -107,11 +107,11 @@ async def test_delete_document(client):
         "document_type_id": str(doc_type_id)
     }
 
-    created = await client.post("/api/v1/documents/upload", data=data, files=files)
+    created = await client_with_auth.post("/api/v1/documents/upload", data=data, files=files)
     doc_id = created.json()["id"]
 
-    response = await client.delete(f"/api/v1/documents/{doc_id}")
+    response = await client_with_auth.delete(f"/api/v1/documents/{doc_id}")
     assert response.status_code == 204
 
-    get_response = await client.get(f"/api/v1/documents/{doc_id}")
+    get_response = await client_with_auth.get(f"/api/v1/documents/{doc_id}")
     assert get_response.status_code == 404

@@ -9,9 +9,9 @@ def generate_document_type_data():
     }
 
 @pytest.mark.anyio
-async def test_create_document_type(client):
+async def test_create_document_type(client_with_auth):
     data = generate_document_type_data()
-    response = await client.post("/api/v1/document-types/create", json=data)
+    response = await client_with_auth.post("/api/v1/document-types/create", json=data)
     assert response.status_code == 200
     resp_json = response.json()
     assert resp_json["name"] == data["name"]
@@ -20,32 +20,32 @@ async def test_create_document_type(client):
     assert "created_at" in resp_json
 
 @pytest.mark.anyio
-async def test_get_document_type_by_id(client):
+async def test_get_document_type_by_id(client_with_auth):
     data = generate_document_type_data()
-    created = await client.post("/api/v1/document-types/create", json=data)
+    created = await client_with_auth.post("/api/v1/document-types/create", json=data)
     doc_type_id = created.json()["id"]
 
-    response = await client.get(f"/api/v1/document-types/{doc_type_id}")
+    response = await client_with_auth.get(f"/api/v1/document-types/{doc_type_id}")
     assert response.status_code == 200
     resp_json = response.json()
     assert resp_json["id"] == doc_type_id
     assert resp_json["name"] == data["name"]
 
 @pytest.mark.anyio
-async def test_update_document_type(client):
-    created = await client.post("/api/v1/document-types/create", json=generate_document_type_data())
+async def test_update_document_type(client_with_auth):
+    created = await client_with_auth.post("/api/v1/document-types/create", json=generate_document_type_data())
     doc_type_id = created.json()["id"]
 
     new_name = f"Actualizado {uuid4()}"
-    response = await client.put(f"/api/v1/document-types/{doc_type_id}", json={"name": new_name})
+    response = await client_with_auth.put(f"/api/v1/document-types/{doc_type_id}", json={"name": new_name})
     assert response.status_code == 200
     assert response.json()["name"] == new_name
 
 @pytest.mark.anyio
-async def test_list_document_types(client):
-    await client.post("/api/v1/document-types/create", json=generate_document_type_data())
+async def test_list_document_types(client_with_auth):
+    await client_with_auth.post("/api/v1/document-types/create", json=generate_document_type_data())
 
-    response = await client.post("/api/v1/document-types/", json={
+    response = await client_with_auth.post("/api/v1/document-types/", json={
         "start": 0,
         "length": 10,
         "search": {"value": "string"},
@@ -60,12 +60,12 @@ async def test_list_document_types(client):
     assert len(data["data"]) >= 1
 
 @pytest.mark.anyio
-async def test_delete_document_type(client):
-    created = await client.post("/api/v1/document-types/create", json=generate_document_type_data())
+async def test_delete_document_type(client_with_auth):
+    created = await client_with_auth.post("/api/v1/document-types/create", json=generate_document_type_data())
     doc_type_id = created.json()["id"]
 
-    response = await client.delete(f"/api/v1/document-types/{doc_type_id}")
+    response = await client_with_auth.delete(f"/api/v1/document-types/{doc_type_id}")
     assert response.status_code == 204
 
-    get_response = await client.get(f"/api/v1/document-types/{doc_type_id}")
+    get_response = await client_with_auth.get(f"/api/v1/document-types/{doc_type_id}")
     assert get_response.status_code == 404

@@ -16,9 +16,9 @@ def generate_sample_data():
     }
 
 @pytest.mark.anyio
-async def test_create_rate(client):
+async def test_create_rate(client_with_auth):
     sample_data = generate_sample_data()
-    response = await client.post("/api/v1/client-ratebook/", json=sample_data)
+    response = await client_with_auth.post("/api/v1/client-ratebook/", json=sample_data)
     assert response.status_code == 200, response.text
     data = response.json()
     assert str(data["client_id"]) == str(sample_data["client_id"])
@@ -27,34 +27,34 @@ async def test_create_rate(client):
 
 
 @pytest.mark.anyio
-async def test_get_rate_by_id(client):
+async def test_get_rate_by_id(client_with_auth):
     sample_data = generate_sample_data()
-    created = await client.post("/api/v1/client-ratebook/", json=sample_data)
+    created = await client_with_auth.post("/api/v1/client-ratebook/", json=sample_data)
     assert created.status_code == 200
     rate_id = created.json()["id"]
 
-    response = await client.get(f"/api/v1/client-ratebook/detail/{rate_id}")
+    response = await client_with_auth.get(f"/api/v1/client-ratebook/detail/{rate_id}")
     assert response.status_code == 200
     data = response.json()
     assert data["id"] == rate_id
 
 
 @pytest.mark.anyio
-async def test_list_by_client_warehouse(client):
+async def test_list_by_client_warehouse(client_with_auth):
     sample_data = generate_sample_data()
-    await client.post("/api/v1/client-ratebook/", json=sample_data)
-    response = await client.get(f"/api/v1/client-ratebook/{sample_data['client_id']}/{sample_data['warehouse_id']}")
+    await client_with_auth.post("/api/v1/client-ratebook/", json=sample_data)
+    response = await client_with_auth.get(f"/api/v1/client-ratebook/{sample_data['client_id']}/{sample_data['warehouse_id']}")
     assert response.status_code == 200
     assert isinstance(response.json(), list)
     assert len(response.json()) >= 1
 
 
 @pytest.mark.anyio
-async def test_match_exact(client):
+async def test_match_exact(client_with_auth):
     sample_data = generate_sample_data()
-    await client.post("/api/v1/client-ratebook/", json=sample_data)
+    await client_with_auth.post("/api/v1/client-ratebook/", json=sample_data)
 
-    response = await client.post("/api/v1/client-ratebook/match", json={
+    response = await client_with_auth.post("/api/v1/client-ratebook/match", json={
         "client_id": str(sample_data["client_id"]),
         "warehouse_id": str(sample_data["warehouse_id"]),
         "operator_id": sample_data["operator_id"],
@@ -67,8 +67,8 @@ async def test_match_exact(client):
 
 
 @pytest.mark.anyio
-async def test_match_default(client):
-    response = await client.post("/api/v1/client-ratebook/match", json={
+async def test_match_default(client_with_auth):
+    response = await client_with_auth.post("/api/v1/client-ratebook/match", json={
         "client_id": "999",
         "warehouse_id": "999",
         "operator_id": "X",
@@ -83,9 +83,9 @@ async def test_match_default(client):
 
 
 @pytest.mark.anyio
-async def test_update_rate(client):
+async def test_update_rate(client_with_auth):
     sample_data = generate_sample_data()
-    created = await client.post("/api/v1/client-ratebook/", json=sample_data)
+    created = await client_with_auth.post("/api/v1/client-ratebook/", json=sample_data)
     assert created.status_code == 200
     rate_id = created.json()["id"]
 
@@ -93,20 +93,20 @@ async def test_update_rate(client):
         "fixed_fee": 99.9
     }
 
-    response = await client.put(f"/api/v1/client-ratebook/{rate_id}", json=updated_data)
+    response = await client_with_auth.put(f"/api/v1/client-ratebook/{rate_id}", json=updated_data)
     assert response.status_code == 200, response.text
     assert response.json()["fixed_fee"] == 99.9
 
 
 @pytest.mark.anyio
-async def test_soft_delete(client):
+async def test_soft_delete(client_with_auth):
     sample_data = generate_sample_data()
-    created = await client.post("/api/v1/client-ratebook/", json=sample_data)
+    created = await client_with_auth.post("/api/v1/client-ratebook/", json=sample_data)
     rate_id = created.json()["id"]
 
-    response = await client.delete(f"/api/v1/client-ratebook/{rate_id}")
+    response = await client_with_auth.delete(f"/api/v1/client-ratebook/{rate_id}")
     assert response.status_code == 204
 
     # Verifica que ya no aparece
-    list_response = await client.get(f"/api/v1/client-ratebook/{sample_data['client_id']}/{sample_data['warehouse_id']}")
+    list_response = await client_with_auth.get(f"/api/v1/client-ratebook/{sample_data['client_id']}/{sample_data['warehouse_id']}")
     assert all(rate["id"] != rate_id for rate in list_response.json())

@@ -13,12 +13,12 @@ MINIMAL_PNG_BYTES = (
 )
 
 @pytest.mark.anyio
-async def test_upload_signature_png_valid(client: AsyncClient):
+async def test_upload_signature_png_valid(client_with_auth: AsyncClient):
     fake_png_file = BytesIO(MINIMAL_PNG_BYTES)
     files = {"image": ("signature.png", fake_png_file, "image/png")}
     data = {"client_id": "test-client-123"}
 
-    response = await client.post("/api/v1/signatures/", data=data, files=files)
+    response = await client_with_auth.post("/api/v1/signatures/", data=data, files=files)
 
     assert response.status_code == status.HTTP_200_OK
     json_data = response.json()
@@ -27,13 +27,13 @@ async def test_upload_signature_png_valid(client: AsyncClient):
 
 
 @pytest.mark.anyio
-async def test_upload_signature_invalid_format(client: AsyncClient):
+async def test_upload_signature_invalid_format(client_with_auth: AsyncClient):
     # Enviamos un archivo JPEG falso
     fake_jpeg = BytesIO(b"this-is-not-a-png")
     files = {"image": ("signature.jpeg", fake_jpeg, "image/jpeg")}
     data = {"client_id": "test-client-456"}
 
-    response = await client.post("/api/v1/signatures/", data=data, files=files)
+    response = await client_with_auth.post("/api/v1/signatures/", data=data, files=files)
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.json()["detail"] == "Only PNG images are allowed"

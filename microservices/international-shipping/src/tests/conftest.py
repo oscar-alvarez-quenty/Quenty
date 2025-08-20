@@ -4,13 +4,14 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.pool import NullPool
-from fastapi import FastAPI
-from src.main import app
-from src.database import get_db
-from src.models.models import Base, Rate, Catalog, CatalogRate, ClientRatebook, DocumentType, Document
 from sqlalchemy import delete
 
-# Crea una base de datos SQLite temporal basada en archivo
+from src.main import app
+from src.database import get_db
+from src.models.models import Base, ClientRatebook
+from src.core.auth import get_current_user  # Asegúrate de que este import apunta al correcto
+
+# Base de datos SQLite temporal
 db_fd, db_path = tempfile.mkstemp()
 TEST_DATABASE_URL = f"sqlite+aiosqlite:///{db_path}"
 
@@ -36,18 +37,48 @@ async def db_session():
     async with TestingSessionLocal() as session:
         yield session
 
+# Cliente sin autenticación (si lo necesitas)
 @pytest.fixture()
 async def client(db_session):
     async def override_get_db():
         yield db_session
 
     app.dependency_overrides[get_db] = override_get_db
+    async with AsyncClient(app=app, base_url="http://test") as c:
+        yield c
+    app.dependency_overrides.clear()
+
+# Cliente con autenticación simulada
+@pytest.fixture()
+async def client_with_auth(db_session):
+    async def override_get_db():
+        yield db_session
+
+    async def override_get_current_user():
+        return {
+            "id": 1,
+            "unique_id": "test-uuid",
+            "username": "testuser",
+            "email": "test@example.com",
+            "first_name": "Test",
+            "last_name": "User",
+            "full_name": "Test User",
+            "avatar_url": None,
+            "role": "superuser",
+            "company_id": "COMP-TECH0001",
+            "permissions": ["*"],
+            "is_superuser": True  # <- importante si usas permisos
+        }
+
+    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_current_user] = override_get_current_user
 
     async with AsyncClient(app=app, base_url="http://test") as c:
         yield c
 
     app.dependency_overrides.clear()
 
+# Limpiar tabla después de cada test
 @pytest.fixture(autouse=True)
 async def clean_client_ratebook(db_session):
     yield
