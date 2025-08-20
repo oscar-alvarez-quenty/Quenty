@@ -12,6 +12,7 @@ from .database import engine, Base, get_db
 from .models import CarrierCredential, CarrierHealthStatus, ExchangeRate
 from .middleware import RateLimitMiddleware, CarrierThrottlingMiddleware, WebhookAuthMiddleware
 from .webhooks import router as webhook_router
+from .routers.credentials import router as credentials_router
 from .carriers.dhl import DHLClient
 from .carriers.fedex import FedExClient
 from .carriers.ups import UPSClient
@@ -95,8 +96,9 @@ app.add_middleware(CarrierThrottlingMiddleware)
 # Add webhook authentication
 app.add_middleware(WebhookAuthMiddleware)
 
-# Include webhook router
+# Include routers
 app.include_router(webhook_router)
+app.include_router(credentials_router)
 
 # Request tracking middleware
 @app.middleware("http")
