@@ -6,9 +6,12 @@ import structlog
 import time
 from contextlib import asynccontextmanager
 from typing import Optional
+import os
 
 from .database import engine, Base, get_db
 from .models import CarrierCredential, CarrierHealthStatus, ExchangeRate
+from .middleware import RateLimitMiddleware, CarrierThrottlingMiddleware, WebhookAuthMiddleware
+from .webhooks import router as webhook_router
 from .carriers.dhl import DHLClient
 from .carriers.fedex import FedExClient
 from .carriers.ups import UPSClient
@@ -69,7 +72,7 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS middleware
+# Add middlewares
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -77,6 +80,23 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Add rate limiting
+app.add_middleware(
+    RateLimitMiddleware,
+    redis_url=os.getenv("REDIS_URL", "redis://redis:6379/1"),
+    requests_per_minute=60,
+    requests_per_hour=1000
+)
+
+# Add carrier throttling
+app.add_middleware(CarrierThrottlingMiddleware)
+
+# Add webhook authentication
+app.add_middleware(WebhookAuthMiddleware)
+
+# Include webhook router
+app.include_router(webhook_router)
 
 # Request tracking middleware
 @app.middleware("http")
