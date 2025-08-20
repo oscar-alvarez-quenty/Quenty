@@ -467,6 +467,156 @@
 - Debe configurar descuentos por volumen
 - Debe activar/desactivar tarifas por período
 
+### Epic 14: Integraciones con Operadores Logísticos Específicos
+
+#### HU-034: Integración con DHL
+**Como** administrador  
+**Quiero** integrar el sistema con DHL  
+**Para** ofrecer servicios de envío internacional premium  
+
+**Criterios de Aceptación:**
+- Debe integrar con DHL Express API para cotizaciones en tiempo real
+- Debe soportar generación de guías DHL (AWB - Air Waybill)
+- Debe sincronizar tracking events desde DHL cada 30 minutos
+- Debe mapear servicios DHL (Express Worldwide, Express 12:00, Express 9:00)
+- Debe validar restricciones de envío por país según normativa DHL
+- Debe manejar documentación aduanera electrónica (PLT - Paperless Trade)
+- Debe soportar pickup scheduling mediante API
+- Debe manejar errores y reintentos con circuit breaker pattern
+
+#### HU-035: Integración con FedEx
+**Como** administrador  
+**Quiero** integrar el sistema con FedEx  
+**Para** ampliar opciones de envío internacional y nacional  
+
+**Criterios de Aceptación:**
+- Debe integrar con FedEx Web Services (Ship, Rate, Track)
+- Debe obtener y renovar automáticamente tokens OAuth 2.0
+- Debe generar etiquetas de envío FedEx con código de barras
+- Debe soportar servicios FedEx (International Priority, International Economy, Ground)
+- Debe calcular duties & taxes para envíos internacionales
+- Debe permitir programación de recolección mediante FedEx Pickup API
+- Debe sincronizar eventos de tracking mediante webhooks
+- Debe manejar consolidación de envíos (MPS - Multi-Piece Shipments)
+- Debe almacenar credenciales de forma segura (account number, meter number)
+
+#### HU-036: Integración con UPS
+**Como** administrador  
+**Quiero** integrar el sistema con UPS  
+**Para** ofrecer alternativas competitivas de envío  
+
+**Criterios de Aceptación:**
+- Debe integrar con UPS Developer Kit APIs
+- Debe autenticar mediante OAuth 2.0 con client credentials flow
+- Debe soportar UPS Rating API para cotizaciones
+- Debe generar labels mediante UPS Shipping API
+- Debe rastrear paquetes con UPS Tracking API
+- Debe soportar servicios UPS (Worldwide Express, Expedited, Standard)
+- Debe manejar UPS Paperless Invoice para documentación comercial
+- Debe procesar notificaciones mediante UPS Webhooks (Quantum View)
+- Debe validar direcciones con UPS Address Validation API
+- Debe manejar tiempos de respuesta con timeout de 30 segundos
+
+#### HU-037: Integración con Servientrega
+**Como** administrador  
+**Quiero** integrar el sistema con Servientrega  
+**Para** ofrecer cobertura nacional completa en Colombia  
+
+**Criterios de Aceptación:**
+- Debe integrar con Web Service SOAP de Servientrega
+- Debe autenticar con usuario y contraseña del convenio empresarial
+- Debe generar guías con numeración consecutiva de Servientrega
+- Debe soportar servicios nacionales (Mercancía Premier, Documento Unitario)
+- Debe consultar cobertura por código postal/municipio
+- Debe sincronizar estados de envío cada hora
+- Debe manejar servicios adicionales (entrega sábado, firma y sello)
+- Debe generar manifiestos de despacho para consolidación
+- Debe calcular flete según acuerdo comercial configurado
+- Debe manejar reintentos con backoff exponencial
+
+#### HU-038: Integración con Interrapidisimo
+**Como** administrador  
+**Quiero** integrar el sistema con Interrapidisimo  
+**Para** complementar cobertura logística nacional  
+
+**Criterios de Aceptación:**
+- Debe integrar con API REST de Interrapidisimo
+- Debe autenticar mediante API Key del cliente corporativo
+- Debe generar remesas con estructura JSON requerida
+- Debe soportar modalidades de servicio (Hoy, Normal, Grandes Superficies)
+- Debe consultar tarifas según origen-destino y peso volumétrico
+- Debe imprimir rótulos con código de barras I2of5
+- Debe rastrear envíos mediante endpoint de consulta masiva
+- Debe manejar novedades específicas de Interrapidisimo
+- Debe generar relación de envíos para cierre de despacho
+- Debe validar ciudades de cobertura antes de generar guía
+
+### Epic 15: Integración con Servicios Financieros
+
+#### HU-039: Integración con Banco de la República - TRM
+**Como** sistema  
+**Quiero** obtener la TRM oficial del Banco de la República  
+**Para** calcular correctamente valores en envíos internacionales  
+
+**Criterios de Aceptación:**
+- Debe consumir el Web Service SOAP del Banco de la República
+- Debe obtener TRM vigente del día actual cada mañana a las 6:00 AM
+- Debe almacenar histórico de TRM con fecha de vigencia
+- Debe usar TRM del día para todas las cotizaciones internacionales
+- Debe manejar caché local con TTL de 24 horas
+- Debe tener fallback a última TRM conocida si el servicio está caído
+- Debe exponer endpoint interno `/api/v1/exchange-rates/cop-usd`
+- Debe notificar al administrador si la TRM varía más del 5% día a día
+- Debe aplicar TRM + spread configurable para cotizaciones a clientes
+- Debe registrar en logs cada actualización de TRM
+
+#### HU-040: Configuración de Credenciales de Operadores
+**Como** administrador  
+**Quiero** gestionar credenciales de operadores logísticos  
+**Para** mantener las integraciones funcionando correctamente  
+
+**Criterios de Aceptación:**
+- Debe permitir configurar credenciales por operador (API keys, tokens, passwords)
+- Debe encriptar credenciales en base de datos usando AES-256
+- Debe validar conectividad al guardar nuevas credenciales
+- Debe mantener múltiples ambientes (sandbox, producción)
+- Debe rotar credenciales según política de cada operador
+- Debe notificar antes de expiración de credenciales
+- Debe mantener log de auditoría de cambios en credenciales
+- Debe soportar múltiples cuentas por operador (multi-tenant)
+
+#### HU-041: Monitoreo de Integraciones
+**Como** administrador  
+**Quiero** monitorear el estado de las integraciones  
+**Para** garantizar disponibilidad del servicio  
+
+**Criterios de Aceptación:**
+- Debe ejecutar health checks cada 5 minutos por operador
+- Debe medir latencia promedio de cada API
+- Debe detectar degradación del servicio (latencia > 2x normal)
+- Debe activar circuit breaker tras 5 fallos consecutivos
+- Debe enviar alertas por email/SMS cuando un servicio está caído
+- Debe mantener dashboard con uptime de últimos 30 días
+- Debe registrar todas las llamadas a APIs externas con request/response
+- Debe calcular tasa de error por operador y endpoint
+- Debe generar reporte mensual de SLA por operador
+- Debe permitir forzar reconexión manual desde panel admin
+
+#### HU-042: Gestión de Fallback entre Operadores
+**Como** sistema  
+**Quiero** usar operadores alternativos automáticamente  
+**Para** garantizar continuidad del servicio  
+
+**Criterios de Aceptación:**
+- Debe configurar orden de prioridad por ruta (origen-destino)
+- Debe cambiar automáticamente al siguiente operador si el principal falla
+- Debe notificar al cliente si hay diferencia de precio > 10%
+- Debe mantener las mismas características de servicio si es posible
+- Debe registrar motivo de fallback en el tracking
+- Debe intentar volver al operador principal cada hora
+- Debe calcular estadísticas de uso de fallback
+- Debe permitir configurar reglas de fallback por tipo de cliente
+
 ## Bounded Contexts
 
 ### 1. Gestión de Clientes y Usuarios
@@ -482,16 +632,16 @@
 - Servicios: Recolección, Entrega, Gestión de puntos
 
 ### 4. Gestión Financiera
-- Entidades: Factura, Pago, Comisión, Microcrédito, Wallet
-- Servicios: Facturación, Pagos, Liquidaciones
+- Entidades: Factura, Pago, Comisión, Microcrédito, Wallet, TRM
+- Servicios: Facturación, Pagos, Liquidaciones, Conversión de divisas
 
 ### 5. Gestión de Tokenización
 - Entidades: Token de Ciudad, Smart Contract
 - Servicios: Emisión, Distribución, Liquidación
 
 ### 6. Gestión de Integraciones
-- Entidades: Canal de Venta, Integración, Webhook
-- Servicios: Sincronización, APIs, Notificaciones
+- Entidades: Canal de Venta, Integración, Webhook, Credencial de Operador
+- Servicios: Sincronización, APIs, Notificaciones, Health Checks
 
 ### 7. Gestión de Configuración
 - Entidades: Política Comercial, Tarifa, Catálogo de Servicios
@@ -500,6 +650,14 @@
 ### 8. Reporting y Analytics
 - Entidades: Reporte, Métrica, Dashboard
 - Servicios: Generación de reportes, KPIs, Business Intelligence
+
+### 9. Gestión de Operadores Logísticos Externos
+- Entidades: Operador Externo (DHL, FedEx, UPS, Servientrega, Interrapidisimo), Credencial, Estado de Integración
+- Servicios: Cotización Multi-operador, Generación de Guías Externas, Tracking Unificado, Fallback Management
+
+### 10. Gestión de Tipos de Cambio
+- Entidades: TRM, Histórico de Tasas, Spread
+- Servicios: Actualización TRM, Conversión de Moneda, Notificación de Variaciones
 
 ## Servicios de Dominio Principales
 
@@ -531,6 +689,38 @@
 - `distributeUtilities(cityId, amount): TokenDistribution`
 - `transferTokens(fromId, toId, amount): Transfer`
 
+### CarrierIntegrationService
+- `getQuoteFromDHL(shipmentData): DHLQuote`
+- `getQuoteFromFedEx(shipmentData): FedExQuote`
+- `getQuoteFromUPS(shipmentData): UPSQuote`
+- `getQuoteFromServientrega(shipmentData): ServientregaQuote`
+- `getQuoteFromInterrapidisimo(shipmentData): InterrapidisimoQuote`
+- `generateDHLLabel(orderData): DHLLabel`
+- `generateFedExLabel(orderData): FedExLabel`
+- `generateUPSLabel(orderData): UPSLabel`
+- `generateServientregaGuide(orderData): ServientregaGuide`
+- `generateInterrapidisimoRemesa(orderData): InterrapidisimoRemesa`
+- `trackMultiCarrier(trackingNumber, carrier): TrackingInfo`
+- `scheduleCarrierPickup(carrier, pickupData): PickupConfirmation`
+- `validateCarrierCredentials(carrier, credentials): ValidationResult`
+- `getCarrierHealthStatus(carrier): HealthStatus`
+
+### ExchangeRateService
+- `getCurrentTRM(): TRMRate`
+- `updateTRMFromBanRep(): TRMUpdate`
+- `convertCOPtoUSD(amount): ConvertedAmount`
+- `convertUSDtoCOP(amount): ConvertedAmount`
+- `getTRMHistory(startDate, endDate): TRMHistory[]`
+- `applySpread(amount, spreadPercentage): AmountWithSpread`
+- `notifyTRMVariation(threshold): Notification`
+
+### CarrierFallbackService
+- `selectPrimaryCarrier(route): Carrier`
+- `selectFallbackCarrier(route, excludeCarriers): Carrier`
+- `recordFallbackEvent(orderId, fromCarrier, toCarrier, reason): FallbackRecord`
+- `attemptCarrierRecovery(carrier): RecoveryResult`
+- `getCarrierPriority(route): CarrierPriority[]`
+
 ## Eventos de Dominio
 
 ### Order Events
@@ -555,6 +745,22 @@
 - `CommissionLiquidated`
 - `CommissionBlocked`
 
+### Carrier Integration Events
+- `CarrierQuoteReceived`
+- `CarrierQuoteFailed`
+- `CarrierLabelGenerated`
+- `CarrierPickupScheduled`
+- `CarrierServiceDegraded`
+- `CarrierServiceRecovered`
+- `CarrierFallbackActivated`
+- `CarrierCredentialsExpiring`
+
+### Exchange Rate Events
+- `TRMUpdated`
+- `TRMUpdateFailed`
+- `TRMVariationDetected`
+- `ExchangeRateApplied`
+
 ## Agregados Principales
 
 1. **Customer Aggregate**: Cliente, Wallet, Microcrédito
@@ -563,5 +769,7 @@
 4. **Payment Aggregate**: Factura, Pago, Comisión
 5. **Franchise Aggregate**: Franquicia, Punto Logístico, Tokens
 6. **Policy Aggregate**: Política Comercial, Tarifa, Catálogo
+7. **Carrier Integration Aggregate**: Operador Externo, Credenciales, Estado de Servicio, Configuración de Fallback
+8. **Exchange Rate Aggregate**: TRM, Histórico de Tasas, Configuración de Spread
 
-Esta especificación proporciona una base sólida para implementar la plataforma Quenty siguiendo principios DDD, con historias de usuario claras y criterios de aceptación específicos que guiarán el desarrollo de cada funcionalidad.
+Esta especificación proporciona una base sólida para implementar la plataforma Quenty siguiendo principios DDD, con historias de usuario claras y criterios de aceptación específicos que guiarán el desarrollo de cada funcionalidad, incluyendo las integraciones con operadores logísticos internacionales (DHL, FedEx, UPS) y nacionales colombianos (Servientrega, Interrapidisimo), así como la integración con el Banco de la República para obtener la TRM oficial.

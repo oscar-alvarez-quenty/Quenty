@@ -52,6 +52,7 @@ class Settings(BaseSettings):
     reverse_logistics_service_url: str = "http://reverse-logistics-service:8007"
     franchise_service_url: str = "http://franchise-service:8008"
     auth_service_url: str = "http://auth-service:8009"
+    carrier_integration_service_url: str = "http://carrier-integration-service:8009"
     consul_host: str = "consul"
     consul_port: int = 8500
     
@@ -98,6 +99,7 @@ service_registry = {
     "analytics": settings.analytics_service_url,
     "reverse-logistics": settings.reverse_logistics_service_url,
     "franchise": settings.franchise_service_url,
+    "carrier-integration": settings.carrier_integration_service_url,
     "auth": settings.auth_service_url,
 }
 

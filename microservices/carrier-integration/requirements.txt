@@ -1,0 +1,21 @@
+fastapi==0.109.0
+uvicorn==0.25.0
+pydantic==2.5.3
+sqlalchemy==2.0.23
+psycopg2-binary==2.9.9
+python-dotenv==1.0.0
+httpx==0.25.2
+redis==5.0.1
+prometheus-client==0.19.0
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.6
+alembic==1.13.1
+tenacity==8.2.3
+zeep==4.2.1  # For SOAP services (Servientrega, Banco de la República)
+xmltodict==0.13.0  # For XML parsing
+cryptography==41.0.7  # For credential encryption
+apscheduler==3.10.4  # For scheduled tasks (TRM updates)
+circuitbreaker==2.0.0  # For circuit breaker pattern
+cachetools==5.3.2  # For caching
+structlog==24.1.0  # For structured logging
