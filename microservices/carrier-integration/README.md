@@ -11,6 +11,16 @@ Comprehensive carrier integration microservice for Quenty logistics platform, pr
 - **Servientrega** - Colombian national coverage
 - **Interrapidisimo** - Colombian regional logistics
 
+### 📦 International Mailbox Services
+- **Pasarex** - Virtual mailbox with Miami and Madrid locations
+  - Package consolidation and pre-alerts
+  - Repackaging and protection services
+  - Multi-location support (USA/Europe)
+- **Aeropost** - Miami PO Box service
+  - IATA weight calculations
+  - Photo verification services
+  - Express consolidation options
+
 ### 💱 Exchange Rate Services
 - **Banco de la República** - Official Colombian TRM (Tasa Representativa del Mercado)
 - Automatic daily updates at 6:00 AM

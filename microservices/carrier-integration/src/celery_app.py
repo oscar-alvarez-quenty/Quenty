@@ -57,6 +57,7 @@ app.conf.update(
         Queue('tracking', Exchange('tracking'), routing_key='tracking.*'),
         Queue('webhooks', Exchange('webhooks'), routing_key='webhooks.*'),
         Queue('batch', Exchange('batch'), routing_key='batch.*'),
+        Queue('mailbox', Exchange('mailbox'), routing_key='mailbox.*'),
         Queue('priority', Exchange('priority'), routing_key='priority.*', priority=10),
     ),
     
@@ -67,6 +68,7 @@ app.conf.update(
         'src.tasks.tracking_tasks.*': {'queue': 'tracking'},
         'src.tasks.webhook_tasks.*': {'queue': 'webhooks'},
         'src.tasks.batch_tasks.*': {'queue': 'batch'},
+        'src.tasks.international_mailbox_tasks.*': {'queue': 'mailbox'},
         'src.tasks.carrier_tasks.urgent_*': {'queue': 'priority'},
     },
     
