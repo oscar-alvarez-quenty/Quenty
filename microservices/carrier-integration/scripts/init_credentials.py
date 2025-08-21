@@ -51,6 +51,14 @@ def init_test_credentials():
         "INTERRAPIDISIMO": {
             "API_KEY": "TEST_INTER_API_KEY_999",
             "CLIENT_CODE": "CLIENT_TEST_001"
+        },
+        "PASAREX": {
+            "CLIENT_ID": "TEST_PASAREX_CLIENT_ID",
+            "CLIENT_SECRET": "TEST_PASAREX_SECRET"
+        },
+        "AEROPOST": {
+            "API_KEY": "TEST_AEROPOST_API_KEY",
+            "API_SECRET": "TEST_AEROPOST_SECRET"
         }
     }
     

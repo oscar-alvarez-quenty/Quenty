@@ -12,6 +12,8 @@ class CarrierType(enum.Enum):
     UPS = "UPS"
     SERVIENTREGA = "Servientrega"
     INTERRAPIDISIMO = "Interrapidisimo"
+    PASAREX = "Pasarex"
+    AEROPOST = "Aeropost"
 
 class EnvironmentType(enum.Enum):
     SANDBOX = "sandbox"
@@ -155,3 +157,95 @@ class ApiCallLog(Base):
     latency_ms = Column(Float, nullable=False)
     error_message = Column(Text, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
+
+# International Mailbox Models
+
+class InternationalMailbox(Base):
+    __tablename__ = "international_mailboxes"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    customer_id = Column(String(100), nullable=False, index=True)
+    carrier = Column(SQLEnum(CarrierType), nullable=False)  # PASAREX or AEROPOST
+    mailbox_id = Column(String(100), unique=True, index=True)
+    mailbox_number = Column(String(50), nullable=False)
+    miami_address = Column(JSON, nullable=False)
+    spain_address = Column(JSON, nullable=True)  # Only for Pasarex
+    status = Column(String(20), default="active")
+    membership_type = Column(String(20), default="standard")
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, onupdate=func.now())
+
+class PackagePrealert(Base):
+    __tablename__ = "package_prealerts"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    mailbox_id = Column(String(100), nullable=False, index=True)
+    carrier = Column(SQLEnum(CarrierType), nullable=False)
+    tracking_number = Column(String(100), nullable=False, index=True)
+    origin_carrier = Column(String(50), nullable=True)
+    description = Column(Text, nullable=False)
+    declared_value = Column(Float, nullable=False)
+    currency = Column(String(3), default="USD")
+    weight_lb = Column(Float, nullable=False)
+    dimensions = Column(JSON, nullable=True)
+    category = Column(String(50), default="GENERAL")
+    status = Column(String(50), default="prealerted")
+    expected_arrival = Column(DateTime, nullable=True)
+    arrived_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+
+class PackageConsolidation(Base):
+    __tablename__ = "package_consolidations"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    consolidation_id = Column(String(100), unique=True, index=True)
+    customer_id = Column(String(100), nullable=False)
+    carrier = Column(SQLEnum(CarrierType), nullable=False)
+    package_ids = Column(JSON, nullable=False)  # List of package IDs
+    master_tracking = Column(String(100), nullable=True)
+    status = Column(String(50), default="pending")
+    packages_count = Column(Integer, nullable=False)
+    total_weight_lb = Column(Float, nullable=False)
+    volumetric_weight = Column(Float, nullable=True)
+    billable_weight = Column(Float, nullable=True)
+    estimated_cost = Column(Float, nullable=True)
+    savings_amount = Column(Float, nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+    completed_at = Column(DateTime, nullable=True)
+
+class CustomsDeclaration(Base):
+    __tablename__ = "customs_declarations"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    package_id = Column(String(100), nullable=False, index=True)
+    declaration_id = Column(String(100), unique=True, index=True)
+    carrier = Column(SQLEnum(CarrierType), nullable=False)
+    items = Column(JSON, nullable=False)  # List of declared items
+    total_value = Column(Float, nullable=False)
+    currency = Column(String(3), default="USD")
+    invoice_number = Column(String(100), nullable=True)
+    purchase_date = Column(DateTime, nullable=True)
+    merchant = Column(String(200), nullable=True)
+    customs_form_id = Column(String(100), nullable=True)
+    status = Column(String(50), default="declared")
+    created_at = Column(DateTime, server_default=func.now())
+
+class ImportCostCalculation(Base):
+    __tablename__ = "import_cost_calculations"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    package_id = Column(String(100), nullable=False, index=True)
+    carrier = Column(SQLEnum(CarrierType), nullable=False)
+    product_value = Column(Float, nullable=False)
+    shipping_cost = Column(Float, nullable=False)
+    customs_duty = Column(Float, nullable=False)
+    vat = Column(Float, nullable=False)
+    handling_fee = Column(Float, nullable=False)
+    insurance = Column(Float, nullable=True)
+    total_cost = Column(Float, nullable=False)
+    currency = Column(String(3), default="COP")
+    exchange_rate = Column(Float, nullable=False)
+    duty_rate = Column(Float, nullable=False)
+    vat_rate = Column(Float, nullable=False)
+    category = Column(String(50), nullable=False)
+    calculated_at = Column(DateTime, server_default=func.now())
