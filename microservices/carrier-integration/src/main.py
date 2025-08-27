@@ -14,11 +14,13 @@ from .middleware import RateLimitMiddleware, CarrierThrottlingMiddleware, Webhoo
 from .webhooks import router as webhook_router
 from .routers.credentials import router as credentials_router
 from .routers.international_mailbox import router as mailbox_router
+from .routers.pickit import router as pickit_router
 from .carriers.dhl import DHLClient
 from .carriers.fedex import FedExClient
 from .carriers.ups import UPSClient
 from .carriers.servientrega import ServientregaClient
 from .carriers.interrapidisimo import InterrapidisimoClient
+from .carriers.pickit import PickitClient
 from .exchange_rate.banco_republica import BancoRepublicaClient
 from .services.carrier_service import CarrierService
 from .services.fallback_service import FallbackService
@@ -101,6 +103,7 @@ app.add_middleware(WebhookAuthMiddleware)
 app.include_router(webhook_router)
 app.include_router(credentials_router)
 app.include_router(mailbox_router)
+app.include_router(pickit_router)
 
 # Request tracking middleware
 @app.middleware("http")

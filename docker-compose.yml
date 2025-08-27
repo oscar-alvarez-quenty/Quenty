@@ -273,6 +273,105 @@ services:
     command: celery -A src.celery_app flower --port=5555
     restart: unless-stopped
 
+  # Shopify Integration Service
+  shopify-integration:
+    build:
+      context: ./microservices/shopify-integration
+      dockerfile: Dockerfile
+    container_name: quenty-shopify
+    ports:
+      - "8010:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:quenty123@db:5432/shopify_db
+      - REDIS_URL=redis://:quenty123@redis:6379/2
+      - LOG_LEVEL=INFO
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:8000
+      - SECRET_KEY=${SHOPIFY_SECRET_KEY:-change-this-in-production}
+      - ENCRYPTION_KEY=${SHOPIFY_ENCRYPTION_KEY:-32-byte-key-change-in-production}
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./microservices/shopify-integration/src:/app/src
+    networks:
+      - quenty-network
+    restart: unless-stopped
+
+  # Shopify Celery Worker
+  shopify-worker:
+    build:
+      context: ./microservices/shopify-integration
+      dockerfile: Dockerfile
+    container_name: quenty-shopify-worker
+    environment:
+      - DATABASE_URL=postgresql://postgres:quenty123@db:5432/shopify_db
+      - REDIS_URL=redis://:quenty123@redis:6379/2
+      - PYTHONPATH=/app/src
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./microservices/shopify-integration/src:/app/src
+    networks:
+      - quenty-network
+    command: celery -A src.tasks.celery_app worker --loglevel=info
+    restart: unless-stopped
+
+  # Shopify Celery Beat
+  shopify-beat:
+    build:
+      context: ./microservices/shopify-integration
+      dockerfile: Dockerfile
+    container_name: quenty-shopify-beat
+    environment:
+      - DATABASE_URL=postgresql://postgres:quenty123@db:5432/shopify_db
+      - REDIS_URL=redis://:quenty123@redis:6379/2
+      - PYTHONPATH=/app/src
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./microservices/shopify-integration/src:/app/src
+    networks:
+      - quenty-network
+    command: celery -A src.tasks.celery_app beat --loglevel=info
+    restart: unless-stopped
+
+  # RAG Service for AI-powered chat
+  rag-service:
+    build:
+      context: ./microservices/rag-service
+      dockerfile: Dockerfile
+    container_name: quenty-rag
+    ports:
+      - "8011:8010"
+    environment:
+      - DATABASE_URL=postgresql://postgres:quenty123@db:5432/rag_db
+      - VECTOR_DB_URL=postgresql://postgres:quenty123@db:5432/rag_db
+      - REDIS_URL=redis://:quenty123@redis:6379/3
+      - USE_LOCAL_MODELS=true
+      - AUTH_DB_URL=postgresql://postgres:quenty123@db:5432/auth_db
+      - CUSTOMER_DB_URL=postgresql://postgres:quenty123@db:5432/customer_db
+      - ORDER_DB_URL=postgresql://postgres:quenty123@db:5432/order_db
+      - CARRIER_DB_URL=postgresql://postgres:quenty123@db:5432/carrier_db
+      - ANALYTICS_DB_URL=postgresql://postgres:quenty123@db:5432/analytics_db
+      - FRANCHISE_DB_URL=postgresql://postgres:quenty123@db:5432/franchise_db
+      - INTERNATIONAL_DB_URL=postgresql://postgres:quenty123@db:5432/international_db
+      - MICROCREDIT_DB_URL=postgresql://postgres:quenty123@db:5432/microcredit_db
+      - PICKUP_DB_URL=postgresql://postgres:quenty123@db:5432/pickup_db
+      - REVERSE_LOGISTICS_DB_URL=postgresql://postgres:quenty123@db:5432/reverse_logistics_db
+      - SECRET_KEY=${RAG_SECRET_KEY:-change-this-in-production}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./microservices/rag-service/src:/app/src
+      - ./microservices/rag-service/chat-client:/app/chat-client
+    networks:
+      - quenty-network
+    restart: unless-stopped
+
 volumes:
   postgres_data:
   redis_data:

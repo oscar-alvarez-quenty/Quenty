@@ -12,6 +12,7 @@ from ..carriers.servientrega import ServientregaClient
 from ..carriers.interrapidisimo import InterrapidisimoClient
 from ..carriers.pasarex import PasarexClient
 from ..carriers.aeropost import AeropostClient
+from ..carriers.pickit import PickitClient
 from ..schemas import (
     QuoteRequest, QuoteResponse,
     LabelRequest, LabelResponse,
@@ -47,6 +48,8 @@ class CarrierService:
                 client = PasarexClient()
             elif carrier == "Aeropost":
                 client = AeropostClient()
+            elif carrier == "Pickit":
+                client = PickitClient()
             else:
                 raise ValueError(f"Unsupported carrier: {carrier}")
             
