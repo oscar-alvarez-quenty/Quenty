@@ -212,6 +212,82 @@ async def interrapidisimo_event_webhook(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.post("/pickit/events")
+async def pickit_webhook(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Handle Pickit tracking and pickup point events"""
+    try:
+        # Get webhook headers for validation
+        signature = request.headers.get("X-Pickit-Signature")
+        timestamp = request.headers.get("X-Pickit-Timestamp")
+        
+        # Get raw body for signature validation
+        body = await request.body()
+        data = await request.json()
+        
+        logger.info("Pickit webhook received", event_type=data.get("event_type"))
+        
+        # Validate webhook signature
+        from .carriers.pickit import PickitClient
+        client = PickitClient()
+        
+        if signature and timestamp:
+            is_valid = await client.validate_webhook(body.decode(), signature, timestamp)
+            if not is_valid:
+                logger.warning("Invalid Pickit webhook signature")
+                raise HTTPException(status_code=401, detail="Invalid signature")
+        
+        # Process webhook event
+        event_type = data.get("event_type")
+        event_data = data.get("data", {})
+        
+        # Process the event using the Pickit client
+        result = await client.process_webhook(event_type, event_data)
+        
+        # Handle different event types
+        if event_type in ["shipment.in_transit", "shipment.at_pickup_point", "shipment.delivered"]:
+            tracking_number = event_data.get("tracking_number")
+            
+            # Save tracking event to database
+            db_event = TrackingEventModel(
+                tracking_number=tracking_number,
+                carrier=CarrierType.PICKIT,
+                event_date=datetime.fromisoformat(event_data.get("timestamp", datetime.utcnow().isoformat())),
+                status=result.get("status"),
+                description=event_data.get("description", event_type),
+                location=event_data.get("location"),
+                raw_data=data
+            )
+            db.add(db_event)
+            db.commit()
+            
+            # Notify about tracking update
+            await _notify_tracking_update(tracking_number, "Pickit", result)
+            
+            # Special handling for delivery
+            if event_type == "shipment.delivered":
+                await _notify_delivery_confirmation(tracking_number, "Pickit", result)
+        
+        elif event_type == "shipment.at_pickup_point":
+            # Notify customer about package arrival at pickup point
+            logger.info(
+                "Package arrived at pickup point",
+                tracking_number=event_data.get("tracking_number"),
+                pickup_code=result.get("pickup_code")
+            )
+            # TODO: Send notification with pickup code
+        
+        return {"status": "success", "message": f"Event {event_type} processed"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Failed to process Pickit webhook", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/dhl/pod")
 async def dhl_proof_of_delivery_webhook(
     request: Request,
