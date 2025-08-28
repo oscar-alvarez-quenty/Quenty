@@ -372,6 +372,90 @@ services:
       - quenty-network
     restart: unless-stopped
 
+  # MercadoLibre Integration Service
+  mercadolibre-integration:
+    build:
+      context: ./microservices/mercadolibre-integration
+      dockerfile: Dockerfile
+    container_name: quenty-mercadolibre
+    ports:
+      - "8012:8012"
+    environment:
+      - DATABASE_URL=postgresql://postgres:quenty123@db:5432/mercadolibre_db
+      - REDIS_URL=redis://:quenty123@redis:6379/4
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672/
+      - CELERY_RESULT_BACKEND=redis://:quenty123@redis:6379/4
+      - MELI_CLIENT_ID=${MELI_CLIENT_ID:-}
+      - MELI_CLIENT_SECRET=${MELI_CLIENT_SECRET:-}
+      - MELI_SITE_ID=${MELI_SITE_ID:-MCO}
+      - SECRET_KEY=${MELI_SECRET_KEY:-change-this-in-production}
+      - ENCRYPTION_KEY=${MELI_ENCRYPTION_KEY:-32-byte-key-change-in-production}
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+    volumes:
+      - ./microservices/mercadolibre-integration/src:/app/src
+    networks:
+      - quenty-network
+    restart: unless-stopped
+
+  # MercadoLibre Celery Worker
+  mercadolibre-worker:
+    build:
+      context: ./microservices/mercadolibre-integration
+      dockerfile: Dockerfile
+    container_name: quenty-mercadolibre-worker
+    environment:
+      - DATABASE_URL=postgresql://postgres:quenty123@db:5432/mercadolibre_db
+      - REDIS_URL=redis://:quenty123@redis:6379/4
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672/
+      - CELERY_RESULT_BACKEND=redis://:quenty123@redis:6379/4
+      - MELI_CLIENT_ID=${MELI_CLIENT_ID:-}
+      - MELI_CLIENT_SECRET=${MELI_CLIENT_SECRET:-}
+      - MELI_SITE_ID=${MELI_SITE_ID:-MCO}
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+      - mercadolibre-integration
+    volumes:
+      - ./microservices/mercadolibre-integration/src:/app/src
+    networks:
+      - quenty-network
+    command: celery -A src.tasks.celery_app worker --loglevel=info --queues=default,products,orders,questions,inventory
+    restart: unless-stopped
+
+  # MercadoLibre Celery Beat
+  mercadolibre-beat:
+    build:
+      context: ./microservices/mercadolibre-integration
+      dockerfile: Dockerfile
+    container_name: quenty-mercadolibre-beat
+    environment:
+      - DATABASE_URL=postgresql://postgres:quenty123@db:5432/mercadolibre_db
+      - REDIS_URL=redis://:quenty123@redis:6379/4
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672/
+      - CELERY_RESULT_BACKEND=redis://:quenty123@redis:6379/4
+      - MELI_CLIENT_ID=${MELI_CLIENT_ID:-}
+      - MELI_CLIENT_SECRET=${MELI_CLIENT_SECRET:-}
+      - MELI_SITE_ID=${MELI_SITE_ID:-MCO}
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+      - mercadolibre-integration
+    volumes:
+      - ./microservices/mercadolibre-integration/src:/app/src
+    networks:
+      - quenty-network
+    command: celery -A src.tasks.celery_app beat --loglevel=info
+    restart: unless-stopped
+
+
 volumes:
   postgres_data:
   redis_data:

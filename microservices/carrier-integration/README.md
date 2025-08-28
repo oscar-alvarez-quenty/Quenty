@@ -10,6 +10,8 @@ Comprehensive carrier integration microservice for Quenty logistics platform, pr
 - **UPS** - Worldwide shipping services
 - **Servientrega** - Colombian national coverage
 - **Interrapidisimo** - Colombian regional logistics
+- **Deprisa** - Express courier and logistics service
+- **Coordinadora** - Nationwide transportation and logistics network
 - **Pickit** - Last-mile delivery and pickup point network
 
 ### 📦 International Mailbox Services
@@ -176,6 +178,33 @@ POST /api/v1/carriers/Pickit/credentials
 }
 ```
 
+#### Deprisa
+```json
+POST /api/v1/carriers/Deprisa/credentials
+{
+  "environment": "production",
+  "credentials": {
+    "api_key": "your-deprisa-api-key",
+    "client_id": "your-deprisa-client-id",
+    "client_secret": "your-deprisa-client-secret"
+  }
+}
+```
+
+#### Coordinadora
+```json
+POST /api/v1/carriers/Coordinadora/credentials
+{
+  "environment": "production",
+  "credentials": {
+    "api_key": "your-coordinadora-api-key",
+    "api_password": "your-coordinadora-password",
+    "nit": "your-coordinadora-nit",
+    "client_code": "your-coordinadora-client-code"
+  }
+}
+```
+
 ## API Documentation
 
 ### Core Endpoints
@@ -308,6 +337,8 @@ Carriers can send real-time updates to:
 - `/webhooks/ups/quantum-view` - UPS Quantum View events
 - `/webhooks/servientrega/notifications` - Servientrega notifications
 - `/webhooks/interrapidisimo/events` - Interrapidisimo events
+- `/webhooks/deprisa/notifications` - Deprisa tracking notifications
+- `/webhooks/coordinadora/events` - Coordinadora status updates
 - `/webhooks/pickit/events` - Pickit tracking and pickup point events
 
 ### Health & Monitoring
@@ -378,6 +409,8 @@ Each error includes:
 - **UPS**: 10 req/sec, 400 req/min
 - **Servientrega**: 5 req/sec, 200 req/min
 - **Interrapidisimo**: 8 req/sec, 300 req/min
+- **Deprisa**: 10 req/sec, 250 req/min
+- **Coordinadora**: 8 req/sec, 300 req/min
 - **Pickit**: 20 req/sec, 600 req/min
 
 ## Monitoring
