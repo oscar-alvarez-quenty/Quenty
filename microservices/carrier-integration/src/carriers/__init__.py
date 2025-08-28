@@ -4,6 +4,8 @@ from .ups import UPSClient
 from .servientrega import ServientregaClient
 from .interrapidisimo import InterrapidisimoClient
 from .pickit import PickitClient
+from .deprisa import DeprisaCarrier
+from .coordinadora import CoordinadoraCarrier
 
 __all__ = [
     'DHLClient', 
@@ -11,5 +13,7 @@ __all__ = [
     'UPSClient',
     'ServientregaClient',
     'InterrapidisimoClient',
-    'PickitClient'
+    'PickitClient',
+    'DeprisaCarrier',
+    'CoordinadoraCarrier'
 ]
