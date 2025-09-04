@@ -6,7 +6,7 @@ pydantic==2.5.0
 pydantic-settings==2.1.0
 
 # Shopify SDK and API
-shopify-python-api==12.3.0
+ShopifyAPI==12.3.0
 requests==2.31.0
 httpx==0.25.2
 
@@ -17,13 +17,12 @@ asyncpg==0.29.0
 psycopg2-binary==2.9.9
 
 # Redis and Caching
-redis==5.0.1
+# redis is included with celery[redis]
 hiredis==2.2.3
 
 # Celery for async tasks
 celery[redis]==5.3.4
 flower==2.0.1
-celery-beat==2.5.0
 
 # Authentication and Security
 python-jose[cryptography]==3.3.0

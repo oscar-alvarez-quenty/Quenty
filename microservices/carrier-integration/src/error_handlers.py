@@ -257,6 +257,12 @@ class InterrapidisimoErrorHandler:
         )
 
 
+# Aliases for backward compatibility
+CarrierError = CarrierException
+ValidationError = CarrierException
+AuthenticationError = CarrierException
+
+
 class ErrorHandlerFactory:
     """Factory to get appropriate error handler for each carrier"""
     

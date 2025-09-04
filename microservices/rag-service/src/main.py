@@ -109,7 +109,8 @@ async def health_check(db: AsyncSession = Depends(get_db)):
         await db.execute(select(Document).limit(1))
         
         # Check vector extension
-        result = await db.execute("SELECT extversion FROM pg_extension WHERE extname = 'vector'")
+        from sqlalchemy import text
+        result = await db.execute(text("SELECT extversion FROM pg_extension WHERE extname = 'vector'"))
         vector_version = result.scalar()
         
         return HealthResponse(

@@ -28,7 +28,7 @@ services:
 
   # PostgreSQL Database
   db:
-    image: postgres:15-alpine
+    image: pgvector/pgvector:pg15
     container_name: quenty-db
     environment:
       POSTGRES_DB: quenty_db
@@ -38,7 +38,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - "5432:5432"
+      - "5433:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d quenty_db"]
       interval: 10s
@@ -55,7 +55,7 @@ services:
     container_name: quenty-redis
     command: redis-server --appendonly yes --requirepass quenty123
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -169,7 +169,7 @@ services:
       - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
       - CELERY_RESULT_BACKEND=redis://:quenty123@redis:6379/1
       - SECRET_KEY=${CARRIER_SECRET_KEY:-change-this-in-production}
-      - ENCRYPTION_KEY=${CARRIER_ENCRYPTION_KEY:-32-byte-key-change-in-production}
+      - ENCRYPTION_KEY=${CARRIER_ENCRYPTION_KEY:-VoZ9YI9RNI5V0tGEYiIwA59DThPwfpTuWAoKrbmed9o=}
     depends_on:
       - db
       - redis
@@ -194,7 +194,7 @@ services:
       - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
       - CELERY_RESULT_BACKEND=redis://:quenty123@redis:6379/1
       - SECRET_KEY=${CARRIER_SECRET_KEY:-change-this-in-production}
-      - ENCRYPTION_KEY=${CARRIER_ENCRYPTION_KEY:-32-byte-key-change-in-production}
+      - ENCRYPTION_KEY=${CARRIER_ENCRYPTION_KEY:-VoZ9YI9RNI5V0tGEYiIwA59DThPwfpTuWAoKrbmed9o=}
     depends_on:
       - db
       - redis
@@ -220,7 +220,7 @@ services:
       - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
       - CELERY_RESULT_BACKEND=redis://:quenty123@redis:6379/1
       - SECRET_KEY=${CARRIER_SECRET_KEY:-change-this-in-production}
-      - ENCRYPTION_KEY=${CARRIER_ENCRYPTION_KEY:-32-byte-key-change-in-production}
+      - ENCRYPTION_KEY=${CARRIER_ENCRYPTION_KEY:-VoZ9YI9RNI5V0tGEYiIwA59DThPwfpTuWAoKrbmed9o=}
     depends_on:
       - db
       - redis
@@ -287,7 +287,7 @@ services:
       - LOG_LEVEL=INFO
       - CORS_ORIGINS=http://localhost:3000,http://localhost:8000
       - SECRET_KEY=${SHOPIFY_SECRET_KEY:-change-this-in-production}
-      - ENCRYPTION_KEY=${SHOPIFY_ENCRYPTION_KEY:-32-byte-key-change-in-production}
+      - ENCRYPTION_KEY=${SHOPIFY_ENCRYPTION_KEY:-vPmIWQK2cnOGJ0IY36X82VPwS_0rc-DuypwPRHqdIt8=}
     depends_on:
       - db
       - redis
@@ -390,7 +390,7 @@ services:
       - MELI_CLIENT_SECRET=${MELI_CLIENT_SECRET:-}
       - MELI_SITE_ID=${MELI_SITE_ID:-MCO}
       - SECRET_KEY=${MELI_SECRET_KEY:-change-this-in-production}
-      - ENCRYPTION_KEY=${MELI_ENCRYPTION_KEY:-32-byte-key-change-in-production}
+      - ENCRYPTION_KEY=${MELI_ENCRYPTION_KEY:-sOTEK5wts0GGkd9t1Uk1PZGl8ke8dLJKq9pSTJ3VJXs=}
     depends_on:
       - db
       - redis
