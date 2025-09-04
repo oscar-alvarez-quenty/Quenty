@@ -17,7 +17,7 @@ class Document(Base):
     source_id = Column(String(255), nullable=False)  # record id
     document_type = Column(String(100))  # order, customer, product, etc.
     content = Column(Text, nullable=False)
-    metadata = Column(JSON)
+    meta_data = Column(JSON)
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
     
@@ -37,7 +37,7 @@ class DocumentChunk(Base):
     chunk_index = Column(Integer, nullable=False)
     content = Column(Text, nullable=False)
     embedding = Column(Vector(384))  # 384 dimensions for all-MiniLM-L6-v2
-    metadata = Column(JSON)
+    meta_data = Column(JSON)
     created_at = Column(DateTime, default=func.now())
     
     # Relationship to parent document
@@ -56,7 +56,7 @@ class Conversation(Base):
     user_id = Column(String(255))
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
-    metadata = Column(JSON)
+    meta_data = Column(JSON)
     
     # Relationship to messages
     messages = relationship("Message", back_populates="conversation", cascade="all, delete-orphan")
@@ -88,7 +88,7 @@ class IndexingJob(Base):
     total_records = Column(Integer, default=0)
     processed_records = Column(Integer, default=0)
     error_message = Column(Text)
-    metadata = Column(JSON)
+    meta_data = Column(JSON)
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 

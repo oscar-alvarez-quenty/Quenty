@@ -20,10 +20,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY src/ ./src/
 COPY alembic.ini .
 COPY alembic/ ./alembic/
-COPY scripts/ ./scripts/
-
-# Make scripts executable
-RUN chmod +x scripts/*.sh
 
 # Set environment variables
 ENV PYTHONPATH=/app

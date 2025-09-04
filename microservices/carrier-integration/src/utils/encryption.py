@@ -9,7 +9,7 @@ if not ENCRYPTION_KEY:
     ENCRYPTION_KEY = Fernet.generate_key().decode()
     print(f"Warning: Using generated encryption key. Set ENCRYPTION_KEY environment variable in production.")
 
-cipher_suite = Fernet(ENCRYPTION_KEY.encode())
+cipher_suite = Fernet(ENCRYPTION_KEY if isinstance(ENCRYPTION_KEY, bytes) else ENCRYPTION_KEY.encode())
 
 def encrypt_credentials(credentials: Dict[str, Any]) -> str:
     """Encrypt credentials dictionary to string"""
@@ -38,3 +38,7 @@ def decrypt_credentials(encrypted: str) -> Dict[str, Any]:
         
     except Exception as e:
         raise Exception(f"Failed to decrypt credentials: {str(e)}")
+
+# Alias functions for compatibility
+encrypt_data = encrypt_credentials
+decrypt_data = decrypt_credentials

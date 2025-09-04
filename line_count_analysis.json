@@ -1,0 +1,2762 @@
+{
+  "by_extension": {
+    ".md": 27178,
+    ".ini": 1269,
+    ".dockerfile": 689,
+    ".toml": 22,
+    ".yml": 2123,
+    ".py": 78051,
+    ".mako": 264,
+    ".html": 551,
+    ".sh": 1134,
+    ".tf": 2598,
+    ".conf": 230,
+    ".json": 11422,
+    ".sql": 112
+  },
+  "by_directory": {
+    "historias.md": 852,
+    "alembic.ini": 41,
+    "Dockerfile": 70,
+    "INTEGRATION_STATUS.md": 225,
+    "pyproject.toml": 22,
+    "docker-compose.microservices.yml": 571,
+    "README.md": 501,
+    "GRAFANA_RAW_LOGS_DASHBOARD.md": 286,
+    "docker-compose.yml": 470,
+    "docker-compose.prod.yml": 208,
+    "DASHBOARD_CREATION_SUMMARY.md": 216,
+    "main.py": 31,
+    "count_lines_script.py": 211,
+    "microservices": 55771,
+    "terraform": 3523,
+    "docker": 9548,
+    "tests": 5275,
+    "shared": 128,
+    "docs": 17451,
+    "scripts": 4066,
+    "src": 26177
+  },
+  "by_microservice": {
+    "TESTING.md": 378,
+    "common_metrics.py": 114,
+    "README.md": 227,
+    "METRICS.md": 217,
+    "add_metrics_endpoints.py": 112,
+    "TESTING_RESULTS.md": 177,
+    "METRICS_VERIFICATION.md": 67,
+    "woocommerce-integration": 5568,
+    "order": 1312,
+    "mercadolibre-integration": 4467,
+    "reverse-logistics": 1846,
+    "api-gateway": 1058,
+    "international-shipping": 1339,
+    "rag-service": 3100,
+    "microcredit": 1759,
+    "franchise": 1795,
+    "pickup": 1629,
+    "shopify-integration": 7007,
+    "carrier-integration": 17799,
+    "auth-service": 3322,
+    "customer": 1384,
+    "analytics": 1094
+  },
+  "files_analyzed": [
+    {
+      "path": "historias.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 852
+    },
+    {
+      "path": "alembic.ini",
+      "extension": ".ini",
+      "type": "INI",
+      "lines": 41
+    },
+    {
+      "path": "Dockerfile",
+      "extension": ".dockerfile",
+      "type": "Dockerfile",
+      "lines": 70
+    },
+    {
+      "path": "INTEGRATION_STATUS.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 225
+    },
+    {
+      "path": "pyproject.toml",
+      "extension": ".toml",
+      "type": "TOML",
+      "lines": 22
+    },
+    {
+      "path": "docker-compose.microservices.yml",
+      "extension": ".yml",
+      "type": "YAML",
+      "lines": 571
+    },
+    {
+      "path": "README.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 501
+    },
+    {
+      "path": "GRAFANA_RAW_LOGS_DASHBOARD.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 286
+    },
+    {
+      "path": "docker-compose.yml",
+      "extension": ".yml",
+      "type": "YAML",
+      "lines": 470
+    },
+    {
+      "path": "docker-compose.prod.yml",
+      "extension": ".yml",
+      "type": "YAML",
+      "lines": 208
+    },
+    {
+      "path": "DASHBOARD_CREATION_SUMMARY.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 216
+    },
+    {
+      "path": "main.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 31
+    },
+    {
+      "path": "count_lines_script.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 211
+    },
+    {
+      "path": "microservices/TESTING.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 378
+    },
+    {
+      "path": "microservices/common_metrics.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 114
+    },
+    {
+      "path": "microservices/README.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 227
+    },
+    {
+      "path": "microservices/METRICS.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 217
+    },
+    {
+      "path": "microservices/add_metrics_endpoints.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 112
+    },
+    {
+      "path": "microservices/TESTING_RESULTS.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 177
+    },
+    {
+      "path": "microservices/METRICS_VERIFICATION.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 67
+    },
+    {
+      "path": "microservices/woocommerce-integration/Dockerfile",
+      "extension": ".dockerfile",
+      "type": "Dockerfile",
+      "lines": 37
+    },
+    {
+      "path": "microservices/woocommerce-integration/docs/WOOCOMMERCE_INTEGRATION_COMPLETE.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 2262
+    },
+    {
+      "path": "microservices/woocommerce-integration/src/main.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 387
+    },
+    {
+      "path": "microservices/woocommerce-integration/src/models/entities.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 440
+    },
+    {
+      "path": "microservices/woocommerce-integration/src/api/woocommerce_client.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 914
+    },
+    {
+      "path": "microservices/woocommerce-integration/src/webhooks/webhook_handler.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 816
+    },
+    {
+      "path": "microservices/woocommerce-integration/src/services/order_service.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 712
+    },
+    {
+      "path": "microservices/order/alembic.ini",
+      "extension": ".ini",
+      "type": "INI",
+      "lines": 147
+    },
+    {
+      "path": "microservices/order/Dockerfile",
+      "extension": ".dockerfile",
+      "type": "Dockerfile",
+      "lines": 46
+    },
+    {
+      "path": "microservices/order/alembic/script.py.mako",
+      "extension": ".mako",
+      "type": "Mako Template",
+      "lines": 28
+    },
+    {
+      "path": "microservices/order/alembic/env.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 78
+    },
+    {
+      "path": "microservices/order/src/logging_config.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 196
+    },
+    {
+      "path": "microservices/order/src/models.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 108
+    },
+    {
+      "path": "microservices/order/src/database.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 23
+    },
+    {
+      "path": "microservices/order/src/main.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 686
+    },
+    {
+      "path": "microservices/mercadolibre-integration/alembic.ini",
+      "extension": ".ini",
+      "type": "INI",
+      "lines": 41
+    },
+    {
+      "path": "microservices/mercadolibre-integration/Dockerfile",
+      "extension": ".dockerfile",
+      "type": "Dockerfile",
+      "lines": 33
+    },
+    {
+      "path": "microservices/mercadolibre-integration/README.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 541
+    },
+    {
+      "path": "microservices/mercadolibre-integration/alembic/script.py.mako",
+      "extension": ".mako",
+      "type": "Mako Template",
+      "lines": 24
+    },
+    {
+      "path": "microservices/mercadolibre-integration/alembic/env.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 58
+    },
+    {
+      "path": "microservices/mercadolibre-integration/src/config.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 90
+    },
+    {
+      "path": "microservices/mercadolibre-integration/src/models.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 294
+    },
+    {
+      "path": "microservices/mercadolibre-integration/src/database.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 49
+    },
+    {
+      "path": "microservices/mercadolibre-integration/src/main.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 321
+    },
+    {
+      "path": "microservices/mercadolibre-integration/src/routers/auth.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 179
+    },
+    {
+      "path": "microservices/mercadolibre-integration/src/routers/questions.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 176
+    },
+    {
+      "path": "microservices/mercadolibre-integration/src/routers/__init__.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 3
+    },
+    {
+      "path": "microservices/mercadolibre-integration/src/routers/products.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 344
+    },
+    {
+      "path": "microservices/mercadolibre-integration/src/routers/orders.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 325
+    },
+    {
+      "path": "microservices/mercadolibre-integration/src/routers/webhooks.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 236
+    },
+    {
+      "path": "microservices/mercadolibre-integration/src/routers/inventory.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 280
+    },
+    {
+      "path": "microservices/mercadolibre-integration/src/services/question_service.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 211
+    },
+    {
+      "path": "microservices/mercadolibre-integration/src/services/order_service.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 440
+    },
+    {
+      "path": "microservices/mercadolibre-integration/src/services/__init__.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 9
+    },
+    {
+      "path": "microservices/mercadolibre-integration/src/services/product_sync.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 425
+    },
+    {
+      "path": "microservices/mercadolibre-integration/src/services/meli_client.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 388
+    },
+    {
+      "path": "microservices/reverse-logistics/Dockerfile",
+      "extension": ".dockerfile",
+      "type": "Dockerfile",
+      "lines": 46
+    },
+    {
+      "path": "microservices/reverse-logistics/src/logging_config.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 196
+    },
+    {
+      "path": "microservices/reverse-logistics/src/models.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 317
+    },
+    {
+      "path": "microservices/reverse-logistics/src/database.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 65
+    },
+    {
+      "path": "microservices/reverse-logistics/src/schemas.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 343
+    },
+    {
+      "path": "microservices/reverse-logistics/src/main.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 879
+    },
+    {
+      "path": "microservices/api-gateway/Dockerfile",
+      "extension": ".dockerfile",
+      "type": "Dockerfile",
+      "lines": 44
+    },
+    {
+      "path": "microservices/api-gateway/src/logging_config.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 196
+    },
+    {
+      "path": "microservices/api-gateway/src/main.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 818
+    },
+    {
+      "path": "microservices/international-shipping/alembic.ini",
+      "extension": ".ini",
+      "type": "INI",
+      "lines": 147
+    },
+    {
+      "path": "microservices/international-shipping/Dockerfile",
+      "extension": ".dockerfile",
+      "type": "Dockerfile",
+      "lines": 46
+    },
+    {
+      "path": "microservices/international-shipping/alembic/script.py.mako",
+      "extension": ".mako",
+      "type": "Mako Template",
+      "lines": 28
+    },
+    {
+      "path": "microservices/international-shipping/alembic/env.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 78
+    },
+    {
+      "path": "microservices/international-shipping/src/logging_config.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 196
+    },
+    {
+      "path": "microservices/international-shipping/src/models.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 116
+    },
+    {
+      "path": "microservices/international-shipping/src/database.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 23
+    },
+    {
+      "path": "microservices/international-shipping/src/main.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 705
+    },
+    {
+      "path": "microservices/rag-service/alembic.ini",
+      "extension": ".ini",
+      "type": "INI",
+      "lines": 101
+    },
+    {
+      "path": "microservices/rag-service/Dockerfile",
+      "extension": ".dockerfile",
+      "type": "Dockerfile",
+      "lines": 32
+    },
+    {
+      "path": "microservices/rag-service/README.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 382
+    },
+    {
+      "path": "microservices/rag-service/tests/test_rag_system.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 279
+    },
+    {
+      "path": "microservices/rag-service/chat-client/index.html",
+      "extension": ".html",
+      "type": "HTML",
+      "lines": 551
+    },
+    {
+      "path": "microservices/rag-service/alembic/script.py.mako",
+      "extension": ".mako",
+      "type": "Mako Template",
+      "lines": 24
+    },
+    {
+      "path": "microservices/rag-service/alembic/env.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 64
+    },
+    {
+      "path": "microservices/rag-service/src/config.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 100
+    },
+    {
+      "path": "microservices/rag-service/src/models.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 110
+    },
+    {
+      "path": "microservices/rag-service/src/database.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 117
+    },
+    {
+      "path": "microservices/rag-service/src/main.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 346
+    },
+    {
+      "path": "microservices/rag-service/src/services/rag_service.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 424
+    },
+    {
+      "path": "microservices/rag-service/src/services/__init__.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 9
+    },
+    {
+      "path": "microservices/rag-service/src/services/embedding_service.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 179
+    },
+    {
+      "path": "microservices/rag-service/src/services/ingestion_service.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 382
+    },
+    {
+      "path": "microservices/microcredit/alembic.ini",
+      "extension": ".ini",
+      "type": "INI",
+      "lines": 147
+    },
+    {
+      "path": "microservices/microcredit/Dockerfile",
+      "extension": ".dockerfile",
+      "type": "Dockerfile",
+      "lines": 46
+    },
+    {
+      "path": "microservices/microcredit/alembic/script.py.mako",
+      "extension": ".mako",
+      "type": "Mako Template",
+      "lines": 28
+    },
+    {
+      "path": "microservices/microcredit/alembic/env.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 78
+    },
+    {
+      "path": "microservices/microcredit/src/logging_config.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 196
+    },
+    {
+      "path": "microservices/microcredit/src/models.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 334
+    },
+    {
+      "path": "microservices/microcredit/src/database.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 53
+    },
+    {
+      "path": "microservices/microcredit/src/main.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 877
+    },
+    {
+      "path": "microservices/franchise/Dockerfile",
+      "extension": ".dockerfile",
+      "type": "Dockerfile",
+      "lines": 46
+    },
+    {
+      "path": "microservices/franchise/src/logging_config.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 196
+    },
+    {
+      "path": "microservices/franchise/src/models.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 378
+    },
+    {
+      "path": "microservices/franchise/src/database.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 65
+    },
+    {
+      "path": "microservices/franchise/src/schemas.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 450
+    },
+    {
+      "path": "microservices/franchise/src/main.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 660
+    },
+    {
+      "path": "microservices/pickup/alembic.ini",
+      "extension": ".ini",
+      "type": "INI",
+      "lines": 147
+    },
+    {
+      "path": "microservices/pickup/Dockerfile",
+      "extension": ".dockerfile",
+      "type": "Dockerfile",
+      "lines": 46
+    },
+    {
+      "path": "microservices/pickup/alembic/script.py.mako",
+      "extension": ".mako",
+      "type": "Mako Template",
+      "lines": 28
+    },
+    {
+      "path": "microservices/pickup/alembic/env.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 78
+    },
+    {
+      "path": "microservices/pickup/src/logging_config.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 196
+    },
+    {
+      "path": "microservices/pickup/src/models.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 291
+    },
+    {
+      "path": "microservices/pickup/src/database.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 49
+    },
+    {
+      "path": "microservices/pickup/src/main.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 794
+    },
+    {
+      "path": "microservices/shopify-integration/API_DOCUMENTATION.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 634
+    },
+    {
+      "path": "microservices/shopify-integration/CHANGELOG.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 197
+    },
+    {
+      "path": "microservices/shopify-integration/alembic.ini",
+      "extension": ".ini",
+      "type": "INI",
+      "lines": 106
+    },
+    {
+      "path": "microservices/shopify-integration/Dockerfile",
+      "extension": ".dockerfile",
+      "type": "Dockerfile",
+      "lines": 43
+    },
+    {
+      "path": "microservices/shopify-integration/README.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 468
+    },
+    {
+      "path": "microservices/shopify-integration/docker-compose.yml",
+      "extension": ".yml",
+      "type": "YAML",
+      "lines": 103
+    },
+    {
+      "path": "microservices/shopify-integration/INTEGRATION_GUIDE.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 666
+    },
+    {
+      "path": "microservices/shopify-integration/scripts/quickstart.sh",
+      "extension": ".sh",
+      "type": "Shell",
+      "lines": 89
+    },
+    {
+      "path": "microservices/shopify-integration/alembic/script.py.mako",
+      "extension": ".mako",
+      "type": "Mako Template",
+      "lines": 24
+    },
+    {
+      "path": "microservices/shopify-integration/alembic/env.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 58
+    },
+    {
+      "path": "microservices/shopify-integration/src/database.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 77
+    },
+    {
+      "path": "microservices/shopify-integration/src/shopify_client.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 508
+    },
+    {
+      "path": "microservices/shopify-integration/src/main.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 199
+    },
+    {
+      "path": "microservices/shopify-integration/src/routers/sync.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 21
+    },
+    {
+      "path": "microservices/shopify-integration/src/routers/auth.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 18
+    },
+    {
+      "path": "microservices/shopify-integration/src/routers/__init__.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 22
+    },
+    {
+      "path": "microservices/shopify-integration/src/routers/stores.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 28
+    },
+    {
+      "path": "microservices/shopify-integration/src/routers/products.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 20
+    },
+    {
+      "path": "microservices/shopify-integration/src/routers/orders.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 20
+    },
+    {
+      "path": "microservices/shopify-integration/src/routers/webhooks.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 19
+    },
+    {
+      "path": "microservices/shopify-integration/src/routers/customers.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 20
+    },
+    {
+      "path": "microservices/shopify-integration/src/routers/inventory.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 18
+    },
+    {
+      "path": "microservices/shopify-integration/src/tasks/celery_app.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 33
+    },
+    {
+      "path": "microservices/shopify-integration/src/tasks/__init__.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 3
+    },
+    {
+      "path": "microservices/shopify-integration/src/tasks/sync_tasks.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 27
+    },
+    {
+      "path": "microservices/shopify-integration/src/tasks/webhook_tasks.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 22
+    },
+    {
+      "path": "microservices/shopify-integration/src/models/models.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 477
+    },
+    {
+      "path": "microservices/shopify-integration/src/modules/__init__.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 16
+    },
+    {
+      "path": "microservices/shopify-integration/src/modules/products.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 600
+    },
+    {
+      "path": "microservices/shopify-integration/src/modules/orders.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 665
+    },
+    {
+      "path": "microservices/shopify-integration/src/modules/webhooks.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 607
+    },
+    {
+      "path": "microservices/shopify-integration/src/modules/customers.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 619
+    },
+    {
+      "path": "microservices/shopify-integration/src/modules/inventory.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 580
+    },
+    {
+      "path": "microservices/carrier-integration/PICKIT_INTEGRATION.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 395
+    },
+    {
+      "path": "microservices/carrier-integration/alembic.ini",
+      "extension": ".ini",
+      "type": "INI",
+      "lines": 98
+    },
+    {
+      "path": "microservices/carrier-integration/Dockerfile",
+      "extension": ".dockerfile",
+      "type": "Dockerfile",
+      "lines": 29
+    },
+    {
+      "path": "microservices/carrier-integration/README.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 457
+    },
+    {
+      "path": "microservices/carrier-integration/CREDENTIALS.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 266
+    },
+    {
+      "path": "microservices/carrier-integration/docker-compose.yml",
+      "extension": ".yml",
+      "type": "YAML",
+      "lines": 123
+    },
+    {
+      "path": "microservices/carrier-integration/tests/test_carriers.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 334
+    },
+    {
+      "path": "microservices/carrier-integration/tests/test_integration.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 357
+    },
+    {
+      "path": "microservices/carrier-integration/tests/test_exchange_rate.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 218
+    },
+    {
+      "path": "microservices/carrier-integration/docs/PICKIT_COMPLETE_DOCUMENTATION.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 2427
+    },
+    {
+      "path": "microservices/carrier-integration/scripts/init_credentials.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 147
+    },
+    {
+      "path": "microservices/carrier-integration/scripts/start_beat.sh",
+      "extension": ".sh",
+      "type": "Shell",
+      "lines": 23
+    },
+    {
+      "path": "microservices/carrier-integration/scripts/start_worker.sh",
+      "extension": ".sh",
+      "type": "Shell",
+      "lines": 26
+    },
+    {
+      "path": "microservices/carrier-integration/scripts/start_flower.sh",
+      "extension": ".sh",
+      "type": "Shell",
+      "lines": 26
+    },
+    {
+      "path": "microservices/carrier-integration/alembic/script.py.mako",
+      "extension": ".mako",
+      "type": "Mako Template",
+      "lines": 24
+    },
+    {
+      "path": "microservices/carrier-integration/alembic/env.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 86
+    },
+    {
+      "path": "microservices/carrier-integration/alembic/versions/20250820_1912-9b3c24948a8e_add_international_mailbox_tables_for_.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 142
+    },
+    {
+      "path": "microservices/carrier-integration/src/logging_config.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 42
+    },
+    {
+      "path": "microservices/carrier-integration/src/models.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 252
+    },
+    {
+      "path": "microservices/carrier-integration/src/celery_app.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 127
+    },
+    {
+      "path": "microservices/carrier-integration/src/database.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 30
+    },
+    {
+      "path": "microservices/carrier-integration/src/schemas.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 192
+    },
+    {
+      "path": "microservices/carrier-integration/src/credentials_manager.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 318
+    },
+    {
+      "path": "microservices/carrier-integration/src/error_handlers.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 293
+    },
+    {
+      "path": "microservices/carrier-integration/src/webhooks.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 423
+    },
+    {
+      "path": "microservices/carrier-integration/src/main.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 327
+    },
+    {
+      "path": "microservices/carrier-integration/src/middleware.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 289
+    },
+    {
+      "path": "microservices/carrier-integration/src/routers/pickit.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 299
+    },
+    {
+      "path": "microservices/carrier-integration/src/routers/credentials.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 315
+    },
+    {
+      "path": "microservices/carrier-integration/src/routers/__init__.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 1
+    },
+    {
+      "path": "microservices/carrier-integration/src/routers/international_mailbox.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 393
+    },
+    {
+      "path": "microservices/carrier-integration/src/tasks/international_mailbox_tasks.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 613
+    },
+    {
+      "path": "microservices/carrier-integration/src/tasks/carrier_tasks.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 433
+    },
+    {
+      "path": "microservices/carrier-integration/src/tasks/tracking_tasks.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 381
+    },
+    {
+      "path": "microservices/carrier-integration/src/tasks/__init__.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 15
+    },
+    {
+      "path": "microservices/carrier-integration/src/tasks/exchange_rate_tasks.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 428
+    },
+    {
+      "path": "microservices/carrier-integration/src/tasks/webhook_tasks.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 422
+    },
+    {
+      "path": "microservices/carrier-integration/src/tasks/batch_tasks.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 430
+    },
+    {
+      "path": "microservices/carrier-integration/src/utils/encryption.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 40
+    },
+    {
+      "path": "microservices/carrier-integration/src/utils/__init__.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 3
+    },
+    {
+      "path": "microservices/carrier-integration/src/carriers/fedex.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 325
+    },
+    {
+      "path": "microservices/carrier-integration/src/carriers/aeropost.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 642
+    },
+    {
+      "path": "microservices/carrier-integration/src/carriers/pickit.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 832
+    },
+    {
+      "path": "microservices/carrier-integration/src/carriers/servientrega.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 327
+    },
+    {
+      "path": "microservices/carrier-integration/src/carriers/ups.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 528
+    },
+    {
+      "path": "microservices/carrier-integration/src/carriers/__init__.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 19
+    },
+    {
+      "path": "microservices/carrier-integration/src/carriers/coordinadora.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 650
+    },
+    {
+      "path": "microservices/carrier-integration/src/carriers/deprisa.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 640
+    },
+    {
+      "path": "microservices/carrier-integration/src/carriers/pasarex.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 528
+    },
+    {
+      "path": "microservices/carrier-integration/src/carriers/dhl.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 392
+    },
+    {
+      "path": "microservices/carrier-integration/src/carriers/interrapidisimo.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 420
+    },
+    {
+      "path": "microservices/carrier-integration/src/exchange_rate/__init__.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 3
+    },
+    {
+      "path": "microservices/carrier-integration/src/exchange_rate/banco_republica.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 137
+    },
+    {
+      "path": "microservices/carrier-integration/src/services/__init__.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 9
+    },
+    {
+      "path": "microservices/carrier-integration/src/services/international_mailbox_service.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 493
+    },
+    {
+      "path": "microservices/carrier-integration/src/services/exchange_rate_service.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 182
+    },
+    {
+      "path": "microservices/carrier-integration/src/services/carrier_service.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 265
+    },
+    {
+      "path": "microservices/carrier-integration/src/services/fallback_service.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 163
+    },
+    {
+      "path": "microservices/auth-service/alembic.ini",
+      "extension": ".ini",
+      "type": "INI",
+      "lines": 147
+    },
+    {
+      "path": "microservices/auth-service/Dockerfile",
+      "extension": ".dockerfile",
+      "type": "Dockerfile",
+      "lines": 31
+    },
+    {
+      "path": "microservices/auth-service/alembic/script.py.mako",
+      "extension": ".mako",
+      "type": "Mako Template",
+      "lines": 28
+    },
+    {
+      "path": "microservices/auth-service/alembic/env.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 77
+    },
+    {
+      "path": "microservices/auth-service/src/init_roles.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 255
+    },
+    {
+      "path": "microservices/auth-service/src/config.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 65
+    },
+    {
+      "path": "microservices/auth-service/src/logging_config.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 196
+    },
+    {
+      "path": "microservices/auth-service/src/models.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 317
+    },
+    {
+      "path": "microservices/auth-service/src/database.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 59
+    },
+    {
+      "path": "microservices/auth-service/src/security.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 410
+    },
+    {
+      "path": "microservices/auth-service/src/schemas.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 346
+    },
+    {
+      "path": "microservices/auth-service/src/main.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 916
+    },
+    {
+      "path": "microservices/auth-service/src/oauth.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 475
+    },
+    {
+      "path": "microservices/customer/alembic.ini",
+      "extension": ".ini",
+      "type": "INI",
+      "lines": 147
+    },
+    {
+      "path": "microservices/customer/Dockerfile",
+      "extension": ".dockerfile",
+      "type": "Dockerfile",
+      "lines": 48
+    },
+    {
+      "path": "microservices/customer/alembic/script.py.mako",
+      "extension": ".mako",
+      "type": "Mako Template",
+      "lines": 28
+    },
+    {
+      "path": "microservices/customer/alembic/env.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 78
+    },
+    {
+      "path": "microservices/customer/src/logging_config.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 196
+    },
+    {
+      "path": "microservices/customer/src/models.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 138
+    },
+    {
+      "path": "microservices/customer/src/database.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 23
+    },
+    {
+      "path": "microservices/customer/src/main.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 726
+    },
+    {
+      "path": "microservices/analytics/Dockerfile",
+      "extension": ".dockerfile",
+      "type": "Dockerfile",
+      "lines": 46
+    },
+    {
+      "path": "microservices/analytics/src/logging_config.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 196
+    },
+    {
+      "path": "microservices/analytics/src/models.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 185
+    },
+    {
+      "path": "microservices/analytics/src/database.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 65
+    },
+    {
+      "path": "microservices/analytics/src/main.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 602
+    },
+    {
+      "path": "terraform/outputs.tf",
+      "extension": ".tf",
+      "type": "Terraform",
+      "lines": 58
+    },
+    {
+      "path": "terraform/main.tf",
+      "extension": ".tf",
+      "type": "Terraform",
+      "lines": 162
+    },
+    {
+      "path": "terraform/README.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 250
+    },
+    {
+      "path": "terraform/TERRAFORM.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 432
+    },
+    {
+      "path": "terraform/variables.tf",
+      "extension": ".tf",
+      "type": "Terraform",
+      "lines": 97
+    },
+    {
+      "path": "terraform/environments/prod/main.tf",
+      "extension": ".tf",
+      "type": "Terraform",
+      "lines": 78
+    },
+    {
+      "path": "terraform/environments/dev/main.tf",
+      "extension": ".tf",
+      "type": "Terraform",
+      "lines": 58
+    },
+    {
+      "path": "terraform/scripts/deploy.sh",
+      "extension": ".sh",
+      "type": "Shell",
+      "lines": 103
+    },
+    {
+      "path": "terraform/scripts/build-and-deploy.sh",
+      "extension": ".sh",
+      "type": "Shell",
+      "lines": 140
+    },
+    {
+      "path": "terraform/modules/cloudwatch/outputs.tf",
+      "extension": ".tf",
+      "type": "Terraform",
+      "lines": 28
+    },
+    {
+      "path": "terraform/modules/cloudwatch/main.tf",
+      "extension": ".tf",
+      "type": "Terraform",
+      "lines": 260
+    },
+    {
+      "path": "terraform/modules/cloudwatch/variables.tf",
+      "extension": ".tf",
+      "type": "Terraform",
+      "lines": 35
+    },
+    {
+      "path": "terraform/modules/alb/outputs.tf",
+      "extension": ".tf",
+      "type": "Terraform",
+      "lines": 31
+    },
+    {
+      "path": "terraform/modules/alb/main.tf",
+      "extension": ".tf",
+      "type": "Terraform",
+      "lines": 220
+    },
+    {
+      "path": "terraform/modules/alb/variables.tf",
+      "extension": ".tf",
+      "type": "Terraform",
+      "lines": 34
+    },
+    {
+      "path": "terraform/modules/ecr/outputs.tf",
+      "extension": ".tf",
+      "type": "Terraform",
+      "lines": 21
+    },
+    {
+      "path": "terraform/modules/ecr/main.tf",
+      "extension": ".tf",
+      "type": "Terraform",
+      "lines": 155
+    },
+    {
+      "path": "terraform/modules/ecr/variables.tf",
+      "extension": ".tf",
+      "type": "Terraform",
+      "lines": 12
+    },
+    {
+      "path": "terraform/modules/ecs/outputs.tf",
+      "extension": ".tf",
+      "type": "Terraform",
+      "lines": 36
+    },
+    {
+      "path": "terraform/modules/ecs/main.tf",
+      "extension": ".tf",
+      "type": "Terraform",
+      "lines": 231
+    },
+    {
+      "path": "terraform/modules/ecs/variables.tf",
+      "extension": ".tf",
+      "type": "Terraform",
+      "lines": 99
+    },
+    {
+      "path": "terraform/modules/iam/outputs.tf",
+      "extension": ".tf",
+      "type": "Terraform",
+      "lines": 21
+    },
+    {
+      "path": "terraform/modules/iam/main.tf",
+      "extension": ".tf",
+      "type": "Terraform",
+      "lines": 218
+    },
+    {
+      "path": "terraform/modules/iam/variables.tf",
+      "extension": ".tf",
+      "type": "Terraform",
+      "lines": 12
+    },
+    {
+      "path": "terraform/modules/vpc/outputs.tf",
+      "extension": ".tf",
+      "type": "Terraform",
+      "lines": 36
+    },
+    {
+      "path": "terraform/modules/vpc/main.tf",
+      "extension": ".tf",
+      "type": "Terraform",
+      "lines": 219
+    },
+    {
+      "path": "terraform/modules/vpc/variables.tf",
+      "extension": ".tf",
+      "type": "Terraform",
+      "lines": 22
+    },
+    {
+      "path": "terraform/modules/elasticache/outputs.tf",
+      "extension": ".tf",
+      "type": "Terraform",
+      "lines": 26
+    },
+    {
+      "path": "terraform/modules/elasticache/main.tf",
+      "extension": ".tf",
+      "type": "Terraform",
+      "lines": 124
+    },
+    {
+      "path": "terraform/modules/elasticache/variables.tf",
+      "extension": ".tf",
+      "type": "Terraform",
+      "lines": 53
+    },
+    {
+      "path": "terraform/modules/rds/outputs.tf",
+      "extension": ".tf",
+      "type": "Terraform",
+      "lines": 27
+    },
+    {
+      "path": "terraform/modules/rds/main.tf",
+      "extension": ".tf",
+      "type": "Terraform",
+      "lines": 168
+    },
+    {
+      "path": "terraform/modules/rds/variables.tf",
+      "extension": ".tf",
+      "type": "Terraform",
+      "lines": 57
+    },
+    {
+      "path": "docker/loki/loki-config.yml",
+      "extension": ".yml",
+      "type": "YAML",
+      "lines": 53
+    },
+    {
+      "path": "docker/redis/redis.conf",
+      "extension": ".conf",
+      "type": "Config",
+      "lines": 42
+    },
+    {
+      "path": "docker/promtail/promtail-config.yml",
+      "extension": ".yml",
+      "type": "YAML",
+      "lines": 260
+    },
+    {
+      "path": "docker/grafana/dashboards.yml",
+      "extension": ".yml",
+      "type": "YAML",
+      "lines": 13
+    },
+    {
+      "path": "docker/grafana/datasources.yml",
+      "extension": ".yml",
+      "type": "YAML",
+      "lines": 18
+    },
+    {
+      "path": "docker/grafana/provisioning/datasources/datasources.yml",
+      "extension": ".yml",
+      "type": "YAML",
+      "lines": 31
+    },
+    {
+      "path": "docker/grafana/provisioning/dashboards/quenty-infrastructure-final.json",
+      "extension": ".json",
+      "type": "JSON",
+      "lines": 715
+    },
+    {
+      "path": "docker/grafana/provisioning/dashboards/quenty-raw-logs.json",
+      "extension": ".json",
+      "type": "JSON",
+      "lines": 574
+    },
+    {
+      "path": "docker/grafana/provisioning/dashboards/quenty-infrastructure-comprehensive.json",
+      "extension": ".json",
+      "type": "JSON",
+      "lines": 836
+    },
+    {
+      "path": "docker/grafana/provisioning/dashboards/quenty-infrastructure.json",
+      "extension": ".json",
+      "type": "JSON",
+      "lines": 528
+    },
+    {
+      "path": "docker/grafana/provisioning/dashboards/quenty-business-metrics.json",
+      "extension": ".json",
+      "type": "JSON",
+      "lines": 750
+    },
+    {
+      "path": "docker/grafana/provisioning/dashboards/quenty-executive.json",
+      "extension": ".json",
+      "type": "JSON",
+      "lines": 618
+    },
+    {
+      "path": "docker/grafana/provisioning/dashboards/quenty-microservices-logs.json",
+      "extension": ".json",
+      "type": "JSON",
+      "lines": 744
+    },
+    {
+      "path": "docker/grafana/provisioning/dashboards/quenty-overview.json",
+      "extension": ".json",
+      "type": "JSON",
+      "lines": 272
+    },
+    {
+      "path": "docker/grafana/provisioning/dashboards/dashboards.yml",
+      "extension": ".yml",
+      "type": "YAML",
+      "lines": 12
+    },
+    {
+      "path": "docker/grafana/provisioning/dashboards/quenty-logs-overview.json",
+      "extension": ".json",
+      "type": "JSON",
+      "lines": 318
+    },
+    {
+      "path": "docker/grafana/provisioning/dashboards/quenty-microservices.json",
+      "extension": ".json",
+      "type": "JSON",
+      "lines": 654
+    },
+    {
+      "path": "docker/grafana/provisioning/dashboards/quenty-infrastructure-working.json",
+      "extension": ".json",
+      "type": "JSON",
+      "lines": 512
+    },
+    {
+      "path": "docker/grafana/provisioning/dashboards/quenty-working-overview.json",
+      "extension": ".json",
+      "type": "JSON",
+      "lines": 429
+    },
+    {
+      "path": "docker/grafana/provisioning/notifiers/notification-channels.yml",
+      "extension": ".yml",
+      "type": "YAML",
+      "lines": 24
+    },
+    {
+      "path": "docker/grafana/dashboards/quenty-business-metrics.json",
+      "extension": ".json",
+      "type": "JSON",
+      "lines": 750
+    },
+    {
+      "path": "docker/grafana/dashboards/quenty-overview.json",
+      "extension": ".json",
+      "type": "JSON",
+      "lines": 272
+    },
+    {
+      "path": "docker/grafana/dashboards/quenty-microservices.json",
+      "extension": ".json",
+      "type": "JSON",
+      "lines": 654
+    },
+    {
+      "path": "docker/postgres/postgresql.conf",
+      "extension": ".conf",
+      "type": "Config",
+      "lines": 53
+    },
+    {
+      "path": "docker/postgres/init.sql",
+      "extension": ".sql",
+      "type": "SQL",
+      "lines": 44
+    },
+    {
+      "path": "docker/nginx/default.conf",
+      "extension": ".conf",
+      "type": "Config",
+      "lines": 86
+    },
+    {
+      "path": "docker/nginx/nginx.conf",
+      "extension": ".conf",
+      "type": "Config",
+      "lines": 49
+    },
+    {
+      "path": "docker/prometheus/alert_rules.yml",
+      "extension": ".yml",
+      "type": "YAML",
+      "lines": 97
+    },
+    {
+      "path": "docker/prometheus/prometheus.yml",
+      "extension": ".yml",
+      "type": "YAML",
+      "lines": 140
+    },
+    {
+      "path": "tests/unit/test_aggregates.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 356
+    },
+    {
+      "path": "tests/unit/test_wallet.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 133
+    },
+    {
+      "path": "tests/unit/test_order_service.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 220
+    },
+    {
+      "path": "tests/unit/test_customer.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 138
+    },
+    {
+      "path": "tests/unit/test_value_objects.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 305
+    },
+    {
+      "path": "tests/unit/test_events.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 201
+    },
+    {
+      "path": "tests/unit/test_commission.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 234
+    },
+    {
+      "path": "tests/unit/test_order.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 139
+    },
+    {
+      "path": "tests/unit/test_franchise.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 198
+    },
+    {
+      "path": "tests/integration/test_customer_api.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 198
+    },
+    {
+      "path": "tests/integration/test_order_api.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 294
+    },
+    {
+      "path": "tests/domain/entities/test_microcredit.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 499
+    },
+    {
+      "path": "tests/domain/entities/test_pickup.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 475
+    },
+    {
+      "path": "tests/domain/entities/test_analytics.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 671
+    },
+    {
+      "path": "tests/domain/entities/test_reverse_logistics.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 697
+    },
+    {
+      "path": "tests/domain/entities/test_international_shipping.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 517
+    },
+    {
+      "path": "shared/service_logger.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 128
+    },
+    {
+      "path": "docs/README.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 79
+    },
+    {
+      "path": "docs/architecture-overview.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 425
+    },
+    {
+      "path": "docs/DOCKER.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 310
+    },
+    {
+      "path": "docs/microservices/customer-service.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 466
+    },
+    {
+      "path": "docs/microservices/analytics-service.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 621
+    },
+    {
+      "path": "docs/microservices/international-shipping-service.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 681
+    },
+    {
+      "path": "docs/microservices/reverse-logistics-service.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 746
+    },
+    {
+      "path": "docs/microservices/auth-service.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 479
+    },
+    {
+      "path": "docs/microservices/franchise-service.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 615
+    },
+    {
+      "path": "docs/microservices/pickup-service.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 824
+    },
+    {
+      "path": "docs/microservices/order-service.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 582
+    },
+    {
+      "path": "docs/microservices/microcredit-service.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 778
+    },
+    {
+      "path": "docs/database/schema.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 1317
+    },
+    {
+      "path": "docs/database/er-models.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 1076
+    },
+    {
+      "path": "docs/development/local-development.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 687
+    },
+    {
+      "path": "docs/integration/api-integration.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 749
+    },
+    {
+      "path": "docs/postman/Quenty_Test_Workflows.json",
+      "extension": ".json",
+      "type": "JSON",
+      "lines": 835
+    },
+    {
+      "path": "docs/postman/README.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 267
+    },
+    {
+      "path": "docs/postman/Quenty_Microservices_Collection.json",
+      "extension": ".json",
+      "type": "JSON",
+      "lines": 1778
+    },
+    {
+      "path": "docs/postman/Quenty_Local_Environment.json",
+      "extension": ".json",
+      "type": "JSON",
+      "lines": 183
+    },
+    {
+      "path": "docs/postman/SETUP_GUIDE.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 140
+    },
+    {
+      "path": "docs/grafana/GRAFANA_DASHBOARD_FILTERS.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 193
+    },
+    {
+      "path": "docs/testing/ENDPOINT_TESTING_DOCUMENTATION.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 333
+    },
+    {
+      "path": "docs/deployment/production-deployment.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 1126
+    },
+    {
+      "path": "docs/deployment/GRAFANA_SETUP_COMPLETE.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 240
+    },
+    {
+      "path": "docs/deployment/STARTUP_STATUS.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 132
+    },
+    {
+      "path": "docs/deployment/PORT_MAPPING.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 218
+    },
+    {
+      "path": "docs/deployment/GRAFANA_MONITORING_GUIDE.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 470
+    },
+    {
+      "path": "docs/deployment/docker-deployment.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 666
+    },
+    {
+      "path": "docs/data/DATA_PREFILL_GUIDE.md",
+      "extension": ".md",
+      "type": "Markdown",
+      "lines": 435
+    },
+    {
+      "path": "scripts/quick_prefill.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 199
+    },
+    {
+      "path": "scripts/comprehensive_endpoint_tester.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 676
+    },
+    {
+      "path": "scripts/prefill_data_simple.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 373
+    },
+    {
+      "path": "scripts/init_companies.sql",
+      "extension": ".sql",
+      "type": "SQL",
+      "lines": 68
+    },
+    {
+      "path": "scripts/comprehensive_endpoint_tester_simple.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 713
+    },
+    {
+      "path": "scripts/run_prefill.sh",
+      "extension": ".sh",
+      "type": "Shell",
+      "lines": 25
+    },
+    {
+      "path": "scripts/comprehensive_prefill.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 761
+    },
+    {
+      "path": "scripts/quick_prefill.sh",
+      "extension": ".sh",
+      "type": "Shell",
+      "lines": 142
+    },
+    {
+      "path": "scripts/prefill_data.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 474
+    },
+    {
+      "path": "scripts/testing/test-logging.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 75
+    },
+    {
+      "path": "scripts/testing/test-all-endpoints.sh",
+      "extension": ".sh",
+      "type": "Shell",
+      "lines": 386
+    },
+    {
+      "path": "scripts/testing/run-endpoint-tests.sh",
+      "extension": ".sh",
+      "type": "Shell",
+      "lines": 174
+    },
+    {
+      "path": "src/api/schemas/customer_schemas.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 53
+    },
+    {
+      "path": "src/api/schemas/international_shipping_schemas.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 277
+    },
+    {
+      "path": "src/api/schemas/__init__.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 8
+    },
+    {
+      "path": "src/api/schemas/analytics_schemas.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 385
+    },
+    {
+      "path": "src/api/schemas/order_schemas.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 91
+    },
+    {
+      "path": "src/api/schemas/microcredit_schemas.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 327
+    },
+    {
+      "path": "src/api/schemas/pickup_schemas.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 205
+    },
+    {
+      "path": "src/api/schemas/reverse_logistics_schemas.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 396
+    },
+    {
+      "path": "src/api/controllers/order_controller.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 162
+    },
+    {
+      "path": "src/api/controllers/analytics_controller.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 674
+    },
+    {
+      "path": "src/api/controllers/pickup_controller.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 548
+    },
+    {
+      "path": "src/api/controllers/international_shipping_controller.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 567
+    },
+    {
+      "path": "src/api/controllers/reverse_logistics_controller.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 676
+    },
+    {
+      "path": "src/api/controllers/customer_controller.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 222
+    },
+    {
+      "path": "src/api/controllers/microcredit_controller.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 588
+    },
+    {
+      "path": "src/application/services/order_application_service.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 84
+    },
+    {
+      "path": "src/application/services/customer_application_service.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 74
+    },
+    {
+      "path": "src/infrastructure/database/database.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 17
+    },
+    {
+      "path": "src/infrastructure/repositories/microcredit_repository.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 505
+    },
+    {
+      "path": "src/infrastructure/repositories/sqlalchemy_order_repository.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 58
+    },
+    {
+      "path": "src/infrastructure/repositories/reverse_logistics_repository.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 601
+    },
+    {
+      "path": "src/infrastructure/repositories/sqlalchemy_customer_repository.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 144
+    },
+    {
+      "path": "src/infrastructure/repositories/international_shipping_repository.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 446
+    },
+    {
+      "path": "src/infrastructure/repositories/pickup_repository.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 334
+    },
+    {
+      "path": "src/infrastructure/repositories/analytics_repository.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 639
+    },
+    {
+      "path": "src/infrastructure/models/wallet_model.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 33
+    },
+    {
+      "path": "src/infrastructure/models/order_model.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 44
+    },
+    {
+      "path": "src/infrastructure/models/customer_model.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 26
+    },
+    {
+      "path": "src/infrastructure/error_handling/error_handler.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 253
+    },
+    {
+      "path": "src/infrastructure/mappers/customer_mapper.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 40
+    },
+    {
+      "path": "src/infrastructure/mappers/order_mapper.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 73
+    },
+    {
+      "path": "src/infrastructure/events/event_handlers.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 232
+    },
+    {
+      "path": "src/infrastructure/events/event_bus.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 120
+    },
+    {
+      "path": "src/infrastructure/logging/logger.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 138
+    },
+    {
+      "path": "src/infrastructure/logging/log_messages.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 225
+    },
+    {
+      "path": "src/domain/aggregates/order_aggregate.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 307
+    },
+    {
+      "path": "src/domain/aggregates/policy_aggregate.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 414
+    },
+    {
+      "path": "src/domain/aggregates/payment_aggregate.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 495
+    },
+    {
+      "path": "src/domain/aggregates/franchise_aggregate.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 443
+    },
+    {
+      "path": "src/domain/aggregates/shipping_aggregate.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 402
+    },
+    {
+      "path": "src/domain/aggregates/customer_aggregate.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 194
+    },
+    {
+      "path": "src/domain/value_objects/phone.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 78
+    },
+    {
+      "path": "src/domain/value_objects/address.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 50
+    },
+    {
+      "path": "src/domain/value_objects/guide_id.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 24
+    },
+    {
+      "path": "src/domain/value_objects/operator_id.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 20
+    },
+    {
+      "path": "src/domain/value_objects/order_id.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 17
+    },
+    {
+      "path": "src/domain/value_objects/customer_id.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 17
+    },
+    {
+      "path": "src/domain/value_objects/money.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 142
+    },
+    {
+      "path": "src/domain/value_objects/customer_type.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 6
+    },
+    {
+      "path": "src/domain/value_objects/email.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 18
+    },
+    {
+      "path": "src/domain/value_objects/package_dimensions.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 22
+    },
+    {
+      "path": "src/domain/repositories/customer_repository.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 31
+    },
+    {
+      "path": "src/domain/repositories/order_repository.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 27
+    },
+    {
+      "path": "src/domain/exceptions/base_exceptions.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 118
+    },
+    {
+      "path": "src/domain/events/analytics_events.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 345
+    },
+    {
+      "path": "src/domain/events/customer_events.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 146
+    },
+    {
+      "path": "src/domain/events/token_events.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 187
+    },
+    {
+      "path": "src/domain/events/order_events.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 210
+    },
+    {
+      "path": "src/domain/events/international_shipping_events.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 285
+    },
+    {
+      "path": "src/domain/events/integration_events.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 220
+    },
+    {
+      "path": "src/domain/events/reverse_logistics_events.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 362
+    },
+    {
+      "path": "src/domain/events/franchise_events.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 131
+    },
+    {
+      "path": "src/domain/events/shipping_events.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 174
+    },
+    {
+      "path": "src/domain/events/microcredit_events.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 299
+    },
+    {
+      "path": "src/domain/events/payment_events.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 141
+    },
+    {
+      "path": "src/domain/events/base_event.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 64
+    },
+    {
+      "path": "src/domain/events/pickup_events.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 144
+    },
+    {
+      "path": "src/domain/events/policy_events.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 161
+    },
+    {
+      "path": "src/domain/services/franchise_service.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 323
+    },
+    {
+      "path": "src/domain/services/notification_service.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 369
+    },
+    {
+      "path": "src/domain/services/shipping_service.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 506
+    },
+    {
+      "path": "src/domain/services/order_service.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 190
+    },
+    {
+      "path": "src/domain/services/payment_service.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 246
+    },
+    {
+      "path": "src/domain/services/microcredit_service.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 617
+    },
+    {
+      "path": "src/domain/services/reverse_logistics_service.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 627
+    },
+    {
+      "path": "src/domain/services/pickup_service.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 529
+    },
+    {
+      "path": "src/domain/services/token_service.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 565
+    },
+    {
+      "path": "src/domain/services/integration_service.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 486
+    },
+    {
+      "path": "src/domain/services/commission_service.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 255
+    },
+    {
+      "path": "src/domain/services/international_shipping_service.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 449
+    },
+    {
+      "path": "src/domain/services/analytics_service.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 552
+    },
+    {
+      "path": "src/domain/entities/reverse_logistics.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 468
+    },
+    {
+      "path": "src/domain/entities/commission.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 192
+    },
+    {
+      "path": "src/domain/entities/guide.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 84
+    },
+    {
+      "path": "src/domain/entities/international_shipping.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 493
+    },
+    {
+      "path": "src/domain/entities/cash_on_delivery.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 235
+    },
+    {
+      "path": "src/domain/entities/microcredit.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 497
+    },
+    {
+      "path": "src/domain/entities/token.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 206
+    },
+    {
+      "path": "src/domain/entities/incident.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 190
+    },
+    {
+      "path": "src/domain/entities/franchise.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 337
+    },
+    {
+      "path": "src/domain/entities/order.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 180
+    },
+    {
+      "path": "src/domain/entities/policy.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 254
+    },
+    {
+      "path": "src/domain/entities/__init__.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 23
+    },
+    {
+      "path": "src/domain/entities/integration.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 339
+    },
+    {
+      "path": "src/domain/entities/campaign.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 334
+    },
+    {
+      "path": "src/domain/entities/customer.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 105
+    },
+    {
+      "path": "src/domain/entities/analytics.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 707
+    },
+    {
+      "path": "src/domain/entities/tracking.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 65
+    },
+    {
+      "path": "src/domain/entities/pickup.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 484
+    },
+    {
+      "path": "src/domain/entities/logistics_operator.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 166
+    },
+    {
+      "path": "src/domain/entities/wallet.py",
+      "extension": ".py",
+      "type": "Python",
+      "lines": 145
+    }
+  ],
+  "total_lines": 125643,
+  "total_files": 449
+}

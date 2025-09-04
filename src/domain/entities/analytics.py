@@ -50,6 +50,21 @@ class ReportStatus(Enum):
     SCHEDULED = "scheduled"
 
 
+class DashboardStatus(Enum):
+    """Estados de un dashboard.
+    
+    Attributes:
+        ACTIVE: Dashboard activo y visible
+        INACTIVE: Dashboard desactivado
+        DRAFT: Dashboard en borrador
+        ARCHIVED: Dashboard archivado
+    """
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+    DRAFT = "draft"
+    ARCHIVED = "archived"
+
+
 class AnalyticsStatus(Enum):
     """Estados de componentes de analíticas.
     

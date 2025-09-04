@@ -1,501 +1,480 @@
-# Quenty - Plataforma Logística DDD
+# Quenty Platform - Enterprise Logistics & E-Commerce Solution
 
-Una plataforma logística completa desarrollada con **Domain-Driven Design (DDD)** y **Test-Driven Development (TDD)** usando FastAPI, SQLAlchemy y Alembic. Implementa un sistema integral de gestión logística con eventos de dominio, logging estructurado, manejo de errores, arquitectura hexagonal y documentación comprensiva.
+![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![Services](https://img.shields.io/badge/microservices-14-green)
+![Docker](https://img.shields.io/badge/docker-ready-blue)
+![Status](https://img.shields.io/badge/status-production--ready-success)
 
-## 🏗️ Arquitectura
+## 🚀 Overview
 
-Este proyecto implementa una arquitectura DDD completa con bounded contexts bien definidos y separación clara de responsabilidades:
+Quenty is a comprehensive enterprise-grade logistics and e-commerce platform built with a microservices architecture. It provides end-to-end solutions for order management, multi-carrier shipping, international logistics, microcredit services, and seamless integration with major e-commerce platforms.
 
-### 📋 Bounded Contexts Implementados
+### Key Features
 
-| Contexto | Estado | Descripción |
-|----------|--------|-------------|
-| **✅ Gestión de Clientes** | Completo | Registro, validación KYC, perfiles de cliente |
-| **✅ Gestión de Órdenes** | Completo | Órdenes, cotizaciones, guías de envío |
-| **✅ Gestión de Recolecciones** | Completo | Programación, rutas, intentos de recolección |
-| **✅ Envíos Internacionales** | Completo | KYC, documentación aduanera, restricciones |
-| **✅ Gestión de Microcréditos** | Completo | Evaluación crediticia, desembolsos, pagos |
-| **✅ Analytics y Reportes** | Completo | Dashboards, métricas, KPIs, reportes |
-| **✅ Logística Inversa** | Completo | Devoluciones, inspecciones, reembolsos |
-| **✅ Red Logística** | Completo | Franquicias, puntos logísticos, operadores |
-| **✅ Gestión Financiera** | Completo | Pagos, comisiones, liquidaciones |
-| **✅ Sistema de Tokenización** | Completo | Tokens de ciudad, smart contracts |
+- 🌐 **Multi-Carrier Integration**: DHL, FedEx, UPS, Servientrega, Interrapidisimo, Pickit
+- 🛍️ **E-Commerce Platform Integration**: Shopify, MercadoLibre
+- 📦 **Complete Order Management**: From creation to delivery
+- 🌍 **International Shipping**: Customs management and international manifests
+- 💳 **Microcredit Services**: Built-in financing options for customers  
+- 🔄 **Reverse Logistics**: Returns and exchanges management
+- 🏢 **Franchise Management**: Multi-location support
+- 📊 **Advanced Analytics**: Real-time metrics and reporting
+- 🤖 **AI-Powered Features**: RAG-based intelligent search and assistance
 
-### 🏛️ Estructura del Proyecto
+## 📋 Table of Contents
+
+- [Architecture](#-architecture)
+- [Services](#-services)
+- [Technology Stack](#-technology-stack)
+- [Getting Started](#-getting-started)
+- [API Documentation](#-api-documentation)
+- [Configuration](#-configuration)
+- [Development](#-development)
+- [Deployment](#-deployment)
+- [Monitoring](#-monitoring)
+- [Security](#-security)
+
+## 🏗 Architecture
+
+### System Architecture
 
 ```
-src/
-├── domain/                         # 🎯 Capa de Dominio
-│   ├── aggregates/                # Agregados del dominio
-│   ├── entities/                  # Entidades principales
-│   │   ├── customer.py           # ✅ Cliente, Wallet, validaciones
-│   │   ├── order.py              # ✅ Órdenes, guías, tracking
-│   │   ├── pickup.py             # ✅ Recolecciones y rutas
-│   │   ├── international_shipping.py # ✅ Envíos internacionales
-│   │   ├── microcredit.py        # ✅ Microcréditos y scoring
-│   │   ├── analytics.py          # ✅ Dashboards y reportes
-│   │   ├── reverse_logistics.py  # ✅ Devoluciones y logistics
-│   │   ├── franchise.py          # ✅ Franquicias y operadores
-│   │   ├── commission.py         # ✅ Comisiones y liquidaciones
-│   │   ├── incident.py           # ✅ Incidentes y reintentos
-│   │   └── token.py              # ✅ Tokens y blockchain
-│   ├── value_objects/            # Objetos de valor
-│   │   ├── money.py              # ✅ Manejo monetario multimoneda
-│   │   ├── guide_id.py           # ✅ IDs de guías
-│   │   ├── customer_id.py        # ✅ IDs de clientes
-│   │   └── address.py            # ✅ Direcciones y coordenadas
-│   ├── services/                 # Servicios de dominio
-│   │   ├── order_service.py      # ✅ Lógica de órdenes
-│   │   ├── payment_service.py    # ✅ Procesamiento pagos
-│   │   ├── pickup_service.py     # ✅ Gestión de recolecciones
-│   │   ├── international_shipping_service.py # ✅ Envíos internacionales
-│   │   ├── microcredit_service.py # ✅ Servicios de microcrédito
-│   │   ├── analytics_service.py  # ✅ Servicios de analytics
-│   │   └── reverse_logistics_service.py # ✅ Servicios de devoluciones
-│   ├── events/                   # ✅ Eventos de dominio
-│   ├── exceptions/               # ✅ Excepciones especializadas
-│   └── repositories/             # ✅ Interfaces de repositorios
-├── infrastructure/               # 🔧 Capa de Infraestructura
-│   ├── database/                 # ✅ Configuración SQLAlchemy
-│   ├── repositories/             # ✅ Implementaciones repositorios
-│   │   ├── pickup_repository.py  # ✅ Persistencia recolecciones
-│   │   ├── international_shipping_repository.py # ✅ Envíos internacionales
-│   │   ├── microcredit_repository.py # ✅ Persistencia microcréditos
-│   │   ├── analytics_repository.py # ✅ Persistencia analytics
-│   │   └── reverse_logistics_repository.py # ✅ Persistencia devoluciones
-│   ├── models/                   # ✅ Modelos SQLAlchemy
-│   ├── logging/                  # ✅ Sistema logging estructurado
-│   └── external_services/        # ✅ Servicios externos
-└── api/                          # 🌐 Capa de Presentación
-    ├── controllers/              # ✅ Controladores FastAPI
-    │   ├── customer_controller.py # ✅ API de clientes
-    │   ├── order_controller.py   # ✅ API de órdenes
-    │   ├── pickup_controller.py  # ✅ API de recolecciones
-    │   ├── international_shipping_controller.py # ✅ API envíos internacionales
-    │   ├── microcredit_controller.py # ✅ API de microcréditos
-    │   ├── analytics_controller.py # ✅ API de analytics
-    │   └── reverse_logistics_controller.py # ✅ API de devoluciones
-    ├── schemas/                  # ✅ Esquemas Pydantic centralizados
-    │   ├── customer_schemas.py   # ✅ Schemas de clientes
-    │   ├── pickup_schemas.py     # ✅ Schemas de recolecciones
-    │   ├── international_shipping_schemas.py # ✅ Schemas envíos
-    │   ├── microcredit_schemas.py # ✅ Schemas microcréditos
-    │   ├── analytics_schemas.py  # ✅ Schemas analytics
-    │   └── reverse_logistics_schemas.py # ✅ Schemas devoluciones
-    └── middlewares/              # ✅ Middlewares de aplicación
+┌─────────────────────────────────────────────────────────────────────┐
+│                           EXTERNAL CLIENTS                          │
+│           (Web Apps, Mobile Apps, Partner APIs, Webhooks)           │
+└─────────────────────────────────┬───────────────────────────────────┘
+                                  │
+                                  ▼
+                    ┌──────────────────────────┐
+                    │   NGINX Load Balancer    │
+                    │      (Port 80/443)       │
+                    └──────────┬───────────────┘
+                               │
+                               ▼
+        ┌──────────────────────────────────────────────┐
+        │             API GATEWAY                      │
+        │            (Port 8080)                       │
+        │     [PUBLIC - JWT Authentication]            │
+        └──────────────────┬───────────────────────────┘
+                           │
+        ┌──────────────────┼───────────────────────────┐
+        │                  │                           │
+        ▼                  ▼                           ▼
+┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐
+│  Auth Service   │ │ Customer Service│ │  Order Service  │
+│   [PRIVATE]     │ │    [PRIVATE]    │ │   [PRIVATE]     │
+│  Port: 8019     │ │   Port: 8001    │ │   Port: 8002    │
+└─────────────────┘ └─────────────────┘ └─────────────────┘
 ```
 
-## ✅ Funcionalidades Implementadas
+### Microservices Architecture
 
-### 🏢 Gestión de Clientes (Customer Aggregate)
-- [x] Registro de clientes con validación completa
-- [x] Configuración de perfil y documentos
-- [x] Validación KYC para envíos internacionales
-- [x] Gestión de tipos de cliente (pequeño, mediano, grande)
-- [x] Wallet digital integrado con transacciones
-- [x] Sistema de microcréditos basado en historial
-- [x] Eventos de dominio para todas las operaciones
-- [x] **API REST completa** con schemas validados
+The platform consists of **44 containerized services** organized into:
 
-### 📦 Gestión de Órdenes (Order Aggregate)
-- [x] Creación de órdenes manuales con validaciones
-- [x] Cotización automática de envíos por zona
-- [x] Confirmación de órdenes con métodos de pago
-- [x] Generación de guías con códigos únicos (barcode, QR)
-- [x] Cancelación con reglas de negocio por estado
-- [x] Tracking completo con estados granulares
-- [x] Gestión de incidencias y reintentos automáticos
-- [x] Evidencias fotográficas de entrega
-- [x] **API REST completa** con documentación
+- **14 Business Microservices**: Core business logic
+- **11 PostgreSQL Databases**: Data persistence with pgvector support
+- **7 Background Workers**: Async processing with Celery
+- **12 Infrastructure Services**: Supporting services
 
-### 🚚 **Gestión de Recolecciones** *(Nuevo)*
-- [x] **Programación de recolecciones** con slots de tiempo
-- [x] **Rutas optimizadas** para operadores
-- [x] **Gestión de intentos** y fallos de recolección
-- [x] **Tipos de recolección**: directa, punto logístico, programada
-- [x] **Reagendamiento automático** con reglas de negocio
-- [x] **Métricas de rendimiento** por operador y zona
-- [x] **API REST completa** con validaciones comprehensivas
+## 🔧 Services
 
-### 🌍 **Envíos Internacionales** *(Nuevo)*
-- [x] **Validación KYC** con múltiples proveedores
-- [x] **Documentación aduanera** automatizada
-- [x] **Restricciones por país** y categoría de producto
-- [x] **Cálculo de aranceles** y seguros
-- [x] **Estados de compliance** y liberación aduanera
-- [x] **Gestión de documentos** con traducción automática
-- [x] **API REST completa** con workflow internacional
+### Core Business Services
 
-### 💳 **Sistema de Microcréditos** *(Nuevo)*
-- [x] **Evaluación crediticia** con scoring automático
-- [x] **Aprobación/rechazo** con reglas de negocio
-- [x] **Desembolso automático** a billeteras
-- [x] **Gestión de pagos** con recordatorios
-- [x] **Cálculo de intereses** y fechas de vencimiento
-- [x] **Perfiles crediticios** dinámicos por cliente
-- [x] **API REST completa** con flujo financiero
+| Service | Port | Description | Status |
+|---------|------|-------------|---------|
+| **API Gateway** | 8080 | Central entry point for all external requests | ✅ Active |
+| **Auth Service** | 8019 | Authentication, authorization, user management | ✅ Active |
+| **Customer Service** | 8001 | Customer management, support tickets | ✅ Active |
+| **Order Service** | 8002 | Order processing, products, inventory | ✅ Active |
+| **Pickup Service** | 8003 | Package pickup scheduling, route optimization | ✅ Active |
+| **International Shipping** | 8004 | International manifests, customs management | ✅ Active |
+| **Microcredit Service** | 8005 | Credit applications, payments, scoring | ✅ Active |
+| **Analytics Service** | 8006 | Business metrics, reporting, dashboards | ✅ Active |
+| **Reverse Logistics** | 8007 | Returns, exchanges, inspection | ✅ Active |
+| **Franchise Service** | 8008 | Franchise management, territories | ✅ Active |
 
-### 📊 **Analytics y Reportes** *(Nuevo)*
-- [x] **Dashboards personalizables** con widgets
-- [x] **Reportes automáticos** programables
-- [x] **KPIs en tiempo real** con alertas
-- [x] **Métricas de negocio** consolidadas
-- [x] **Exportación** en múltiples formatos
-- [x] **Análisis de tendencias** y predicciones
-- [x] **API REST completa** para business intelligence
+### Integration Services
 
-### ↩️ **Logística Inversa** *(Nuevo)*
-- [x] **Gestión de devoluciones** con políticas flexibles
-- [x] **Inspección automatizada** de productos devueltos
-- [x] **Procesamientos de reembolsos** multi-método
-- [x] **Centros logísticos** de procesamiento
-- [x] **Análisis de calidad** y alertas tempranas
-- [x] **Inventario de productos** devueltos
-- [x] **API REST completa** para reverse logistics
+| Service | Port | Description | Platforms |
+|---------|------|-------------|-----------|
+| **Carrier Integration** | 8020 | Multi-carrier logistics | DHL, FedEx, UPS, Servientrega, Interrapidisimo, Pickit |
+| **Shopify Integration** | 8010 | E-commerce sync | Shopify stores |
+| **MercadoLibre Integration** | 8012 | Marketplace sync | MercadoLibre Colombia |
+| **RAG Service** | 8011 | AI-powered search | OpenAI, Local models |
 
-### 💰 Gestión de Pagos y Comisiones
-- [x] Procesamiento de pagos múltiples métodos
-- [x] Pago contra entrega (COD) con validaciones
-- [x] Sistema de comisiones jerárquico por franquicia
-- [x] Liquidaciones automáticas programables
-- [x] Cálculo de bonos por volumen de ventas
-- [x] Integración con pasarelas de pago externas
-- [x] Manejo de reembolsos y chargebacks
+### Infrastructure Services
 
-### 🏢 Gestión de Red Logística
-- [x] Registro y evaluación de franquiciados
-- [x] Gestión de zonas logísticas con geometría
-- [x] Puntos logísticos y aliados estratégicos
-- [x] Cálculo de rendimiento de franquicias
-- [x] Sistema de renovación de contratos automático
-- [x] Integración con operadores logísticos externos
+| Service | Port | Purpose |
+|---------|------|---------|
+| **PostgreSQL** | 5433 | Primary database with pgvector |
+| **Redis** | 6380 | Cache, session store, message broker |
+| **RabbitMQ** | 5672/15672 | Message queue for async operations |
+| **Consul** | 8500 | Service discovery and configuration |
+| **Prometheus** | 9090 | Metrics collection |
+| **Grafana** | 3000 | Metrics visualization |
+| **Jaeger** | 16686 | Distributed tracing |
+| **Loki** | 3100 | Log aggregation |
 
-### 🪙 Sistema de Tokenización
-- [x] Tokens de ciudad con utilidades distribuidas
-- [x] Smart contracts automatizados en blockchain
-- [x] Distribución de utilidades proporcional a holdings
-- [x] Transferencias de tokens entre holders
-- [x] Governance descentralizada por ciudad
+## 💻 Technology Stack
 
-## 🧪 Testing Comprehensivo
+### Backend
+- **Language**: Python 3.11
+- **Framework**: FastAPI
+- **ORM**: SQLAlchemy 2.0
+- **Database**: PostgreSQL 15 with pgvector
+- **Cache**: Redis 7
+- **Message Queue**: RabbitMQ 3
+- **Task Queue**: Celery 5.3
 
-### **Suite de Pruebas Completa**
-- [x] **Tests unitarios** para todas las entidades (450+ tests)
-- [x] **Tests de dominio** con casos de negocio complejos
-- [x] **Tests de integración** para repositorios
-- [x] **Tests de API** con scenarios end-to-end
-- [x] **Cobertura >90%** en lógica de negocio crítica
+### Infrastructure
+- **Container**: Docker & Docker Compose
+- **Service Discovery**: Consul
+- **API Gateway**: Custom FastAPI gateway
+- **Load Balancer**: Nginx
+- **Monitoring**: Prometheus + Grafana
+- **Tracing**: Jaeger
+- **Logging**: Loki + Promtail
 
-### **Archivos de Test Creados:**
-```
-tests/
-├── domain/
-│   └── entities/
-│       ├── test_pickup.py             # ✅ 75+ tests para recolecciones
-│       ├── test_international_shipping.py # ✅ 60+ tests para envíos
-│       ├── test_microcredit.py        # ✅ 80+ tests para microcréditos  
-│       ├── test_analytics.py          # ✅ 70+ tests para analytics
-│       └── test_reverse_logistics.py  # ✅ 85+ tests para devoluciones
-├── infrastructure/
-│   └── repositories/                  # ✅ Tests de persistencia
-└── api/
-    └── controllers/                   # ✅ Tests de endpoints
-```
+### Security
+- **Authentication**: JWT (RS256)
+- **OAuth**: Google, Facebook, Shopify, MercadoLibre
+- **Encryption**: Fernet for sensitive data
+- **API Security**: Rate limiting, CORS, API keys
 
-## 📚 Documentación Comprensiva
+## 🚀 Getting Started
 
-### **Docstrings en Español**
-- [x] **100% de clases documentadas** con propósito de negocio
-- [x] **Todos los métodos** con Args, Returns, Raises
-- [x] **Ejemplos de uso** para lógica compleja
-- [x] **Contexto de dominio** logístico colombiano
-- [x] **Estándar Google-style** consistente
+### Prerequisites
 
-### **Cobertura de Documentación:**
-- ✅ **Entidades de dominio** (8 archivos, 200+ clases/métodos)
-- ✅ **Servicios de dominio** (7 archivos, 150+ métodos)
-- ✅ **Repositorios** (5 archivos, 100+ métodos)
-- ✅ **Controladores API** (7 archivos, 200+ endpoints)
-- ✅ **Schemas Pydantic** (6 archivos, 150+ modelos)
+- Docker Desktop 4.0+
+- Docker Compose 2.0+
+- Git
+- 16GB RAM minimum
+- 20GB free disk space
 
-## 🚀 Instalación y Configuración
+### Quick Start
 
-### Requisitos del Sistema
-- **Python 3.9+** con pip actualizado
-- **PostgreSQL 13+** (producción) o SQLite (desarrollo)
-- **Redis** (opcional, para cache distribuido)
-
-### Instalación Rápida
-
-1. **Clonar el repositorio:**
+1. **Clone the repository**
 ```bash
-git clone <repository-url>
-cd DDD
+git clone git@github.com:oscar-alvarez-quenty/Quenty.git
+cd Quenty
 ```
 
-2. **Configurar entorno virtual:**
+2. **Set up environment variables**
 ```bash
+cp .env.example .env
+# Edit .env with your configuration
+```
+
+3. **Start all services**
+```bash
+# Start infrastructure and business services
+docker compose up -d
+docker compose -f docker-compose.microservices.yml up -d
+```
+
+4. **Verify deployment**
+```bash
+# Check all services are running
+docker ps | wc -l  # Should show 44+ containers
+
+# Check API Gateway health
+curl http://localhost:8080/health
+```
+
+5. **Access services**
+- API Gateway: http://localhost:8080
+- API Documentation: http://localhost:8080/docs
+- Grafana Dashboard: http://localhost:3000
+- RabbitMQ Management: http://localhost:15672
+- PgAdmin: http://localhost:5050
+- Flower (Celery): http://localhost:5555
+
+## 📚 API Documentation
+
+### Authentication
+
+All API requests (except public endpoints) require JWT authentication:
+
+```bash
+# 1. Login to get token
+curl -X POST http://localhost:8080/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "user@example.com", "password": "password"}'
+
+# 2. Use token in requests
+curl http://localhost:8080/api/v1/orders \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Main API Endpoints
+
+#### Authentication & Users
+```
+POST   /auth/register          - Register new user
+POST   /auth/login             - Login
+POST   /auth/refresh           - Refresh token
+GET    /auth/me                - Current user info
+POST   /auth/logout            - Logout
+```
+
+#### Customer Management
+```
+GET    /api/v1/customers       - List customers
+POST   /api/v1/customers       - Create customer
+GET    /api/v1/customers/{id}  - Get customer details
+PUT    /api/v1/customers/{id}  - Update customer
+DELETE /api/v1/customers/{id}  - Delete customer
+```
+
+#### Order Management
+```
+GET    /api/v1/orders          - List orders
+POST   /api/v1/orders          - Create order
+GET    /api/v1/orders/{id}     - Get order details
+PUT    /api/v1/orders/{id}     - Update order
+POST   /api/v1/orders/{id}/cancel - Cancel order
+```
+
+#### Shipping & Logistics
+```
+POST   /api/v1/quotes          - Get shipping quote
+POST   /api/v1/labels          - Generate shipping label
+POST   /api/v1/tracking        - Track shipment
+POST   /api/v1/pickups         - Schedule pickup
+```
+
+#### Carrier Integration
+```
+GET    /api/v1/carriers        - List available carriers
+POST   /api/v1/carriers/{carrier}/credentials - Save carrier credentials
+GET    /api/v1/carriers/{carrier}/health - Check carrier status
+```
+
+#### E-Commerce Integration
+```
+# Shopify
+POST   /api/v1/shopify/connect - Connect Shopify store
+GET    /api/v1/shopify/products - Sync products
+GET    /api/v1/shopify/orders  - Sync orders
+
+# MercadoLibre
+GET    /api/v1/mercadolibre/auth - OAuth authorization
+GET    /api/v1/mercadolibre/products - List products
+POST   /api/v1/mercadolibre/publish - Publish product
+```
+
+#### Analytics
+```
+GET    /api/v1/analytics/dashboard - Dashboard metrics
+GET    /api/v1/analytics/reports   - Generate reports
+GET    /api/v1/analytics/metrics   - Real-time metrics
+```
+
+### Webhook Endpoints
+
+```
+POST   /webhooks/shopify       - Shopify webhooks
+POST   /webhooks/mercadolibre  - MercadoLibre notifications
+POST   /webhooks/carriers      - Carrier status updates
+```
+
+## ⚙️ Configuration
+
+### Environment Variables
+
+Key environment variables in `.env`:
+
+```bash
+# Database
+DATABASE_URL=postgresql://postgres:quenty123@db:5433/quenty_db
+POSTGRES_PASSWORD=quenty123
+
+# Redis
+REDIS_URL=redis://:quenty123@redis:6380/0
+REDIS_PASSWORD=quenty123
+
+# RabbitMQ
+RABBITMQ_DEFAULT_USER=guest
+RABBITMQ_DEFAULT_PASS=guest
+
+# JWT
+JWT_SECRET_KEY=your-secret-key-change-in-production
+JWT_ALGORITHM=HS256
+
+# Carrier Credentials (Optional)
+DHL_API_KEY=
+FEDEX_CLIENT_ID=
+UPS_USERNAME=
+
+# E-Commerce Integration (Optional)
+SHOPIFY_API_KEY=
+SHOPIFY_API_SECRET=
+MELI_CLIENT_ID=
+MELI_CLIENT_SECRET=
+
+# OpenAI (Optional for RAG)
+OPENAI_API_KEY=
+```
+
+### Service Configuration
+
+Each microservice has its own configuration in:
+- `microservices/[service-name]/config/`
+- `microservices/[service-name]/.env`
+
+## 🛠 Development
+
+### Local Development Setup
+
+1. **Install dependencies for a specific service**
+```bash
+cd microservices/order-service
 python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-```
-
-3. **Instalar dependencias:**
-```bash
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-4. **Configurar variables de entorno:**
+2. **Run tests**
 ```bash
-export DATABASE_URL="sqlite:///./quenty.db"  # Desarrollo
-export DATABASE_URL="postgresql+asyncpg://user:pass@localhost/quenty"  # Producción
-export SECRET_KEY="your-secret-key"
-export ENVIRONMENT="development"
+# Run all tests
+pytest
+
+# Run specific service tests
+cd microservices/order-service
+pytest tests/
 ```
 
-5. **Inicializar base de datos:**
+3. **Code quality**
 ```bash
-alembic upgrade head
+# Format code
+black .
+
+# Lint
+flake8 .
+
+# Type checking
+mypy .
 ```
 
-## 🏃‍♂️ Ejecución
+### Adding a New Microservice
 
-### Modo Desarrollo
+1. Create service directory structure:
 ```bash
-python main.py
+microservices/
+└── new-service/
+    ├── Dockerfile
+    ├── requirements.txt
+    ├── alembic.ini
+    ├── alembic/
+    ├── src/
+    │   ├── __init__.py
+    │   ├── main.py
+    │   ├── models.py
+    │   ├── schemas.py
+    │   ├── database.py
+    │   └── routers/
+    └── tests/
 ```
-- **API:** http://localhost:8000
-- **Documentación Swagger:** http://localhost:8000/docs  
-- **ReDoc:** http://localhost:8000/redoc
 
-### Modo Producción
+2. Add to `docker-compose.microservices.yml`
+3. Configure service discovery in Consul
+4. Update API Gateway routing
+
+## 📦 Deployment
+
+### Production Deployment
+
+1. **Build production images**
 ```bash
-uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4
+docker compose -f docker-compose.prod.yml build
 ```
 
-## 🧪 Ejecución de Tests
-
-### Tests Completos
+2. **Deploy with Docker Swarm**
 ```bash
-pytest                              # Todos los tests
-pytest -v                           # Verbose output
-pytest --cov=src                    # Con cobertura
-pytest --cov=src --cov-report=html  # Reporte HTML
+docker stack deploy -c docker-compose.prod.yml quenty
 ```
 
-### Tests Específicos
+3. **Kubernetes deployment** (coming soon)
 ```bash
-pytest tests/domain/entities/        # Tests de entidades
-pytest tests/api/controllers/        # Tests de API
-pytest -k "pickup"                   # Tests relacionados con pickup
-pytest -k "international"            # Tests de envíos internacionales
+kubectl apply -f k8s/
 ```
 
-### Tests por Funcionalidad
-```bash
-pytest tests/domain/entities/test_pickup.py              # Recolecciones
-pytest tests/domain/entities/test_microcredit.py         # Microcréditos
-pytest tests/domain/entities/test_analytics.py           # Analytics
-pytest tests/domain/entities/test_reverse_logistics.py   # Devoluciones
-```
+### Health Checks
 
-## 🌐 API Endpoints
+All services implement health endpoints:
+- `/health` - Basic health status
+- `/ready` - Readiness probe
+- `/metrics` - Prometheus metrics
 
-### 👥 Gestión de Clientes
-```
-POST   /api/v1/customers/                    # Crear cliente
-GET    /api/v1/customers/{id}                # Obtener cliente
-PUT    /api/v1/customers/{id}                # Actualizar cliente
-POST   /api/v1/customers/{id}/validate-kyc   # Validar KYC
-GET    /api/v1/customers/                    # Listar clientes
-```
+## 📊 Monitoring
 
-### 📦 Gestión de Órdenes
-```
-POST   /api/v1/orders/                       # Crear orden
-GET    /api/v1/orders/{id}                   # Obtener orden
-POST   /api/v1/orders/quote                  # Cotizar envío
-POST   /api/v1/orders/{id}/confirm           # Confirmar orden
-POST   /api/v1/orders/{id}/cancel            # Cancelar orden
-POST   /api/v1/orders/{id}/guide             # Generar guía
-```
+### Accessing Monitoring Tools
 
-### 🚚 **Recolecciones** *(Nuevo)*
-```
-POST   /api/v1/pickups/                      # Crear recolección
-PUT    /api/v1/pickups/{id}/schedule         # Programar recolección
-POST   /api/v1/pickups/{id}/complete         # Completar recolección
-POST   /api/v1/pickups/{id}/fail             # Marcar como fallida
-GET    /api/v1/pickups/routes/{route_id}     # Obtener ruta
-POST   /api/v1/pickups/routes/               # Crear ruta optimizada
-```
+- **Grafana**: http://localhost:3000
+  - Username: admin
+  - Password: admin
 
-### 🌍 **Envíos Internacionales** *(Nuevo)*
-```
-POST   /api/v1/international-shipments/     # Crear envío internacional
-POST   /api/v1/kyc-validations/             # Iniciar validación KYC
-POST   /api/v1/customs-declarations/        # Crear declaración aduanera
-POST   /api/v1/international-documents/     # Subir documentos
-GET    /api/v1/shipping-restrictions/{country} # Consultar restricciones
-```
+- **Prometheus**: http://localhost:9090
+- **Jaeger**: http://localhost:16686
+- **Flower**: http://localhost:5555
 
-### 💳 **Microcréditos** *(Nuevo)*
-```
-POST   /api/v1/microcredit-applications/    # Solicitar microcrédito
-POST   /api/v1/microcredits/{id}/disburse   # Desembolsar crédito
-POST   /api/v1/microcredits/{id}/payments   # Registrar pago
-GET    /api/v1/customers/{id}/credit-profile # Perfil crediticio
-GET    /api/v1/microcredits/overdue         # Créditos vencidos
-```
+### Key Metrics to Monitor
 
-### 📊 **Analytics** *(Nuevo)*
-```
-POST   /api/v1/dashboards/                  # Crear dashboard
-POST   /api/v1/widgets/                     # Crear widget
-POST   /api/v1/reports/execute              # Ejecutar reporte
-POST   /api/v1/metrics/values               # Registrar métrica
-GET    /api/v1/kpis/dashboard               # Dashboard de KPIs
-```
+1. **Service Metrics**
+   - Request rate, error rate, duration (RED)
+   - Service availability
+   - Database connections
+   - Cache hit rates
 
-### ↩️ **Logística Inversa** *(Nuevo)*
-```
-POST   /api/v1/return-requests/             # Crear devolución
-POST   /api/v1/return-requests/{id}/approve # Aprobar devolución
-POST   /api/v1/return-requests/{id}/inspect # Inspeccionar productos
-POST   /api/v1/return-requests/{id}/refund  # Procesar reembolso
-GET    /api/v1/return-analytics             # Analytics de devoluciones
-```
+2. **Business Metrics**
+   - Orders processed
+   - Shipping success rate
+   - Customer satisfaction
+   - Revenue metrics
 
-## 🏗️ Principios DDD Aplicados
+3. **Infrastructure Metrics**
+   - CPU/Memory usage
+   - Network latency
+   - Disk I/O
+   - Message queue depth
 
-### **Agregados de Dominio**
-- **Customer Aggregate** - Cliente con wallet y microcréditos
-- **Order Aggregate** - Orden con guías y tracking
-- **Pickup Aggregate** - Recolección con rutas y intentos
-- **Shipment Aggregate** - Envío con documentación y compliance
-- **Return Aggregate** - Devolución con inspección y reembolso
+## 🔒 Security
 
-### **Value Objects Reutilizables**
-- **Money** - Manejo multimoneda con conversiones
-- **GuideId** - Identificadores únicos de guías
-- **CustomerId** - Identificadores de clientes
-- **Address** - Direcciones con geocodificación
-- **PhoneNumber** - Números telefónicos internacionales
+### Security Features
 
-### **Servicios de Dominio Especializados**
-- **OrderService** - Cotizaciones y validaciones de órdenes
-- **PaymentService** - Procesamiento de pagos complejos
-- **PickupService** - Optimización de rutas y programación
-- **MicrocreditService** - Evaluación crediticia y scoring
-- **AnalyticsService** - Agregación de métricas de negocio
+- **JWT Authentication**: Short-lived access tokens (30 min)
+- **OAuth Integration**: Google, Facebook, Shopify, MercadoLibre
+- **Rate Limiting**: API Gateway level protection
+- **CORS Protection**: Configured for allowed origins
+- **Data Encryption**: Fernet encryption for sensitive data
+- **Network Isolation**: Private services not exposed
+- **TLS/SSL**: HTTPS for all external communication
 
-## 🔧 Características Técnicas Avanzadas
+### Security Best Practices
 
-### **🏛️ Arquitectura DDD Completa**
-- **Bounded Contexts** bien definidos y separados
-- **Agregados** con invariantes de negocio complejas
-- **Value Objects** inmutables con validaciones específicas
-- **Servicios de Dominio** con lógica de negocio rica
-- **Repositorios** con interfaces limpias y abstracciones
-- **Eventos de Dominio** para desacoplamiento y auditoria
+1. **Regular Updates**: Keep all dependencies updated
+2. **Secret Management**: Use environment variables, never commit secrets
+3. **Access Control**: Role-based access control (RBAC)
+4. **Audit Logging**: All operations logged
+5. **Container Security**: Regular vulnerability scanning
 
-### **📊 Validación y Schemas Centralizados**  
-- **Pydantic Schemas** centralizados en `/api/schemas/`
-- **Validación en múltiples niveles** (valor, entidad, aplicación)
-- **Transformación de datos** entre capas
-- **Documentación automática** de APIs con OpenAPI
-- **Type safety** completo con Python typing
+## 📝 License
 
-### **🧪 Testing Estratificado**
-- **Tests unitarios** focalizados en lógica de dominio
-- **Tests de integración** para persistencia y APIs  
-- **Tests de contrato** entre bounded contexts
-- **Property-based testing** para casos complejos
-- **Test doubles** (mocks, stubs) apropiados por capa
+This project is proprietary software. All rights reserved.
 
-### **📝 Logging y Observabilidad**
-- **Structured logging** en formato JSON
-- **Correlation IDs** para trazabilidad end-to-end
-- **Métricas de negocio** automáticas por agregado
-- **Health checks** comprensivos por subsistema
-- **Error tracking** con contexto completo
+## 🤝 Support
 
-### **🔄 Eventos y Mensajería** 
-- **Domain Events** para comunicación entre agregados
-- **Event Store** para auditoria y replay capabilities
-- **Event Bus** asíncrono con handlers especializados  
-- **Saga Pattern** preparado para procesos de larga duración
-- **Eventually Consistent** operations entre contextos
+For support and questions:
+- Technical Issues: Create an issue in the repository
+- Business Inquiries: contact@quenty.com
+- Documentation: See `/docs` directory
 
-## 🚀 Roadmap y Próximas Funcionalidades
+## 🙏 Acknowledgments
 
-### **🎯 Próximo Sprint (Q1 2024)**
-- [ ] **Dashboard en tiempo real** con WebSockets
-- [ ] **Integración real** con Coordinadora y Servientrega
-- [ ] **API pública de tracking** para e-commerce
-- [ ] **Sistema de alertas** business-critical
-- [ ] **Mobile API** para aplicación de mensajeros
-
-### **🔧 Mejoras Técnicas (Q2 2024)**
-- [ ] **Event Sourcing completo** con proyecciones
-- [ ] **CQRS** con read models optimizados
-- [ ] **Apache Kafka** para eventos distribuidos
-- [ ] **Circuit Breakers** para servicios externos
-- [ ] **Cache distribuido** con Redis Cluster
-- [ ] **Métricas** con Prometheus/Grafana
-
-### **💼 Expansión de Negocio (Q3-Q4 2024)**
-- [ ] **Portal de franquiciados** con analytics
-- [ ] **Marketplace de operadores** con subastas
-- [ ] **Integración marketplace** (MercadoLibre, Amazon)
-- [ ] **App móvil** para clientes finales
-- [ ] **Programa de referidos** multinivel
-- [ ] **Expansión internacional** (México, Chile)
-
-### **🌐 Escalabilidad (2025)**
-- [ ] **Microservicios** por bounded context
-- [ ] **Kubernetes deployment** con auto-scaling
-- [ ] **Multi-tenant** architecture
-- [ ] **GraphQL Federation** para APIs
-- [ ] **Edge computing** para tracking en tiempo real
-
-## 👨‍💻 Guía de Contribución
-
-### **Workflow de Desarrollo**
-1. **Crear rama feature:** `git checkout -b feature/nueva-funcionalidad`
-2. **TDD primero:** Escribir tests que fallen  
-3. **Implementar:** Hacer que los tests pasen
-4. **Refactorizar:** Mejorar diseño manteniendo tests verdes
-5. **Documentar:** Agregar/actualizar docstrings y README
-6. **Pull Request:** Con descripción detallada y tests
-
-### **Estándares de Código**
-- **PEP 8** compliance obligatorio
-- **Type hints** en todas las funciones públicas
-- **Docstrings** en español para métodos públicos
-- **Domain language** consistente (Ubiquitous Language)
-- **Error handling** explícito con custom exceptions
-
-### **Testing Requirements**
-- **100% cobertura** en nueva lógica de dominio
-- **Tests unitarios** independientes y rápidos
-- **Tests de integración** para cambios en persistencia
-- **Tests de API** para nuevos endpoints
-- **Documentation tests** para ejemplos en docstrings
-
-## 📄 Licencia
-
-Este proyecto está bajo la **Licencia MIT** - ver archivo [LICENSE](LICENSE) para detalles.
+Built with modern open-source technologies including FastAPI, PostgreSQL, Docker, and many other excellent projects.
 
 ---
 
-## 🏆 Estado del Proyecto
-
-**✅ Estado: COMPLETO Y FUNCIONAL**
-
-- **🏗️ Arquitectura DDD:** 100% implementada
-- **🧪 Test Coverage:** >90% en lógica crítica  
-- **📚 Documentación:** 100% de APIs documentadas
-- **🔧 Funcionalidades:** 10/10 bounded contexts completos
-- **🚀 Producción:** Ready para deployment
-
-**Desarrollado con ❤️ para la revolución logística colombiana 🇨🇴**
+**Version**: 1.0.0  
+**Last Updated**: September 2025  
+**Maintained by**: Quenty Platform Engineering Team
