@@ -1,5 +1,6 @@
 import httpx
 import json
+import os
 from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -15,13 +16,28 @@ logger = structlog.get_logger()
 
 class UPSClient:
     """UPS Developer Kit API Client"""
-    
-    def __init__(self, credentials: Dict[str, Any], environment: str = "production"):
+
+    def __init__(self, credentials: Dict[str, Any] = None, environment: str = None):
+        # Load from environment variables if credentials not provided
+        if credentials is None:
+            credentials = self._load_from_env()
+
         self.credentials = credentials
-        self.environment = environment
+        self.environment = environment or os.getenv('UPS_ENVIRONMENT', 'sandbox')
         self.base_url = self._get_base_url()
         self.access_token = None
         self.token_expires = None
+
+    def _load_from_env(self) -> Dict[str, Any]:
+        """Load UPS credentials from environment variables"""
+        return {
+            'client_id': os.getenv('UPS_CLIENT_ID'),
+            'client_secret': os.getenv('UPS_CLIENT_SECRET'),
+            'account_number': os.getenv('UPS_ACCOUNT_NUMBER'),
+            'access_license_number': os.getenv('UPS_ACCESS_LICENSE_NUMBER'),
+            'username': os.getenv('UPS_USERNAME'),
+            'password': os.getenv('UPS_PASSWORD')
+        }
         
     def _get_base_url(self) -> str:
         """Get UPS API base URL based on environment"""

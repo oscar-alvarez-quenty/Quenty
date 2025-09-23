@@ -5,6 +5,7 @@ International courier service with Miami PO Box
 
 import httpx
 import structlog
+import os
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
 import base64
@@ -26,17 +27,37 @@ logger = structlog.get_logger()
 
 class AeropostClient:
     """Client for Aeropost international courier services"""
-    
-    def __init__(self):
-        self.base_url = "https://api.aeropost.com/v3"
-        self.soap_url = "https://services.aeropost.com/WSAeropost/AeropostService.asmx?wsdl"
-        self.credentials = self._load_credentials()
+
+    def __init__(self, credentials: Dict[str, Any] = None, environment: str = None):
+        # Load from environment variables if credentials not provided
+        if credentials is None:
+            credentials = self._load_from_env()
+
+        self.credentials = credentials
+        self.environment = environment or os.getenv('AEROPOST_ENVIRONMENT', 'sandbox')
+        self.base_url = self._get_base_url()
+        self.soap_url = self._get_soap_url()
         self.session_token = None
-        
-    def _load_credentials(self) -> Dict[str, str]:
-        """Load Aeropost credentials from manager"""
-        manager = get_credential_manager()
-        return manager.get_all_credentials("AEROPOST")
+
+    def _load_from_env(self) -> Dict[str, Any]:
+        """Load Aeropost credentials from environment variables"""
+        return {
+            'API_KEY': os.getenv('AEROPOST_API_KEY'),
+            'API_SECRET': os.getenv('AEROPOST_API_SECRET'),
+            'ACCOUNT_NUMBER': os.getenv('AEROPOST_ACCOUNT_NUMBER')
+        }
+
+    def _get_base_url(self) -> str:
+        """Get Aeropost API base URL based on environment"""
+        if self.environment == "sandbox":
+            return "https://sandbox-api.aeropost.com/v3"
+        return "https://api.aeropost.com/v3"
+
+    def _get_soap_url(self) -> str:
+        """Get Aeropost SOAP URL based on environment"""
+        if self.environment == "sandbox":
+            return "https://sandbox-services.aeropost.com/WSAeropost/AeropostService.asmx?wsdl"
+        return "https://services.aeropost.com/WSAeropost/AeropostService.asmx?wsdl"
     
     def _get_auth_header(self) -> str:
         """Generate Basic Auth header"""

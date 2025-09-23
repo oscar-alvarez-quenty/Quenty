@@ -32,6 +32,7 @@ from .schemas import (
     HealthCheckResponse, TRMResponse
 )
 from .logging_config import setup_logging
+from .startup import initialize_carriers, get_carrier_status
 
 # Setup structured logging
 logger = setup_logging()
@@ -46,22 +47,31 @@ carrier_api_duration = Histogram('carrier_api_duration_seconds', 'Carrier API du
 async def lifespan(app: FastAPI):
     """Manage application lifecycle"""
     logger.info("Starting Carrier Integration Service...")
-    
+
     # Create database tables
     Base.metadata.create_all(bind=engine)
-    
+
     # Initialize services
     app.state.carrier_service = CarrierService()
     app.state.fallback_service = FallbackService()
     app.state.exchange_rate_service = ExchangeRateService()
-    
+
+    # Initialize all carriers from environment variables
+    try:
+        logger.info("Initializing carriers from environment variables...")
+        carrier_results = await initialize_carriers()
+        logger.info(f"Carrier initialization results: {carrier_results}")
+    except Exception as e:
+        logger.error(f"Failed to initialize carriers: {str(e)}")
+        # Continue startup even if some carriers fail
+
     # Start scheduled tasks
     await app.state.exchange_rate_service.start_scheduler()
-    
+
     logger.info("Carrier Integration Service started successfully")
-    
+
     yield
-    
+
     # Cleanup
     logger.info("Shutting down Carrier Integration Service...")
     await app.state.exchange_rate_service.stop_scheduler()
@@ -268,6 +278,17 @@ async def get_carrier_health(
         return health
     except Exception as e:
         logger.error("Failed to get carrier health", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Get status of all carriers
+@app.get("/api/v1/carriers/status")
+async def get_carriers_status():
+    """Get initialization status of all carriers"""
+    try:
+        status = get_carrier_status()
+        return status
+    except Exception as e:
+        logger.error("Failed to get carriers status", error=str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
 # Exchange rate endpoints

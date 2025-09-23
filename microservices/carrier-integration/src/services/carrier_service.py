@@ -30,9 +30,10 @@ class CarrierService:
         self.carriers = {}
         self.health_status = {}
         
-    async def initialize_carrier(self, carrier: str, credentials: Dict[str, Any], environment: str = "production"):
-        """Initialize a carrier client with credentials"""
+    async def initialize_carrier(self, carrier: str, credentials: Dict[str, Any] = None, environment: str = None):
+        """Initialize a carrier client with credentials or environment variables"""
         try:
+            # If no credentials provided, clients will load from environment variables
             if carrier == "DHL":
                 client = DHLClient(credentials, environment)
             elif carrier == "FedEx":
@@ -44,15 +45,16 @@ class CarrierService:
             elif carrier == "Interrapidisimo":
                 client = InterrapidisimoClient(credentials, environment)
             elif carrier == "Pasarex":
-                client = PasarexClient()
+                client = PasarexClient(credentials, environment)
             elif carrier == "Aeropost":
-                client = AeropostClient()
+                client = AeropostClient(credentials, environment)
             else:
                 raise ValueError(f"Unsupported carrier: {carrier}")
-            
+
             self.carriers[carrier] = client
-            logger.info("Carrier initialized", carrier=carrier)
-            
+            logger.info("Carrier initialized", carrier=carrier,
+                       source="credentials" if credentials else "environment")
+
         except Exception as e:
             logger.error("Failed to initialize carrier", carrier=carrier, error=str(e))
             raise

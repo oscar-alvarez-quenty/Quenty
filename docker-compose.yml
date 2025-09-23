@@ -162,14 +162,16 @@ services:
     container_name: quenty-carrier-integration
     ports:
       - "8009:8009"
+    env_file:
+      - .env.carriers
     environment:
-      - DATABASE_URL=postgresql://postgres:quenty123@db:5432/carrier_db
-      - REDIS_URL=redis://:quenty123@redis:6379/1
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672//
-      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
-      - CELERY_RESULT_BACKEND=redis://:quenty123@redis:6379/1
+      - DATABASE_URL=${CARRIER_DATABASE_URL:-postgresql://postgres:quenty123@db:5432/carrier_db}
+      - REDIS_URL=${CARRIER_REDIS_URL:-redis://:quenty123@redis:6379/1}
+      - RABBITMQ_URL=${CARRIER_RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672//}
+      - CELERY_BROKER_URL=${CARRIER_CELERY_BROKER_URL:-amqp://guest:guest@rabbitmq:5672//}
+      - CELERY_RESULT_BACKEND=${CARRIER_CELERY_RESULT_BACKEND:-redis://:quenty123@redis:6379/1}
       - SECRET_KEY=${CARRIER_SECRET_KEY:-change-this-in-production}
-      - ENCRYPTION_KEY=${CARRIER_ENCRYPTION_KEY:-32-byte-key-change-in-production}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-32-byte-key-change-in-production}
     depends_on:
       - db
       - redis
@@ -187,14 +189,16 @@ services:
       context: ./microservices/carrier-integration
       dockerfile: Dockerfile
     container_name: quenty-carrier-worker
+    env_file:
+      - .env.carriers
     environment:
-      - DATABASE_URL=postgresql://postgres:quenty123@db:5432/carrier_db
-      - REDIS_URL=redis://:quenty123@redis:6379/1
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672//
-      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
-      - CELERY_RESULT_BACKEND=redis://:quenty123@redis:6379/1
+      - DATABASE_URL=${CARRIER_DATABASE_URL:-postgresql://postgres:quenty123@db:5432/carrier_db}
+      - REDIS_URL=${CARRIER_REDIS_URL:-redis://:quenty123@redis:6379/1}
+      - RABBITMQ_URL=${CARRIER_RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672//}
+      - CELERY_BROKER_URL=${CARRIER_CELERY_BROKER_URL:-amqp://guest:guest@rabbitmq:5672//}
+      - CELERY_RESULT_BACKEND=${CARRIER_CELERY_RESULT_BACKEND:-redis://:quenty123@redis:6379/1}
       - SECRET_KEY=${CARRIER_SECRET_KEY:-change-this-in-production}
-      - ENCRYPTION_KEY=${CARRIER_ENCRYPTION_KEY:-32-byte-key-change-in-production}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-32-byte-key-change-in-production}
     depends_on:
       - db
       - redis
@@ -213,14 +217,16 @@ services:
       context: ./microservices/carrier-integration
       dockerfile: Dockerfile
     container_name: quenty-carrier-beat
+    env_file:
+      - .env.carriers
     environment:
-      - DATABASE_URL=postgresql://postgres:quenty123@db:5432/carrier_db
-      - REDIS_URL=redis://:quenty123@redis:6379/1
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672//
-      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
-      - CELERY_RESULT_BACKEND=redis://:quenty123@redis:6379/1
+      - DATABASE_URL=${CARRIER_DATABASE_URL:-postgresql://postgres:quenty123@db:5432/carrier_db}
+      - REDIS_URL=${CARRIER_REDIS_URL:-redis://:quenty123@redis:6379/1}
+      - RABBITMQ_URL=${CARRIER_RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672//}
+      - CELERY_BROKER_URL=${CARRIER_CELERY_BROKER_URL:-amqp://guest:guest@rabbitmq:5672//}
+      - CELERY_RESULT_BACKEND=${CARRIER_CELERY_RESULT_BACKEND:-redis://:quenty123@redis:6379/1}
       - SECRET_KEY=${CARRIER_SECRET_KEY:-change-this-in-production}
-      - ENCRYPTION_KEY=${CARRIER_ENCRYPTION_KEY:-32-byte-key-change-in-production}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-32-byte-key-change-in-production}
     depends_on:
       - db
       - redis

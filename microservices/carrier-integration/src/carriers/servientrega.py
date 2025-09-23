@@ -1,4 +1,5 @@
 import httpx
+import os
 from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
 from zeep import Client as SOAPClient
@@ -17,13 +18,27 @@ logger = structlog.get_logger()
 
 class ServientregaClient:
     """Servientrega SOAP Web Service Client for Colombian logistics"""
-    
-    def __init__(self, credentials: Dict[str, Any], environment: str = "production"):
+
+    def __init__(self, credentials: Dict[str, Any] = None, environment: str = None):
+        # Load from environment variables if credentials not provided
+        if credentials is None:
+            credentials = self._load_from_env()
+
         self.credentials = credentials
-        self.environment = environment
+        self.environment = environment or os.getenv('SERVIENTREGA_ENVIRONMENT', 'test')
         self.wsdl_url = self._get_wsdl_url()
         self.soap_client = None
         self._initialize_soap_client()
+
+    def _load_from_env(self) -> Dict[str, Any]:
+        """Load Servientrega credentials from environment variables"""
+        return {
+            'username': os.getenv('SERVIENTREGA_USER'),
+            'password': os.getenv('SERVIENTREGA_PASSWORD'),
+            'billing_code': os.getenv('SERVIENTREGA_BILLING_CODE'),
+            'id_client': os.getenv('SERVIENTREGA_ID_CLIENT'),
+            'name_pack': os.getenv('SERVIENTREGA_NAME_PACK')
+        }
         
     def _get_wsdl_url(self) -> str:
         """Get Servientrega WSDL URL based on environment"""

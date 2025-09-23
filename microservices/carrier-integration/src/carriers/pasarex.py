@@ -5,6 +5,7 @@ International mailbox service for USA and Europe
 
 import httpx
 import structlog
+import os
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
 import hashlib
@@ -24,17 +25,31 @@ logger = structlog.get_logger()
 
 class PasarexClient:
     """Client for Pasarex international mailbox services"""
-    
-    def __init__(self):
-        self.base_url = "https://api.pasarex.com/v2"
-        self.credentials = self._load_credentials()
+
+    def __init__(self, credentials: Dict[str, Any] = None, environment: str = None):
+        # Load from environment variables if credentials not provided
+        if credentials is None:
+            credentials = self._load_from_env()
+
+        self.credentials = credentials
+        self.environment = environment or os.getenv('PASAREX_ENVIRONMENT', 'sandbox')
+        self.base_url = self._get_base_url()
         self.access_token = None
         self.token_expires = None
-        
-    def _load_credentials(self) -> Dict[str, str]:
-        """Load Pasarex credentials from manager"""
-        manager = get_credential_manager()
-        return manager.get_all_credentials("PASAREX")
+
+    def _load_from_env(self) -> Dict[str, Any]:
+        """Load Pasarex credentials from environment variables"""
+        return {
+            'api_key': os.getenv('PASAREX_API_KEY'),
+            'api_secret': os.getenv('PASAREX_API_SECRET'),
+            'account_number': os.getenv('PASAREX_ACCOUNT_NUMBER')
+        }
+
+    def _get_base_url(self) -> str:
+        """Get Pasarex API base URL based on environment"""
+        if self.environment == "sandbox":
+            return "https://sandbox-api.pasarex.com/v2"
+        return "https://api.pasarex.com/v2"
     
     async def _get_access_token(self) -> str:
         """Get OAuth 2.0 access token"""

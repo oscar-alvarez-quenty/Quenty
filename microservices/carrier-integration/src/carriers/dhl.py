@@ -1,5 +1,6 @@
 import httpx
 import json
+import os
 from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
 import base64
@@ -17,12 +18,27 @@ logger = structlog.get_logger()
 
 class DHLClient:
     """DHL Express API Client"""
-    
-    def __init__(self, credentials: Dict[str, Any], environment: str = "production"):
+
+    def __init__(self, credentials: Dict[str, Any] = None, environment: str = None):
+        # Load from environment variables if credentials not provided
+        if credentials is None:
+            credentials = self._load_from_env()
+
         self.credentials = credentials
-        self.environment = environment
+        self.environment = environment or os.getenv('DHL_ENVIRONMENT', 'sandbox')
         self.base_url = self._get_base_url()
         self.headers = self._get_headers()
+
+    def _load_from_env(self) -> Dict[str, Any]:
+        """Load DHL credentials from environment variables"""
+        return {
+            'api_key': os.getenv('DHL_API_KEY'),
+            'api_secret': os.getenv('DHL_API_SECRET'),
+            'username': os.getenv('DHL_USERNAME'),
+            'password': os.getenv('DHL_PASSWORD'),
+            'account_number': os.getenv('DHL_ACCOUNT_NUMBER'),
+            'message_reference': os.getenv('DHL_MESSAGE_REFERENCE', 'QUENTY_REF')
+        }
         
     def _get_base_url(self) -> str:
         """Get DHL API base URL based on environment"""
