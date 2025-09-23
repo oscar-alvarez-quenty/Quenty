@@ -1,5 +1,6 @@
 import httpx
 import json
+import os
 from typing import Dict, Any, Optional, List
 from datetime import datetime, timedelta
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -15,12 +16,26 @@ logger = structlog.get_logger()
 
 class InterrapidisimoClient:
     """Interrapidisimo REST API Client for Colombian logistics"""
-    
-    def __init__(self, credentials: Dict[str, Any], environment: str = "production"):
+
+    def __init__(self, credentials: Dict[str, Any] = None, environment: str = None):
+        # Load from environment variables if credentials not provided
+        if credentials is None:
+            credentials = self._load_from_env()
+
         self.credentials = credentials
-        self.environment = environment
+        self.environment = environment or os.getenv('INTERRAPIDISIMO_ENVIRONMENT', 'sandbox')
         self.base_url = self._get_base_url()
         self.headers = self._get_headers()
+
+    def _load_from_env(self) -> Dict[str, Any]:
+        """Load Interrapidisimo credentials from environment variables"""
+        return {
+            'api_key': os.getenv('INTERRAPIDISIMO_API_KEY'),
+            'client_id': os.getenv('INTERRAPIDISIMO_CLIENT_CODE'),
+            'username': os.getenv('INTERRAPIDISIMO_USERNAME'),
+            'password': os.getenv('INTERRAPIDISIMO_PASSWORD'),
+            'contract_number': os.getenv('INTERRAPIDISIMO_CONTRACT_NUMBER')
+        }
         
     def _get_base_url(self) -> str:
         """Get Interrapidisimo API base URL based on environment"""

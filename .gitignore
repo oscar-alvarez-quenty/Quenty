@@ -1,1 +1,11 @@
 logs/
+
+# Environment files with sensitive credentials
+.env
+.env.carriers
+.env.local
+.env.production
+
+# Keep example files
+!.env.example
+!.env.carriers.example
