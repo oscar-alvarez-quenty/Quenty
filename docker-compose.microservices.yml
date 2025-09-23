@@ -8,7 +8,7 @@ services:
       dockerfile: Dockerfile
     container_name: quenty-api-gateway
     ports:
-      - "8000:8000"
+      - "8080:8000"
     environment:
       - SERVICE_NAME=api-gateway
       - LOG_LEVEL=DEBUG
@@ -42,7 +42,7 @@ services:
       dockerfile: Dockerfile
     container_name: quenty-auth-service
     ports:
-      - "8009:8009"
+      - "8019:8009"
     environment:
       - SERVICE_NAME=auth-service
       - DATABASE_URL=postgresql+asyncpg://auth:auth_pass@auth-db:5432/auth_db
@@ -104,7 +104,7 @@ services:
     image: postgres:15-alpine
     container_name: quenty-customer-db
     ports:
-      - "5433:5432"
+      - "5434:5432"
     environment:
       - POSTGRES_USER=customer
       - POSTGRES_PASSWORD=customer_pass
@@ -142,7 +142,7 @@ services:
     image: postgres:15-alpine
     container_name: quenty-order-db
     ports:
-      - "5434:5432"
+      - "5442:5432"
     environment:
       - POSTGRES_USER=order
       - POSTGRES_PASSWORD=order_pass
@@ -382,13 +382,13 @@ services:
       dockerfile: Dockerfile
     container_name: quenty-carrier-integration-service
     ports:
-      - "8009:8009"
+      - "8020:8009"
     environment:
       - SERVICE_NAME=carrier-integration-service
-      - DATABASE_URL=postgresql+asyncpg://carrier:carrier_pass@carrier-db:5432/carrier_integration_db
+      - DATABASE_URL=postgresql://carrier:carrier_pass@carrier-db:5432/carrier_integration_db
       - REDIS_URL=redis://redis:6379/9
       - LOG_LEVEL=DEBUG
-      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-your-encryption-key-here}
+      - ENCRYPTION_KEY=${CARRIER_ENCRYPTION_KEY:-a_XiHF4wUPMLFGTRbg1x2YqeF8gBtEeGsLOiJaQFoiQ=}
       - AUTH_SERVICE_URL=http://auth-service:8009
     depends_on:
       - carrier-db
@@ -401,7 +401,7 @@ services:
     image: postgres:15-alpine
     container_name: quenty-carrier-db
     ports:
-      - "5441:5432"
+      - "5443:5432"
     environment:
       - POSTGRES_USER=carrier
       - POSTGRES_PASSWORD=carrier_pass

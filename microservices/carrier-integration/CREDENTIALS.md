@@ -13,6 +13,8 @@ This document describes how to manage and configure credentials for the carrier 
 ### Colombian Carriers
 - **Servientrega** - National courier service
 - **Interrapidisimo** - Regional logistics provider
+- **Deprisa** - Express courier and logistics service
+- **Coordinadora** - Nationwide transportation and logistics network
 
 ### Financial Services
 - **Banco de la República** - TRM (Tasa Representativa del Mercado) exchange rates
@@ -46,6 +48,17 @@ export SERVIENTREGA_BILLING_CODE="your-billing-code"
 # Interrapidisimo Credentials
 export INTERRAPIDISIMO_API_KEY="your-inter-api-key"
 export INTERRAPIDISIMO_CLIENT_CODE="your-client-code"
+
+# Deprisa Credentials
+export DEPRISA_API_KEY="your-deprisa-api-key"
+export DEPRISA_CLIENT_ID="your-deprisa-client-id"
+export DEPRISA_CLIENT_SECRET="your-deprisa-secret"
+
+# Coordinadora Credentials
+export COORDINADORA_API_KEY="your-coordinadora-api-key"
+export COORDINADORA_API_PASSWORD="your-coordinadora-password"
+export COORDINADORA_NIT="your-coordinadora-nit"
+export COORDINADORA_CLIENT_CODE="your-coordinadora-client-code"
 ```
 
 ### 2. API Endpoints

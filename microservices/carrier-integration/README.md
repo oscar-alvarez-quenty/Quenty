@@ -10,6 +10,9 @@ Comprehensive carrier integration microservice for Quenty logistics platform, pr
 - **UPS** - Worldwide shipping services
 - **Servientrega** - Colombian national coverage
 - **Interrapidisimo** - Colombian regional logistics
+- **Deprisa** - Express courier and logistics service
+- **Coordinadora** - Nationwide transportation and logistics network
+- **Pickit** - Last-mile delivery and pickup point network
 
 ### 📦 International Mailbox Services
 - **Pasarex** - Virtual mailbox with Miami and Madrid locations
@@ -162,6 +165,46 @@ POST /api/v1/carriers/Interrapidisimo/credentials
 }
 ```
 
+#### Pickit
+```json
+POST /api/v1/carriers/Pickit/credentials
+{
+  "environment": "production",
+  "credentials": {
+    "client_id": "your-pickit-client-id",
+    "client_secret": "your-pickit-client-secret",
+    "webhook_secret": "your-webhook-secret"
+  }
+}
+```
+
+#### Deprisa
+```json
+POST /api/v1/carriers/Deprisa/credentials
+{
+  "environment": "production",
+  "credentials": {
+    "api_key": "your-deprisa-api-key",
+    "client_id": "your-deprisa-client-id",
+    "client_secret": "your-deprisa-client-secret"
+  }
+}
+```
+
+#### Coordinadora
+```json
+POST /api/v1/carriers/Coordinadora/credentials
+{
+  "environment": "production",
+  "credentials": {
+    "api_key": "your-coordinadora-api-key",
+    "api_password": "your-coordinadora-password",
+    "nit": "your-coordinadora-nit",
+    "client_code": "your-coordinadora-client-code"
+  }
+}
+```
+
 ## API Documentation
 
 ### Core Endpoints
@@ -253,6 +296,39 @@ GET /api/v1/exchange-rates/cop-usd
 POST /api/v1/exchange-rates/convert?amount=1000&from_currency=USD&to_currency=COP
 ```
 
+### Pickit-Specific Endpoints
+
+#### Get Pickup Points
+```http
+GET /api/v1/pickit/pickup-points?lat=40.7128&lng=-74.0060&radius=5
+```
+
+Returns available pickup points near the specified location with details about:
+- Pickup point type (LOCKER, STORE, KIOSK)
+- Opening hours and capacity
+- Available services
+
+#### Get Proof of Delivery
+```http
+POST /api/v1/pickit/shipments/{tracking_number}/proof-of-delivery
+```
+
+Returns proof of delivery including signature, photos, and pickup codes.
+
+#### Cancel Shipment
+```http
+POST /api/v1/pickit/shipments/{tracking_number}/cancel
+```
+
+Cancel a Pickit shipment before delivery.
+
+#### Check Service Coverage
+```http
+GET /api/v1/pickit/service-coverage?postal_code=10001&city=New+York&country=US
+```
+
+Check if Pickit services are available in a specific area.
+
 ### Webhook Endpoints
 
 Carriers can send real-time updates to:
@@ -261,6 +337,9 @@ Carriers can send real-time updates to:
 - `/webhooks/ups/quantum-view` - UPS Quantum View events
 - `/webhooks/servientrega/notifications` - Servientrega notifications
 - `/webhooks/interrapidisimo/events` - Interrapidisimo events
+- `/webhooks/deprisa/notifications` - Deprisa tracking notifications
+- `/webhooks/coordinadora/events` - Coordinadora status updates
+- `/webhooks/pickit/events` - Pickit tracking and pickup point events
 
 ### Health & Monitoring
 
@@ -330,6 +409,9 @@ Each error includes:
 - **UPS**: 10 req/sec, 400 req/min
 - **Servientrega**: 5 req/sec, 200 req/min
 - **Interrapidisimo**: 8 req/sec, 300 req/min
+- **Deprisa**: 10 req/sec, 250 req/min
+- **Coordinadora**: 8 req/sec, 300 req/min
+- **Pickit**: 20 req/sec, 600 req/min
 
 ## Monitoring
 

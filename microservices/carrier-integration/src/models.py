@@ -14,6 +14,7 @@ class CarrierType(enum.Enum):
     INTERRAPIDISIMO = "Interrapidisimo"
     PASAREX = "Pasarex"
     AEROPOST = "Aeropost"
+    PICKIT = "Pickit"
 
 class EnvironmentType(enum.Enum):
     SANDBOX = "sandbox"
