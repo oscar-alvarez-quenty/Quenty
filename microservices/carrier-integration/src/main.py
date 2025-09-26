@@ -61,7 +61,7 @@ async def lifespan(app: FastAPI):
     # Initialize all carriers from environment variables
     try:
         logger.info("Initializing carriers from environment variables...")
-        carrier_results = await initialize_carriers()
+        carrier_results = await initialize_carriers(app.state.carrier_service)
         logger.info(f"Carrier initialization results: {carrier_results}")
     except Exception as e:
         logger.error(f"Failed to initialize carriers: {str(e)}")
@@ -164,7 +164,7 @@ async def get_quote(
         
         if request.carrier:
             # Get quote from specific carrier
-            quote = await carrier_service.get_quote(request.carrier, request)
+            quote = await carrier_service.get_quote(request.carrier.value if hasattr(request.carrier, 'value') else request.carrier, request)
         else:
             # Get best quote from available carriers
             quote = await carrier_service.get_best_quote(request)
@@ -177,7 +177,7 @@ async def get_quote(
         
         # Try fallback carrier
         if request.carrier:
-            fallback_quote = await fallback_service.get_fallback_quote(request, exclude=[request.carrier])
+            fallback_quote = await fallback_service.get_fallback_quote(request, exclude=[request.carrier.value if hasattr(request.carrier, 'value') else request.carrier])
             if fallback_quote:
                 logger.info("Using fallback carrier", carrier=fallback_quote.carrier)
                 return fallback_quote

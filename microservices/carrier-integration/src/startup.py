@@ -6,7 +6,7 @@ import os
 import asyncio
 import structlog
 from typing import List, Dict, Any
-from services.carrier_service import CarrierService
+from .services.carrier_service import CarrierService
 
 logger = structlog.get_logger()
 
@@ -14,8 +14,8 @@ logger = structlog.get_logger()
 class CarrierInitializer:
     """Initializes all carrier integrations on startup"""
 
-    def __init__(self):
-        self.carrier_service = CarrierService()
+    def __init__(self, carrier_service: CarrierService = None):
+        self.carrier_service = carrier_service or CarrierService()
         self.enabled_carriers = self._get_enabled_carriers()
 
     def _get_enabled_carriers(self) -> List[str]:
@@ -89,12 +89,12 @@ class CarrierInitializer:
 _initializer = None
 
 
-async def initialize_carriers():
+async def initialize_carriers(carrier_service: CarrierService = None):
     """Initialize all carriers on application startup"""
     global _initializer
 
     try:
-        _initializer = CarrierInitializer()
+        _initializer = CarrierInitializer(carrier_service)
         results = await _initializer.initialize_all_carriers()
 
         # Log results

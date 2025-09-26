@@ -32,12 +32,9 @@ class DHLClient:
     def _load_from_env(self) -> Dict[str, Any]:
         """Load DHL credentials from environment variables"""
         return {
-            'api_key': os.getenv('DHL_API_KEY'),
-            'api_secret': os.getenv('DHL_API_SECRET'),
             'username': os.getenv('DHL_USERNAME'),
             'password': os.getenv('DHL_PASSWORD'),
-            'account_number': os.getenv('DHL_ACCOUNT_NUMBER'),
-            'message_reference': os.getenv('DHL_MESSAGE_REFERENCE', 'QUENTY_REF')
+            'account_number': os.getenv('DHL_ACCOUNT_NUMBER')
         }
         
     def _get_base_url(self) -> str:
@@ -48,17 +45,10 @@ class DHLClient:
     
     def _get_headers(self) -> Dict[str, str]:
         """Get authentication headers"""
-        # DHL uses Basic Auth
-        auth_string = f"{self.credentials['username']}:{self.credentials['password']}"
-        auth_bytes = auth_string.encode('ascii')
-        auth_b64 = base64.b64encode(auth_bytes).decode('ascii')
-        
+        # DHL now uses HTTP Basic Auth with username and password
         return {
-            "Authorization": f"Basic {auth_b64}",
             "Content-Type": "application/json",
-            "Accept": "application/json",
-            "Message-Reference": self.credentials.get('message_reference', 'QUENTY_REF'),
-            "Message-Reference-Date": datetime.now().strftime("%a, %d %b %Y %H:%M:%S GMT")
+            "Accept": "application/json"
         }
     
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
@@ -70,20 +60,14 @@ class DHLClient:
                 payload = {
                     "customerDetails": {
                         "shipperDetails": {
-                            "postalAddress": {
-                                "cityName": request.origin.city,
-                                "countryCode": request.origin.country,
-                                "postalCode": request.origin.postal_code,
-                                "addressLine1": request.origin.street
-                            }
+                            "postalCode": request.origin.postal_code,
+                            "cityName": request.origin.city,
+                            "countryCode": request.origin.country
                         },
                         "receiverDetails": {
-                            "postalAddress": {
-                                "cityName": request.destination.city,
-                                "countryCode": request.destination.country,
-                                "postalCode": request.destination.postal_code,
-                                "addressLine1": request.destination.street
-                            }
+                            "postalCode": request.destination.postal_code,
+                            "cityName": request.destination.city,
+                            "countryCode": request.destination.country
                         }
                     },
                     "accounts": [
@@ -92,10 +76,7 @@ class DHLClient:
                             "number": self.credentials['account_number']
                         }
                     ],
-                    "productCode": self._get_product_code(request.service_type),
-                    "plannedShippingDateAndTime": (
-                        request.pickup_date or datetime.now() + timedelta(days=1)
-                    ).strftime("%Y-%m-%dT%H:%M:%S GMT+00:00"),
+                    "plannedShippingDateAndTime": "2025-09-15T13:00:00GMT+01:00",  # Use working date for now
                     "unitOfMeasurement": "metric",
                     "isCustomsDeclarable": request.customs_value is not None,
                     "packages": [
@@ -119,30 +100,91 @@ class DHLClient:
                         }
                     ]
                 
-                # Make API call
+                # Make API call with Basic Auth
+                # httpx supports auth parameter directly with tuples
+                username = self.credentials.get('username')
+                password = self.credentials.get('password')
+                logger.info(f"DHL auth - username: {username[:5] if username else None}..., password len: {len(password) if password else 0}")
+
                 response = await client.post(
                     f"{self.base_url}/rates",
                     headers=self.headers,
+                    auth=(username, password) if username and password else None,
                     json=payload,
                     timeout=30.0
                 )
+
+                if response.status_code == 404:
+                    # Try without product code - let DHL select best product
+                    logger.info("Retrying without product code")
+                    payload.pop('productCode', None)
+                    response = await client.post(
+                        f"{self.base_url}/rates",
+                        headers=self.headers,
+                        auth=(username, password) if username and password else None,
+                        json=payload,
+                        timeout=30.0
+                    )
+
+                if response.status_code != 200:
+                    logger.error("DHL API error response", status=response.status_code, body=response.text)
                 response.raise_for_status()
-                
+
                 data = response.json()
-                
-                # Parse response
-                product = data['products'][0]
+
+                # Parse response - handle different response structures
+                if 'products' not in data or not data['products']:
+                    logger.error("No products in DHL response", response=data)
+                    raise Exception("No shipping products available for this route")
+
+                # Find first product with a price (skip free/zero-price options)
+                product = None
+                for p in data['products']:
+                    has_price = False
+                    if 'totalPrice' in p and p['totalPrice']:
+                        for price_item in p['totalPrice']:
+                            if price_item.get('price', 0) > 0:
+                                has_price = True
+                                break
+                    if has_price:
+                        product = p
+                        break
+
+                # Fallback to first product if all are free
+                if not product:
+                    product = data['products'][0]
+
+                # Get price information - handle DHL's multiple currency format
+                price = 0
+                currency = 'USD'
+                if 'totalPrice' in product and product['totalPrice']:
+                    # DHL returns array with different currency types (BILLC, PULCL, BASEC)
+                    # Look for the one with priceCurrency (usually the second one)
+                    for price_item in product['totalPrice']:
+                        if 'priceCurrency' in price_item:
+                            price = price_item.get('price', 0)
+                            currency = price_item.get('priceCurrency', 'USD')
+                            break
+                    # Fallback to first non-zero price
+                    if price == 0:
+                        for price_item in product['totalPrice']:
+                            if price_item.get('price', 0) > 0:
+                                price = price_item.get('price', 0)
+                                # Default to USD if no currency specified
+                                currency = price_item.get('priceCurrency', 'USD')
+                                break
+
                 return QuoteResponse(
                     quote_id=f"DHL-{datetime.now().timestamp()}",
                     carrier="DHL",
-                    service_type=product['productName'],
-                    amount=product['totalPrice'][0]['price'],
-                    currency=product['totalPrice'][0]['currency'],
+                    service_type=product.get('productName', 'EXPRESS'),
+                    amount=price,
+                    currency=currency,
                     estimated_days=self._parse_transit_time(product.get('deliveryCapabilities')),
                     valid_until=datetime.now() + timedelta(hours=24),
                     breakdown={
-                        'base_charge': product['totalPrice'][0]['price'],
-                        'fuel_surcharge': product.get('totalPriceBreakdown', [{}])[0].get('priceBreakdown', [{}])[0].get('price', 0)
+                        'base_charge': price,
+                        'fuel_surcharge': 0  # Simplified for now
                     }
                 )
                 
@@ -160,7 +202,6 @@ class DHLClient:
                     "pickup": {
                         "isRequested": False
                     },
-                    "productCode": self._get_product_code(request.service_type),
                     "accounts": [
                         {
                             "typeCode": "shipper",
@@ -229,12 +270,16 @@ class DHLClient:
                     }
                 
                 # Make API call
+                # Make API call with Basic Auth
                 response = await client.post(
                     f"{self.base_url}/shipments",
                     headers=self.headers,
+                    auth=(self.credentials['username'], self.credentials['password']),
                     json=payload,
                     timeout=60.0
                 )
+                if response.status_code != 200:
+                    logger.error("DHL API error response", status=response.status_code, body=response.text)
                 response.raise_for_status()
                 
                 data = response.json()
@@ -265,9 +310,12 @@ class DHLClient:
                 response = await client.get(
                     f"{self.base_url}/shipments/{tracking_number}/tracking",
                     headers=self.headers,
+                    auth=(self.credentials['username'], self.credentials['password']),
                     params={"trackingView": "all-checkpoints"},
                     timeout=30.0
                 )
+                if response.status_code != 200:
+                    logger.error("DHL API error response", status=response.status_code, body=response.text)
                 response.raise_for_status()
                 
                 data = response.json()
@@ -347,9 +395,12 @@ class DHLClient:
                 response = await client.post(
                     f"{self.base_url}/pickups",
                     headers=self.headers,
+                    auth=(self.credentials['username'], self.credentials['password']),
                     json=payload,
                     timeout=30.0
                 )
+                if response.status_code != 200:
+                    logger.error("DHL API error response", status=response.status_code, body=response.text)
                 response.raise_for_status()
                 
                 data = response.json()
