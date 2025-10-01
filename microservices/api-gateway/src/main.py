@@ -51,8 +51,11 @@ class Settings(BaseSettings):
     analytics_service_url: str = "http://analytics-service:8006"
     reverse_logistics_service_url: str = "http://reverse-logistics-service:8007"
     franchise_service_url: str = "http://franchise-service:8008"
-    auth_service_url: str = "http://auth-service:8009"
-    carrier_integration_service_url: str = "http://carrier-integration-service:8009"
+    auth_service_url: str = "http://auth-service:8019"
+    carrier_integration_service_url: str = "http://carrier-integration:8009"
+    shopify_integration_service_url: str = "http://shopify-integration:8010"
+    mercadolibre_integration_service_url: str = "http://mercadolibre-integration:8012"
+    rag_service_url: str = "http://rag-service:8011"
     consul_host: str = "consul"
     consul_port: int = 8500
     
@@ -100,6 +103,9 @@ service_registry = {
     "reverse-logistics": settings.reverse_logistics_service_url,
     "franchise": settings.franchise_service_url,
     "carrier-integration": settings.carrier_integration_service_url,
+    "shopify-integration": settings.shopify_integration_service_url,
+    "mercadolibre-integration": settings.mercadolibre_integration_service_url,
+    "rag-service": settings.rag_service_url,
     "auth": settings.auth_service_url,
 }
 
@@ -976,6 +982,219 @@ async def get_franchise_performance(franchise_id: str, request: Request):
     headers = dict(request.headers)
     params = dict(request.query_params)
     return await resilient_request("franchise", f"/api/v1/franchises/{franchise_id}/performance", headers=headers, params=params)
+
+# Carrier Integration endpoints
+@app.post("/api/v1/carrier/quotes")
+async def get_carrier_quotes(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("carrier-integration", "/api/v1/quotes", method="POST", json=body, headers=headers)
+
+@app.post("/api/v1/carrier/labels")
+async def generate_shipping_label(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("carrier-integration", "/api/v1/labels", method="POST", json=body, headers=headers)
+
+@app.get("/api/v1/carrier/tracking/{tracking_number}")
+async def track_carrier_shipment(tracking_number: str, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("carrier-integration", f"/api/v1/tracking/{tracking_number}", headers=headers)
+
+@app.get("/api/v1/carrier/carriers")
+async def list_available_carriers(request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("carrier-integration", "/api/v1/carriers", headers=headers)
+
+@app.post("/api/v1/carrier/shipments")
+async def create_carrier_shipment(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("carrier-integration", "/api/v1/shipments", method="POST", json=body, headers=headers)
+
+@app.get("/api/v1/carrier/exchange-rates/{currency_pair}")
+async def get_exchange_rate(currency_pair: str, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("carrier-integration", f"/api/v1/exchange-rates/{currency_pair}", headers=headers)
+
+# Carrier Credentials Management
+@app.get("/api/v1/carrier/credentials")
+async def list_carrier_credentials(request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("carrier-integration", "/api/v1/credentials", headers=headers)
+
+@app.post("/api/v1/carrier/credentials")
+async def create_carrier_credential(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("carrier-integration", "/api/v1/credentials", method="POST", json=body, headers=headers)
+
+# International Mailbox (Pasarex, Aeropost)
+@app.get("/api/v1/carrier/mailboxes")
+async def list_international_mailboxes(request: Request):
+    headers = dict(request.headers)
+    params = dict(request.query_params)
+    return await resilient_request("carrier-integration", "/api/v1/international-mailbox", headers=headers, params=params)
+
+@app.post("/api/v1/carrier/mailboxes")
+async def create_international_mailbox(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("carrier-integration", "/api/v1/international-mailbox", method="POST", json=body, headers=headers)
+
+# Pickit Integration
+@app.get("/api/v1/carrier/pickit/points")
+async def list_pickit_points(request: Request):
+    headers = dict(request.headers)
+    params = dict(request.query_params)
+    return await resilient_request("carrier-integration", "/api/v1/pickit/points", headers=headers, params=params)
+
+# Shopify Integration endpoints
+@app.get("/api/v1/shopify/stores")
+async def list_shopify_stores(request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("shopify-integration", "/api/v1/stores", headers=headers)
+
+@app.post("/api/v1/shopify/stores")
+async def connect_shopify_store(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("shopify-integration", "/api/v1/stores", method="POST", json=body, headers=headers)
+
+@app.get("/api/v1/shopify/auth/install")
+async def shopify_auth_install(request: Request):
+    params = dict(request.query_params)
+    return await resilient_request("shopify-integration", "/api/v1/auth/install", params=params)
+
+@app.get("/api/v1/shopify/auth/callback")
+async def shopify_auth_callback(request: Request):
+    params = dict(request.query_params)
+    return await resilient_request("shopify-integration", "/api/v1/auth/callback", params=params)
+
+@app.get("/api/v1/shopify/orders")
+async def list_shopify_orders(request: Request):
+    headers = dict(request.headers)
+    params = dict(request.query_params)
+    return await resilient_request("shopify-integration", "/api/v1/orders", headers=headers, params=params)
+
+@app.post("/api/v1/shopify/orders/sync")
+async def sync_shopify_orders(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("shopify-integration", "/api/v1/orders/sync", method="POST", json=body, headers=headers)
+
+@app.post("/api/v1/shopify/orders/{order_id}/fulfill")
+async def fulfill_shopify_order(order_id: str, request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("shopify-integration", f"/api/v1/orders/{order_id}/fulfill", method="POST", json=body, headers=headers)
+
+@app.get("/api/v1/shopify/products")
+async def list_shopify_products(request: Request):
+    headers = dict(request.headers)
+    params = dict(request.query_params)
+    return await resilient_request("shopify-integration", "/api/v1/products", headers=headers, params=params)
+
+@app.post("/api/v1/shopify/products/sync")
+async def sync_shopify_products(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("shopify-integration", "/api/v1/products/sync", method="POST", json=body, headers=headers)
+
+@app.post("/api/v1/shopify/webhooks")
+async def handle_shopify_webhook(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("shopify-integration", "/api/v1/webhooks", method="POST", json=body, headers=headers)
+
+# MercadoLibre Integration endpoints
+@app.get("/api/v1/mercadolibre/auth/authorize")
+async def mercadolibre_auth_authorize(request: Request):
+    params = dict(request.query_params)
+    return await resilient_request("mercadolibre-integration", "/api/v1/auth/authorize", params=params)
+
+@app.get("/api/v1/mercadolibre/auth/callback")
+async def mercadolibre_auth_callback(request: Request):
+    params = dict(request.query_params)
+    return await resilient_request("mercadolibre-integration", "/api/v1/auth/callback", params=params)
+
+@app.get("/api/v1/mercadolibre/orders")
+async def list_mercadolibre_orders(request: Request):
+    headers = dict(request.headers)
+    params = dict(request.query_params)
+    return await resilient_request("mercadolibre-integration", "/api/v1/orders", headers=headers, params=params)
+
+@app.post("/api/v1/mercadolibre/orders/sync")
+async def sync_mercadolibre_orders(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("mercadolibre-integration", "/api/v1/orders/sync", method="POST", json=body, headers=headers)
+
+@app.post("/api/v1/mercadolibre/orders/{order_id}/ship")
+async def ship_mercadolibre_order(order_id: str, request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("mercadolibre-integration", f"/api/v1/orders/{order_id}/ship", method="POST", json=body, headers=headers)
+
+@app.get("/api/v1/mercadolibre/products")
+async def list_mercadolibre_products(request: Request):
+    headers = dict(request.headers)
+    params = dict(request.query_params)
+    return await resilient_request("mercadolibre-integration", "/api/v1/products", headers=headers, params=params)
+
+@app.post("/api/v1/mercadolibre/products/sync")
+async def sync_mercadolibre_products(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("mercadolibre-integration", "/api/v1/products/sync", method="POST", json=body, headers=headers)
+
+@app.get("/api/v1/mercadolibre/questions")
+async def list_mercadolibre_questions(request: Request):
+    headers = dict(request.headers)
+    params = dict(request.query_params)
+    return await resilient_request("mercadolibre-integration", "/api/v1/questions", headers=headers, params=params)
+
+@app.post("/api/v1/mercadolibre/questions/{question_id}/answer")
+async def answer_mercadolibre_question(question_id: str, request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("mercadolibre-integration", f"/api/v1/questions/{question_id}/answer", method="POST", json=body, headers=headers)
+
+@app.post("/api/v1/mercadolibre/webhooks")
+async def handle_mercadolibre_webhook(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("mercadolibre-integration", "/api/v1/webhooks", method="POST", json=body, headers=headers)
+
+# RAG Service endpoints
+@app.post("/api/v1/rag/chat")
+async def rag_chat(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("rag-service", "/api/v1/chat", method="POST", json=body, headers=headers)
+
+@app.post("/api/v1/rag/ingest")
+async def rag_ingest_document(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("rag-service", "/api/v1/ingest", method="POST", json=body, headers=headers)
+
+@app.post("/api/v1/rag/search")
+async def rag_search(request: Request):
+    body = await request.json()
+    headers = dict(request.headers)
+    return await resilient_request("rag-service", "/api/v1/search", method="POST", json=body, headers=headers)
+
+@app.get("/api/v1/rag/documents")
+async def list_rag_documents(request: Request):
+    headers = dict(request.headers)
+    params = dict(request.query_params)
+    return await resilient_request("rag-service", "/api/v1/documents", headers=headers, params=params)
+
+@app.delete("/api/v1/rag/documents/{document_id}")
+async def delete_rag_document(document_id: str, request: Request):
+    headers = dict(request.headers)
+    return await resilient_request("rag-service", f"/api/v1/documents/{document_id}", method="DELETE", headers=headers)
 
 # Service Discovery Registration
 async def register_with_consul():
