@@ -14,14 +14,16 @@
 
 ## Executive Summary
 
-Quenty is a comprehensive logistics and e-commerce platform built using a microservices architecture. The platform consists of 14 core microservices, 11 PostgreSQL databases, and a robust infrastructure stack for monitoring, messaging, and service coordination.
+Quenty is a comprehensive logistics and e-commerce platform built using a microservices architecture. The platform consists of 15 core microservices, 14 PostgreSQL databases, and a robust infrastructure stack for monitoring, messaging, and service coordination.
 
 ### Key Statistics
-- **Total Services**: 14 business microservices + 7 infrastructure services
-- **Total Containers**: 44 running containers in production
-- **Databases**: 11 PostgreSQL instances (including pgvector support)
-- **Authentication**: JWT-based with OAuth integration
+- **Total Services**: 15 business microservices + 7 infrastructure services
+- **Total Containers**: 45+ running containers in production
+- **Databases**: 14 PostgreSQL instances (including pgvector support)
+- **API Endpoints**: 200+ REST endpoints across all services
+- **Authentication**: JWT-based with OAuth integration (Google, Shopify, MercadoLibre, WooCommerce)
 - **API Gateway**: Centralized entry point for all external requests
+- **Carriers Integrated**: 10 (DHL, FedEx, UPS, Servientrega, InterRapidisimo, Coordinadora, Deprisa, Pickit, Pasarex, Aeropost)
 
 ---
 
@@ -79,10 +81,11 @@ Quenty is a comprehensive logistics and e-commerce platform built using a micros
 
 | Service | Port | Access | Purpose | Authentication |
 |---------|------|--------|---------|----------------|
-| **Carrier Integration** | 8009/8020 | PRIVATE | Multi-carrier logistics integration | Rate limiting, webhook auth |
+| **Carrier Integration** | 8009/8020 | PRIVATE | Multi-carrier logistics integration (10 carriers) | Rate limiting, webhook auth |
 | **Shopify Integration** | 8010 | PRIVATE | Shopify marketplace sync | Shopify OAuth |
 | **MercadoLibre Integration** | 8012 | PRIVATE | MercadoLibre marketplace sync | MercadoLibre OAuth |
-| **RAG Service** | 8011 | PRIVATE | AI-powered chat and search | Internal only |
+| **WooCommerce Integration** | 8013 | PRIVATE | WooCommerce store integration | WooCommerce API Keys |
+| **RAG Service** | 8011 | PRIVATE | AI-powered chat and search (pgvector) | Internal only |
 
 ### Infrastructure Services
 
@@ -186,19 +189,25 @@ External Ports:
 
 ### Database Distribution
 
-| Database | Service | Port | Purpose |
-|----------|---------|------|---------|
-| quenty_db | Main App | 5433 | Core platform data (pgvector enabled) |
-| auth_db | Auth Service | 5441 | Users, roles, permissions |
-| customer_db | Customer Service | 5434 | Customer data, support tickets |
-| order_db | Order Service | 5442 | Orders, products, inventory |
-| pickup_db | Pickup Service | 5435 | Pickup schedules, routes |
-| intl_shipping_db | International Shipping | 5436 | Manifests, shipping data |
-| microcredit_db | Microcredit | 5437 | Credit applications, payments |
-| analytics_db | Analytics | 5438 | Metrics, reports, dashboards |
-| reverse_logistics_db | Reverse Logistics | 5439 | Returns, exchanges |
-| franchise_db | Franchise | 5440 | Franchise data, territories |
-| carrier_db | Carrier Integration | 5443 | Carrier credentials, rates |
+| Database | Service | Port | Purpose | Tables |
+|----------|---------|------|---------|--------|
+| quenty_db | Main App | 5433 | Core platform data (pgvector enabled) | Legacy monolith data |
+| auth_db | Auth Service | 5441 | Users, roles, permissions | 5 tables |
+| customer_db | Customer Service | 5433 | Customer data, support tickets | 4 tables |
+| order_db | Order Service | 5434 | Orders, products, inventory | 6 tables |
+| pickup_db | Pickup Service | 5435 | Pickup schedules, routes | 5 tables |
+| intl_shipping_db | International Shipping | 5436 | Manifests, shipping data | 12 tables |
+| microcredit_db | Microcredit | 5437 | Credit applications, payments | 6 tables |
+| analytics_db | Analytics | 5438 | Metrics, reports, dashboards | 3 tables |
+| reverse_logistics_db | Reverse Logistics | 5439 | Returns, exchanges | 5 tables |
+| franchise_db | Franchise | 5440 | Franchise data, territories | 4 tables |
+| carrier_db | Carrier Integration | 5442 | Carrier credentials, rates | 8 tables |
+| shopify_db | Shopify Integration | 5443 | Shopify stores, orders, products | 6 tables |
+| meli_db | MercadoLibre Integration | 5444 | MercadoLibre orders, products | 5 tables |
+| rag_db | RAG Service | 5445 | Documents, embeddings (pgvector) | 3 tables |
+| woocommerce_db | WooCommerce Integration | 5446 | WooCommerce stores, orders | 11 tables |
+
+**Total:** 14 databases, ~90 tables
 
 ### Data Patterns
 
@@ -408,6 +417,150 @@ Critical environment variables for deployment:
 
 ---
 
-*Document Version: 2.0*  
-*Last Updated: 2025-09-04*  
+---
+
+## API Gateway Endpoints
+
+The API Gateway provides **200+ endpoints** organized by service:
+
+### Core Business Services (140+ endpoints)
+- **Auth Service**: `/api/v1/auth/*` - Login, register, OAuth, user management
+- **Customer Service**: `/api/v1/customers/*` - Customer CRUD, support tickets, analytics
+- **Order Service**: `/api/v1/orders/*`, `/api/v1/products/*`, `/api/v1/inventory/*`
+- **Pickup Service**: `/api/v1/pickups/*`, `/api/v1/routes/*` - Pickup scheduling, route management
+- **International Shipping**: `/api/v1/manifests/*`, `/api/v1/rates/*`, `/api/v1/catalogs/*`, `/api/v1/client-ratebook/*`
+- **Microcredit Service**: `/api/v1/microcredit/*` - Applications, accounts, payments, credit scores
+- **Analytics Service**: `/api/v1/analytics/*` - Dashboards, metrics, reports, trends
+- **Reverse Logistics**: `/api/v1/returns/*` - Returns, inspections, refunds
+- **Franchise Service**: `/api/v1/franchises/*`, `/api/v1/territories/*` - Franchise management
+
+### Integration Services (60+ endpoints)
+- **Carrier Integration**: `/api/v1/carrier/*` - Quotes, labels, tracking, credentials, mailboxes
+- **Shopify Integration**: `/api/v1/shopify/*` - Store management, order/product sync, webhooks
+- **MercadoLibre Integration**: `/api/v1/mercadolibre/*` - OAuth, orders, products, questions
+- **WooCommerce Integration**: `/api/v1/woocommerce/*` - Store connections, order/product sync
+- **RAG Service**: `/api/v1/rag/*` - Chat, document ingestion, semantic search
+
+See `microservices/api-gateway/src/main.py` for complete endpoint definitions.
+
+---
+
+## Carrier Integration Details
+
+### Supported Carriers (10 Total)
+
+#### International Carriers
+1. **DHL Express** - Global express shipping
+   - Status: ✅ Active (Sandbox credentials configured)
+   - Services: EXPRESS, ECONOMY, DOMESTIC
+
+2. **FedEx** - International logistics
+   - Status: ⚠️ Credentials needed
+   - Services: INTERNATIONAL_PRIORITY, INTERNATIONAL_ECONOMY
+
+3. **UPS** - Worldwide shipping
+   - Status: ⚠️ Credentials needed
+   - Services: EXPRESS, EXPEDITED, STANDARD
+
+#### Colombian Domestic Carriers
+4. **Servientrega** - Colombian nationwide
+5. **InterRapidisimo** - Express delivery
+6. **Coordinadora** - General cargo
+7. **Deprisa** - Express and package delivery
+
+#### Specialized Services
+8. **Pickit** - Pickup point network (500+ locations in Colombia)
+9. **Pasarex** - International mailbox service (US addresses for Colombians)
+10. **Aeropost** - International mailbox service (Miami addresses)
+
+### Carrier Integration Architecture
+
+```
+┌─────────────────────────────────────────────────┐
+│     Carrier Integration Service (Port 8009)     │
+│  ┌───────────────────────────────────────────┐  │
+│  │  FastAPI App                              │  │
+│  │  - Quote comparison                       │  │
+│  │  - Label generation                       │  │
+│  │  - Tracking                               │  │
+│  │  - Webhook processing                     │  │
+│  └───────────────┬───────────────────────────┘  │
+│                  │                               │
+│  ┌───────────────▼───────────────────────────┐  │
+│  │  Celery Workers (Port 8020)               │  │
+│  │  - Async quote requests                   │  │
+│  │  - Batch tracking updates                 │  │
+│  │  - Exchange rate sync (Banco República)   │  │
+│  │  - Webhook event processing               │  │
+│  └───────────────┬───────────────────────────┘  │
+│                  │                               │
+│  ┌───────────────▼───────────────────────────┐  │
+│  │  PostgreSQL (carrier_db)                  │  │
+│  │  - Encrypted credentials (AES-256)        │  │
+│  │  - Shipments & tracking events            │  │
+│  │  - Quote cache                            │  │
+│  └───────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────┘
+```
+
+---
+
+## E-Commerce Integration Details
+
+### Shopify Integration (Port 8010)
+- **Purpose**: Sync Shopify stores with Quenty platform
+- **Features**:
+  - OAuth-based store connection
+  - Bidirectional product sync
+  - Automatic order import
+  - Fulfillment updates back to Shopify
+  - Real-time webhooks (orders, products, inventory)
+- **Background Workers**: Celery for async sync
+- **Database**: 6 tables (stores, orders, products, customers, webhooks, sync_logs)
+
+### MercadoLibre Integration (Port 8012)
+- **Purpose**: Integrate with Latin America's largest marketplace
+- **Features**:
+  - OAuth 2.0 authentication
+  - Multi-site support (MLA, MLM, MLC, etc.)
+  - Order synchronization
+  - Product listing management
+  - Automatic question answering via RAG
+  - Webhook notifications
+- **Background Workers**: Celery for order processing
+- **Database**: 5 tables (accounts, orders, products, questions, notifications)
+
+### WooCommerce Integration (Port 8013)
+- **Purpose**: Connect WooCommerce stores
+- **Features**:
+  - REST API v3 integration
+  - Multi-store support
+  - Product catalog sync
+  - Order import and fulfillment
+  - Inventory updates
+  - Webhook event processing
+- **Status**: ✅ Database and models complete, needs deployment
+- **Database**: 11 tables (stores, orders, products, customers, shipping_requests, etc.)
+
+---
+
+## AI/ML Services
+
+### RAG Service (Port 8011)
+- **Purpose**: Retrieval-Augmented Generation for intelligent chat and search
+- **Technology**:
+  - **pgvector**: PostgreSQL extension for vector similarity search
+  - **Embeddings**: 1536-dimensional vectors (OpenAI compatible)
+  - **Semantic Search**: Find relevant documents by meaning, not just keywords
+- **Use Cases**:
+  - Customer support chatbot
+  - Product recommendation
+  - Policy/FAQ question answering
+  - MercadoLibre automatic question responses
+- **Database**: 3 tables (documents, conversations, chat_messages)
+
+---
+
+*Document Version: 2.1*
+*Last Updated: 2025-10-01*
 *Architecture Team: Quenty Platform Engineering*
