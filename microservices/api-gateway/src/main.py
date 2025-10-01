@@ -225,8 +225,9 @@ async def login(request: Request):
 
 @app.post("/api/v1/auth/register")
 async def register(request: Request):
+    """Public user registration endpoint"""
     body = await request.json()
-    return await resilient_request("auth", "/api/v1/users", method="POST", json=body)
+    return await resilient_request("auth", "/api/v1/auth/register", method="POST", json=body)
 
 @app.post("/api/v1/auth/refresh")
 async def refresh_token(request: Request):
@@ -243,6 +244,18 @@ async def change_password(request: Request):
     body = await request.json()
     headers = dict(request.headers)
     return await resilient_request("auth", "/api/v1/auth/change-password", method="POST", json=body, headers=headers)
+
+@app.post("/api/v1/auth/password-reset/request")
+async def request_password_reset(request: Request):
+    """Request password reset email"""
+    body = await request.json()
+    return await resilient_request("auth", "/api/v1/auth/password-reset/request", method="POST", json=body)
+
+@app.post("/api/v1/auth/password-reset/confirm")
+async def confirm_password_reset(request: Request):
+    """Confirm password reset with token"""
+    body = await request.json()
+    return await resilient_request("auth", "/api/v1/auth/password-reset/confirm", method="POST", json=body)
 
 @app.get("/api/v1/profile")
 async def get_profile(request: Request):

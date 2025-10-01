@@ -39,7 +39,20 @@ class User(Base):
     # Role and Permissions
     role_id = Column(Integer, ForeignKey("roles.id"), nullable=True)
     additional_permissions = Column(JSON, default=list)  # Additional permissions beyond role
-    
+
+    # User Type and Document Information
+    user_type = Column(String(20), nullable=True, index=True)  # natural, juridica
+    document_type_id = Column(Integer, ForeignKey("document_types.id"), nullable=True)
+    document_number = Column(String(100), nullable=True, index=True)
+
+    # Terms and Policies
+    terms_accepted = Column(Boolean, default=False, nullable=False)
+    terms_accepted_at = Column(DateTime, nullable=True)
+    privacy_policy_accepted = Column(Boolean, default=False, nullable=False)
+    privacy_policy_accepted_at = Column(DateTime, nullable=True)
+    marketing_consent = Column(Boolean, default=False, nullable=False)
+    marketing_consent_at = Column(DateTime, nullable=True)
+
     # Timestamps
     created_at = Column(DateTime, default=func.now(), nullable=False)
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
@@ -47,6 +60,7 @@ class User(Base):
     # Relationships
     company = relationship("Company", back_populates="users")
     role = relationship("Role", back_populates="users")
+    document_type = relationship("DocumentType", foreign_keys=[document_type_id])
     oauth_accounts = relationship("OAuthAccount", back_populates="user", cascade="all, delete-orphan")
     user_sessions = relationship("UserSession", back_populates="user", cascade="all, delete-orphan")
     password_resets = relationship("PasswordResetToken", back_populates="user", cascade="all, delete-orphan")

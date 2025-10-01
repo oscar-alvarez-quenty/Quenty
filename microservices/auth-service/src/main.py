@@ -22,7 +22,8 @@ from .schemas import (
     LoginRequest, TokenResponse, RefreshTokenRequest, PasswordChangeRequest,
     PasswordResetRequest, PasswordResetConfirm, OAuthLoginRequest, OAuthCallbackRequest,
     UserSessionResponse, RoleResponse, PermissionResponse, AuditLogResponse,
-    DocumentTypeResponse, HealthCheck, ErrorResponse
+    DocumentTypeResponse, HealthCheck, ErrorResponse,
+    PublicUserRegistration, PublicRegistrationResponse, UserType
 )
 from .security import (
     authenticate_user, get_password_hash, generate_jwt_token, decode_jwt_token,
@@ -31,6 +32,7 @@ from .security import (
     revoke_user_session, SecurityMiddleware, verify_password
 )
 from .oauth import oauth_service
+from .email_service import email_service
 
 # Import logging configuration
 import os
@@ -851,26 +853,26 @@ async def change_password(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="OAuth users cannot change password"
             )
-        
+
         if not verify_password(password_data.current_password, current_user.password_hash):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Current password is incorrect"
             )
-        
+
         # Update password
         new_password_hash = get_password_hash(password_data.new_password)
         current_user.password_hash = new_password_hash
         current_user.password_changed_at = datetime.utcnow()
         current_user.updated_at = datetime.utcnow()
-        
+
         await db.commit()
-        
+
         # Log password change
         await log_audit_event(db, current_user, "change_password", "authentication", str(current_user.id), request, "success")
-        
+
         return {"message": "Password changed successfully"}
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -878,6 +880,277 @@ async def change_password(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to change password"
+        )
+
+@app.post("/api/v1/auth/register", response_model=PublicRegistrationResponse, status_code=status.HTTP_201_CREATED)
+async def public_register(
+    registration_data: PublicUserRegistration,
+    request: Request,
+    db: AsyncSession = Depends(get_db)
+):
+    """Public user registration endpoint (no authentication required)"""
+    try:
+        # Check if email already exists
+        existing_user = await db.execute(
+            select(User).where(User.email == registration_data.email)
+        )
+        if existing_user.scalar_one_or_none():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered"
+            )
+
+        # Get document type by code
+        doc_type_result = await db.execute(
+            select(DocumentType).where(DocumentType.code == registration_data.document_type_code)
+        )
+        doc_type = doc_type_result.scalar_one_or_none()
+        if not doc_type:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid document type: {registration_data.document_type_code}"
+            )
+
+        # Check if document number already exists
+        existing_doc = await db.execute(
+            select(User).where(User.document_number == registration_data.document_number)
+        )
+        if existing_doc.scalar_one_or_none():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Document number already registered"
+            )
+
+        # Get default role
+        default_role_result = await db.execute(
+            select(Role).where(Role.is_default == True)
+        )
+        default_role = default_role_result.scalar_one_or_none()
+
+        company_id = None
+
+        # Handle company registration for juridica users
+        if registration_data.user_type == UserType.JURIDICA:
+            # Check if NIT already exists
+            existing_company = await db.execute(
+                select(Company).where(Company.document_number == registration_data.company_data.nit)
+            )
+            if existing_company.scalar_one_or_none():
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Company NIT already registered"
+                )
+
+            # Create company
+            company = Company(
+                name=registration_data.company_data.name,
+                document_type="nit",
+                document_number=registration_data.company_data.nit,
+                is_active=True,
+                is_verified=False
+            )
+            db.add(company)
+            await db.flush()  # Get company_id
+            company_id = company.company_id
+
+        # Generate username from email
+        username = registration_data.email.split('@')[0]
+        # Ensure username uniqueness by adding numbers if needed
+        base_username = username
+        counter = 1
+        while True:
+            existing = await db.execute(select(User).where(User.username == username))
+            if not existing.scalar_one_or_none():
+                break
+            username = f"{base_username}{counter}"
+            counter += 1
+
+        # Create user
+        user = User(
+            username=username,
+            email=registration_data.email,
+            password_hash=get_password_hash(registration_data.password),
+            first_name=registration_data.first_name,
+            last_name=registration_data.last_name,
+            phone=registration_data.phone,
+            user_type=registration_data.user_type.value,
+            document_type_id=doc_type.id,
+            document_number=registration_data.document_number,
+            terms_accepted=registration_data.terms_accepted,
+            terms_accepted_at=datetime.utcnow() if registration_data.terms_accepted else None,
+            privacy_policy_accepted=registration_data.privacy_policy_accepted,
+            privacy_policy_accepted_at=datetime.utcnow() if registration_data.privacy_policy_accepted else None,
+            marketing_consent=registration_data.marketing_consent,
+            marketing_consent_at=datetime.utcnow() if registration_data.marketing_consent else None,
+            company_id=company_id,
+            role_id=default_role.id if default_role else None,
+            is_active=True,
+            is_verified=False,
+            email_verified=False
+        )
+
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
+
+        # Create access token session
+        access_expires = timedelta(minutes=settings.jwt_expiration_minutes)
+        access_session = await create_user_session(db, user, request, "access", access_expires)
+
+        # Create refresh token session
+        refresh_expires = timedelta(days=settings.jwt_refresh_expiration_days)
+        refresh_session = await create_user_session(db, user, request, "refresh", refresh_expires)
+
+        # Generate JWT tokens
+        access_token = generate_jwt_token({
+            "sub": str(user.id),
+            "jti": access_session.jti,
+            "type": "access"
+        }, access_expires)
+
+        refresh_token = generate_jwt_token({
+            "sub": str(user.id),
+            "jti": refresh_session.jti,
+            "type": "refresh"
+        }, refresh_expires)
+
+        # Send welcome email (async, don't wait for it)
+        try:
+            user_name = user.full_name if registration_data.user_type == UserType.NATURAL else registration_data.company_data.name
+            email_service.send_welcome_email(user.email, user_name, user.user_type)
+        except Exception as e:
+            logger.error("Failed to send welcome email", user_id=user.id, error=str(e))
+
+        # Log registration
+        await log_audit_event(db, user, "register", "user", str(user.id), request, "success", {"user_type": user.user_type})
+
+        return PublicRegistrationResponse(
+            message="Registration successful",
+            user_id=user.id,
+            unique_id=user.unique_id,
+            email=user.email,
+            user_type=user.user_type,
+            access_token=access_token,
+            refresh_token=refresh_token,
+            expires_in=int(access_expires.total_seconds())
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Registration error", error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Registration failed: {str(e)}"
+        )
+
+@app.post("/api/v1/auth/password-reset/request")
+async def request_password_reset(
+    reset_request: PasswordResetRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_db)
+):
+    """Request password reset - sends email with reset link"""
+    try:
+        # Find user by email
+        result = await db.execute(
+            select(User).where(User.email == reset_request.email)
+        )
+        user = result.scalar_one_or_none()
+
+        # Always return success to prevent email enumeration
+        if not user:
+            logger.warning("Password reset requested for non-existent email", email=reset_request.email)
+            return {"message": "If the email exists, a password reset link has been sent"}
+
+        # Check if user has password (OAuth users don't)
+        if not user.password_hash:
+            logger.warning("Password reset requested for OAuth-only user", user_id=user.id)
+            return {"message": "If the email exists, a password reset link has been sent"}
+
+        # Create password reset token
+        token_value = await create_password_reset_token(db, user)
+
+        # Send password reset email
+        try:
+            email_sent = email_service.send_password_reset_email(
+                to_email=user.email,
+                reset_token=token_value,
+                user_name=user.full_name
+            )
+            if not email_sent:
+                logger.error("Failed to send password reset email", user_id=user.id)
+        except Exception as e:
+            logger.error("Error sending password reset email", user_id=user.id, error=str(e))
+
+        # Log password reset request
+        await log_audit_event(db, user, "password_reset_request", "authentication", str(user.id), request, "success")
+
+        return {"message": "If the email exists, a password reset link has been sent"}
+
+    except Exception as e:
+        logger.error("Password reset request error", error=str(e))
+        # Still return success to prevent enumeration
+        return {"message": "If the email exists, a password reset link has been sent"}
+
+@app.post("/api/v1/auth/password-reset/confirm")
+async def confirm_password_reset(
+    reset_confirm: PasswordResetConfirm,
+    request: Request,
+    db: AsyncSession = Depends(get_db)
+):
+    """Confirm password reset with token"""
+    try:
+        # Verify reset token
+        user = await verify_password_reset_token(db, reset_confirm.token)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or expired reset token"
+            )
+
+        # Update password
+        new_password_hash = get_password_hash(reset_confirm.new_password)
+        user.password_hash = new_password_hash
+        user.password_changed_at = datetime.utcnow()
+        user.updated_at = datetime.utcnow()
+
+        # Mark token as used
+        token_result = await db.execute(
+            select(PasswordResetToken).where(
+                and_(
+                    PasswordResetToken.user_id == user.id,
+                    PasswordResetToken.token == reset_confirm.token,
+                    PasswordResetToken.is_used == False
+                )
+            )
+        )
+        token = token_result.scalar_one_or_none()
+        if token:
+            token.is_used = True
+
+        await db.commit()
+
+        # Revoke all existing sessions for security
+        await db.execute(
+            update(UserSession)
+            .where(UserSession.user_id == user.id)
+            .values(is_revoked=True, revoked_at=datetime.utcnow())
+        )
+        await db.commit()
+
+        # Log password reset
+        await log_audit_event(db, user, "password_reset_confirm", "authentication", str(user.id), request, "success")
+
+        return {"message": "Password reset successful. Please log in with your new password."}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Password reset confirm error", error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to reset password"
         )
 
 # Helper function for audit logging

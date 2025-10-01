@@ -27,6 +27,10 @@ class OAuthProvider(str, Enum):
     GOOGLE = "google"
     AZURE = "azure"
 
+class UserType(str, Enum):
+    NATURAL = "natural"
+    JURIDICA = "juridica"
+
 # Base Models
 class BaseTimestamp(BaseModel):
     created_at: datetime
@@ -211,12 +215,88 @@ class PasswordResetConfirm(BaseModel):
     token: str
     new_password: str = Field(..., min_length=8)
     new_password_confirm: str
-    
+
     @validator('new_password_confirm')
     def passwords_match(cls, v, values, **kwargs):
         if 'new_password' in values and v != values['new_password']:
             raise ValueError('Passwords do not match')
         return v
+
+# Public Registration Schemas
+class CompanyRegistrationData(BaseModel):
+    """Company data for juridica registration"""
+    name: str = Field(..., min_length=2, max_length=200, description="Company legal name")
+    nit: str = Field(..., min_length=9, max_length=20, description="Company NIT number")
+
+    @validator('nit')
+    def validate_nit(cls, v):
+        # Remove any non-numeric characters
+        nit_clean = ''.join(filter(str.isdigit, v))
+        if len(nit_clean) < 9:
+            raise ValueError('NIT must be at least 9 digits')
+        return nit_clean
+
+class PublicUserRegistration(BaseModel):
+    """Public user registration schema"""
+    user_type: UserType = Field(..., description="Type of user: natural or juridica")
+    email: EmailStr = Field(..., description="User email address")
+    password: str = Field(..., min_length=8, max_length=100, description="User password")
+    password_confirm: str = Field(..., description="Password confirmation")
+    document_type_code: str = Field(..., description="Document type code (cedula, nit, passport, etc.)")
+    document_number: str = Field(..., min_length=5, max_length=100, description="Document number")
+    first_name: Optional[str] = Field(None, max_length=100, description="First name (for natural users)")
+    last_name: Optional[str] = Field(None, max_length=100, description="Last name (for natural users)")
+    phone: Optional[str] = Field(None, max_length=20, description="Phone number")
+    terms_accepted: bool = Field(..., description="User accepts terms and conditions")
+    privacy_policy_accepted: bool = Field(..., description="User accepts privacy policy")
+    marketing_consent: bool = Field(False, description="User consents to marketing communications")
+    company_data: Optional[CompanyRegistrationData] = Field(None, description="Company data (required for juridica)")
+
+    @validator('password_confirm')
+    def passwords_match(cls, v, values, **kwargs):
+        if 'password' in values and v != values['password']:
+            raise ValueError('Passwords do not match')
+        return v
+
+    @validator('terms_accepted')
+    def terms_must_be_accepted(cls, v):
+        if not v:
+            raise ValueError('Terms and conditions must be accepted')
+        return v
+
+    @validator('privacy_policy_accepted')
+    def privacy_must_be_accepted(cls, v):
+        if not v:
+            raise ValueError('Privacy policy must be accepted')
+        return v
+
+    @validator('company_data')
+    def validate_company_data(cls, v, values):
+        user_type = values.get('user_type')
+        if user_type == UserType.JURIDICA and not v:
+            raise ValueError('Company data is required for juridica registration')
+        if user_type == UserType.NATURAL and v:
+            raise ValueError('Company data should not be provided for natural registration')
+        return v
+
+    @validator('first_name', 'last_name')
+    def validate_names_for_natural(cls, v, values, field):
+        user_type = values.get('user_type')
+        if user_type == UserType.NATURAL and not v:
+            raise ValueError(f'{field.name} is required for natural user registration')
+        return v
+
+class PublicRegistrationResponse(BaseModel):
+    """Response after successful public registration"""
+    message: str
+    user_id: int
+    unique_id: str
+    email: str
+    user_type: str
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+    expires_in: int
 
 # OAuth Schemas
 class OAuthLoginRequest(BaseModel):
