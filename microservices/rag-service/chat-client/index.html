@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quenty RAG Chat Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .chat-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 800px;
+            height: 80vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .chat-header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #4ade80;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        
+        .message {
+            margin-bottom: 20px;
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .message.user {
+            display: flex;
+            justify-content: flex-end;
+        }
+        
+        .message.assistant {
+            display: flex;
+            justify-content: flex-start;
+        }
+        
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            word-wrap: break-word;
+        }
+        
+        .user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .assistant .message-content {
+            background: white;
+            color: #333;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .sources {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+        
+        .source-item {
+            display: inline-block;
+            background: #f3f4f6;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin: 2px;
+        }
+        
+        .confidence {
+            display: inline-block;
+            margin-left: 10px;
+            padding: 2px 8px;
+            background: #10b981;
+            color: white;
+            border-radius: 10px;
+            font-size: 0.8rem;
+        }
+        
+        .chat-input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .chat-input-form {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 25px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        .chat-input:focus {
+            border-color: #667eea;
+        }
+        
+        .send-button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .send-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .typing-indicator {
+            display: none;
+            padding: 12px 16px;
+            background: white;
+            border-radius: 18px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            max-width: 70%;
+        }
+        
+        .typing-indicator.show {
+            display: inline-block;
+        }
+        
+        .typing-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #6b7280;
+            margin: 0 2px;
+            animation: typing 1.4s infinite;
+        }
+        
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .control-button {
+            padding: 8px 16px;
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+        
+        .control-button:hover {
+            background: #e5e7eb;
+        }
+        
+        .welcome-message {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+        
+        .welcome-message h2 {
+            color: #4b5563;
+            margin-bottom: 10px;
+        }
+        
+        .suggested-questions {
+            margin-top: 20px;
+        }
+        
+        .suggested-question {
+            display: inline-block;
+            margin: 5px;
+            padding: 8px 16px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .suggested-question:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>🤖 Quenty RAG Assistant</h1>
+            <div class="status-indicator">
+                <span class="status-dot"></span>
+                <span>Connected</span>
+            </div>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="welcome-message" id="welcomeMessage">
+                <h2>Welcome to Quenty RAG Assistant!</h2>
+                <p>I can help you with information about orders, customers, shipments, and more.</p>
+                <div class="suggested-questions">
+                    <div class="suggested-question" onclick="askQuestion('What is the status of recent orders?')">
+                        📦 Recent order status
+                    </div>
+                    <div class="suggested-question" onclick="askQuestion('Show me customer analytics')">
+                        📊 Customer analytics
+                    </div>
+                    <div class="suggested-question" onclick="askQuestion('What are the active shipments?')">
+                        🚚 Active shipments
+                    </div>
+                    <div class="suggested-question" onclick="askQuestion('Show franchise performance')">
+                        🏪 Franchise performance
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="message assistant" style="display: none;">
+            <div class="typing-indicator" id="typingIndicator">
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+            </div>
+        </div>
+        
+        <div class="chat-input-container">
+            <div class="controls">
+                <button class="control-button" onclick="clearChat()">🗑️ Clear Chat</button>
+                <button class="control-button" onclick="ingestData()">🔄 Refresh Data</button>
+            </div>
+            <form class="chat-input-form" onsubmit="sendMessage(event)">
+                <input 
+                    type="text" 
+                    class="chat-input" 
+                    id="chatInput" 
+                    placeholder="Ask me anything about your logistics data..."
+                    autocomplete="off"
+                >
+                <button type="submit" class="send-button" id="sendButton">Send</button>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        const API_URL = 'http://localhost:8010';
+        let conversationId = null;
+        
+        async function sendMessage(event) {
+            event.preventDefault();
+            
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Hide welcome message
+            const welcomeMessage = document.getElementById('welcomeMessage');
+            if (welcomeMessage) {
+                welcomeMessage.style.display = 'none';
+            }
+            
+            // Add user message to chat
+            addMessage(message, 'user');
+            
+            // Clear input and disable send button
+            input.value = '';
+            document.getElementById('sendButton').disabled = true;
+            
+            // Show typing indicator
+            showTypingIndicator();
+            
+            try {
+                // Send message to API
+                const response = await fetch(`${API_URL}/query`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: message,
+                        conversation_id: conversationId,
+                        use_cache: true
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Update conversation ID
+                conversationId = data.conversation_id;
+                
+                // Hide typing indicator
+                hideTypingIndicator();
+                
+                // Add assistant response
+                addAssistantMessage(data);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                hideTypingIndicator();
+                addMessage('Sorry, I encountered an error. Please try again.', 'assistant');
+            } finally {
+                document.getElementById('sendButton').disabled = false;
+                input.focus();
+            }
+        }
+        
+        function addMessage(content, role) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.textContent = content;
+            
+            messageDiv.appendChild(contentDiv);
+            messagesDiv.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        
+        function addAssistantMessage(data) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message assistant';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            
+            // Add main response
+            const responseText = document.createElement('div');
+            responseText.textContent = data.answer;
+            contentDiv.appendChild(responseText);
+            
+            // Add confidence score
+            if (data.confidence > 0) {
+                const confidenceSpan = document.createElement('span');
+                confidenceSpan.className = 'confidence';
+                confidenceSpan.textContent = `${Math.round(data.confidence * 100)}% confident`;
+                contentDiv.appendChild(confidenceSpan);
+            }
+            
+            // Add sources if available
+            if (data.sources && data.sources.length > 0) {
+                const sourcesDiv = document.createElement('div');
+                sourcesDiv.className = 'sources';
+                sourcesDiv.innerHTML = '<strong>Sources:</strong> ';
+                
+                data.sources.forEach(source => {
+                    const sourceSpan = document.createElement('span');
+                    sourceSpan.className = 'source-item';
+                    sourceSpan.textContent = source.source;
+                    sourcesDiv.appendChild(sourceSpan);
+                });
+                
+                contentDiv.appendChild(sourcesDiv);
+            }
+            
+            messageDiv.appendChild(contentDiv);
+            messagesDiv.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        
+        function showTypingIndicator() {
+            document.getElementById('typingIndicator').parentElement.style.display = 'flex';
+            document.getElementById('typingIndicator').classList.add('show');
+        }
+        
+        function hideTypingIndicator() {
+            document.getElementById('typingIndicator').classList.remove('show');
+            document.getElementById('typingIndicator').parentElement.style.display = 'none';
+        }
+        
+        function clearChat() {
+            const messagesDiv = document.getElementById('chatMessages');
+            messagesDiv.innerHTML = `
+                <div class="welcome-message" id="welcomeMessage">
+                    <h2>Welcome to Quenty RAG Assistant!</h2>
+                    <p>I can help you with information about orders, customers, shipments, and more.</p>
+                    <div class="suggested-questions">
+                        <div class="suggested-question" onclick="askQuestion('What is the status of recent orders?')">
+                            📦 Recent order status
+                        </div>
+                        <div class="suggested-question" onclick="askQuestion('Show me customer analytics')">
+                            📊 Customer analytics
+                        </div>
+                        <div class="suggested-question" onclick="askQuestion('What are the active shipments?')">
+                            🚚 Active shipments
+                        </div>
+                        <div class="suggested-question" onclick="askQuestion('Show franchise performance')">
+                            🏪 Franchise performance
+                        </div>
+                    </div>
+                </div>
+            `;
+            conversationId = null;
+        }
+        
+        function askQuestion(question) {
+            document.getElementById('chatInput').value = question;
+            sendMessage(new Event('submit'));
+        }
+        
+        async function ingestData() {
+            if (confirm('This will refresh all data from microservices. It may take a few minutes. Continue?')) {
+                try {
+                    const response = await fetch(`${API_URL}/ingest/all`, {
+                        method: 'POST'
+                    });
+                    
+                    if (response.ok) {
+                        alert('Data ingestion started. Check back in a few minutes.');
+                    } else {
+                        alert('Failed to start data ingestion.');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error starting data ingestion.');
+                }
+            }
+        }
+        
+        // Check API health on load
+        async function checkHealth() {
+            try {
+                const response = await fetch(`${API_URL}/health`);
+                const statusDot = document.querySelector('.status-dot');
+                const statusText = document.querySelector('.status-indicator span:last-child');
+                
+                if (response.ok) {
+                    statusDot.style.background = '#4ade80';
+                    statusText.textContent = 'Connected';
+                } else {
+                    statusDot.style.background = '#ef4444';
+                    statusText.textContent = 'Disconnected';
+                }
+            } catch (error) {
+                const statusDot = document.querySelector('.status-dot');
+                const statusText = document.querySelector('.status-indicator span:last-child');
+                statusDot.style.background = '#ef4444';
+                statusText.textContent = 'Disconnected';
+            }
+        }
+        
+        // Check health on load and periodically
+        checkHealth();
+        setInterval(checkHealth, 30000);
+        
+        // Focus input on load
+        document.getElementById('chatInput').focus();
+    </script>
+</body>
+</html>

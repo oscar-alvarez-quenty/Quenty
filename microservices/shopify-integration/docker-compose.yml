@@ -1,0 +1,103 @@
+version: '3.8'
+
+services:
+  shopify-integration:
+    build: .
+    container_name: shopify-integration
+    ports:
+      - "8010:8000"
+    environment:
+      - DATABASE_URL=postgresql://shopify_user:shopify_pass@postgres:5432/shopify_db
+      - REDIS_URL=redis://redis:6379/0
+      - LOG_LEVEL=INFO
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:8000
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - shopify-net
+    volumes:
+      - ./src:/app/src
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: shopify-postgres
+    environment:
+      - POSTGRES_USER=shopify_user
+      - POSTGRES_PASSWORD=shopify_pass
+      - POSTGRES_DB=shopify_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    networks:
+      - shopify-net
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: shopify-redis
+    ports:
+      - "6380:6379"
+    networks:
+      - shopify-net
+    restart: unless-stopped
+
+  celery-worker:
+    build: .
+    container_name: shopify-celery-worker
+    command: celery -A src.tasks.celery_app worker --loglevel=info
+    environment:
+      - DATABASE_URL=postgresql://shopify_user:shopify_pass@postgres:5432/shopify_db
+      - REDIS_URL=redis://redis:6379/0
+      - PYTHONPATH=/app/src
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - shopify-net
+    volumes:
+      - ./src:/app/src
+    restart: unless-stopped
+
+  celery-beat:
+    build: .
+    container_name: shopify-celery-beat
+    command: celery -A src.tasks.celery_app beat --loglevel=info
+    environment:
+      - DATABASE_URL=postgresql://shopify_user:shopify_pass@postgres:5432/shopify_db
+      - REDIS_URL=redis://redis:6379/0
+      - PYTHONPATH=/app/src
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - shopify-net
+    volumes:
+      - ./src:/app/src
+    restart: unless-stopped
+
+  flower:
+    build: .
+    container_name: shopify-flower
+    command: celery -A src.tasks.celery_app flower --port=5555
+    ports:
+      - "5556:5555"
+    environment:
+      - DATABASE_URL=postgresql://shopify_user:shopify_pass@postgres:5432/shopify_db
+      - REDIS_URL=redis://redis:6379/0
+      - PYTHONPATH=/app/src
+    depends_on:
+      - redis
+      - celery-worker
+    networks:
+      - shopify-net
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  shopify-net:
+    driver: bridge

@@ -1,0 +1,123 @@
+version: '3.8'
+
+services:
+  carrier-integration:
+    build: .
+    container_name: carrier-integration
+    ports:
+      - "8009:8009"
+    environment:
+      - DATABASE_URL=postgresql://user:password@postgres:5432/carrier_db
+      - REDIS_URL=redis://redis:6379/0
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672//
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-here}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-your-encryption-key-here}
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    volumes:
+      - ./src:/app/src
+    networks:
+      - carrier-network
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8009 --reload
+
+  celery-worker:
+    build: .
+    container_name: celery-worker
+    environment:
+      - DATABASE_URL=postgresql://user:password@postgres:5432/carrier_db
+      - REDIS_URL=redis://redis:6379/0
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672//
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-here}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-your-encryption-key-here}
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    volumes:
+      - ./src:/app/src
+    networks:
+      - carrier-network
+    command: celery -A src.celery_app worker --loglevel=info --queues=default,quotes,labels,tracking,webhooks,priority
+
+  celery-beat:
+    build: .
+    container_name: celery-beat
+    environment:
+      - DATABASE_URL=postgresql://user:password@postgres:5432/carrier_db
+      - REDIS_URL=redis://redis:6379/0
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672//
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-here}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-your-encryption-key-here}
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    volumes:
+      - ./src:/app/src
+    networks:
+      - carrier-network
+    command: celery -A src.celery_app beat --loglevel=info
+
+  flower:
+    build: .
+    container_name: flower
+    ports:
+      - "5555:5555"
+    environment:
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - redis
+      - rabbitmq
+    networks:
+      - carrier-network
+    command: celery -A src.celery_app flower --port=5555
+
+  postgres:
+    image: postgres:15
+    container_name: carrier-postgres
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=carrier_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - carrier-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: carrier-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - carrier-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: carrier-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    networks:
+      - carrier-network
+
+networks:
+  carrier-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

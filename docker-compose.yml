@@ -28,7 +28,7 @@ services:
 
   # PostgreSQL Database
   db:
-    image: postgres:15-alpine
+    image: pgvector/pgvector:pg15
     container_name: quenty-db
     environment:
       POSTGRES_DB: quenty_db
@@ -38,7 +38,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - "5432:5432"
+      - "5433:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d quenty_db"]
       interval: 10s
@@ -55,7 +55,7 @@ services:
     container_name: quenty-redis
     command: redis-server --appendonly yes --requirepass quenty123
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -154,12 +154,319 @@ services:
       - quenty-network
     restart: unless-stopped
 
+  # Carrier Integration Service
+  carrier-integration:
+    build:
+      context: ./microservices/carrier-integration
+      dockerfile: Dockerfile
+    container_name: quenty-carrier-integration
+    ports:
+      - "8009:8009"
+    env_file:
+      - .env.carriers
+    environment:
+      - DATABASE_URL=${CARRIER_DATABASE_URL:-postgresql://postgres:quenty123@db:5432/carrier_db}
+      - REDIS_URL=${CARRIER_REDIS_URL:-redis://:quenty123@redis:6379/1}
+      - RABBITMQ_URL=${CARRIER_RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672//}
+      - CELERY_BROKER_URL=${CARRIER_CELERY_BROKER_URL:-amqp://guest:guest@rabbitmq:5672//}
+      - CELERY_RESULT_BACKEND=${CARRIER_CELERY_RESULT_BACKEND:-redis://:quenty123@redis:6379/1}
+      - SECRET_KEY=${CARRIER_SECRET_KEY:-change-this-in-production}
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+    volumes:
+      - ./microservices/carrier-integration/src:/app/src
+      - carrier_credentials:/app/credentials
+    networks:
+      - quenty-network
+    restart: unless-stopped
+
+  # Celery Worker for Carrier Integration
+  carrier-worker:
+    build:
+      context: ./microservices/carrier-integration
+      dockerfile: Dockerfile
+    container_name: quenty-carrier-worker
+    env_file:
+      - .env.carriers
+    environment:
+      - DATABASE_URL=${CARRIER_DATABASE_URL:-postgresql://postgres:quenty123@db:5432/carrier_db}
+      - REDIS_URL=${CARRIER_REDIS_URL:-redis://:quenty123@redis:6379/1}
+      - RABBITMQ_URL=${CARRIER_RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672//}
+      - CELERY_BROKER_URL=${CARRIER_CELERY_BROKER_URL:-amqp://guest:guest@rabbitmq:5672//}
+      - CELERY_RESULT_BACKEND=${CARRIER_CELERY_RESULT_BACKEND:-redis://:quenty123@redis:6379/1}
+      - SECRET_KEY=${CARRIER_SECRET_KEY:-change-this-in-production}
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+    volumes:
+      - ./microservices/carrier-integration/src:/app/src
+      - carrier_credentials:/app/credentials
+    networks:
+      - quenty-network
+    command: celery -A src.celery_app worker --loglevel=info --queues=default,quotes,labels,tracking,webhooks,priority
+    restart: unless-stopped
+
+  # Celery Beat for Carrier Integration
+  carrier-beat:
+    build:
+      context: ./microservices/carrier-integration
+      dockerfile: Dockerfile
+    container_name: quenty-carrier-beat
+    env_file:
+      - .env.carriers
+    environment:
+      - DATABASE_URL=${CARRIER_DATABASE_URL:-postgresql://postgres:quenty123@db:5432/carrier_db}
+      - REDIS_URL=${CARRIER_REDIS_URL:-redis://:quenty123@redis:6379/1}
+      - RABBITMQ_URL=${CARRIER_RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672//}
+      - CELERY_BROKER_URL=${CARRIER_CELERY_BROKER_URL:-amqp://guest:guest@rabbitmq:5672//}
+      - CELERY_RESULT_BACKEND=${CARRIER_CELERY_RESULT_BACKEND:-redis://:quenty123@redis:6379/1}
+      - SECRET_KEY=${CARRIER_SECRET_KEY:-change-this-in-production}
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+    volumes:
+      - ./microservices/carrier-integration/src:/app/src
+      - carrier_credentials:/app/credentials
+    networks:
+      - quenty-network
+    command: celery -A src.celery_app beat --loglevel=info
+    restart: unless-stopped
+
+  # RabbitMQ Message Broker
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: quenty-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - quenty-network
+    restart: unless-stopped
+
+  # Flower for Celery Monitoring
+  flower:
+    build:
+      context: ./microservices/carrier-integration
+      dockerfile: Dockerfile
+    container_name: quenty-flower
+    ports:
+      - "5555:5555"
+    environment:
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+      - CELERY_RESULT_BACKEND=redis://:quenty123@redis:6379/1
+    depends_on:
+      - redis
+      - rabbitmq
+    networks:
+      - quenty-network
+    command: celery -A src.celery_app flower --port=5555
+    restart: unless-stopped
+
+  # Shopify Integration Service
+  shopify-integration:
+    build:
+      context: ./microservices/shopify-integration
+      dockerfile: Dockerfile
+    container_name: quenty-shopify
+    ports:
+      - "8010:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:quenty123@db:5432/shopify_db
+      - REDIS_URL=redis://:quenty123@redis:6379/2
+      - LOG_LEVEL=INFO
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:8000
+      - SECRET_KEY=${SHOPIFY_SECRET_KEY:-change-this-in-production}
+      - ENCRYPTION_KEY=${SHOPIFY_ENCRYPTION_KEY:-vPmIWQK2cnOGJ0IY36X82VPwS_0rc-DuypwPRHqdIt8=}
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./microservices/shopify-integration/src:/app/src
+    networks:
+      - quenty-network
+    restart: unless-stopped
+
+  # Shopify Celery Worker
+  shopify-worker:
+    build:
+      context: ./microservices/shopify-integration
+      dockerfile: Dockerfile
+    container_name: quenty-shopify-worker
+    environment:
+      - DATABASE_URL=postgresql://postgres:quenty123@db:5432/shopify_db
+      - REDIS_URL=redis://:quenty123@redis:6379/2
+      - PYTHONPATH=/app/src
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./microservices/shopify-integration/src:/app/src
+    networks:
+      - quenty-network
+    command: celery -A src.tasks.celery_app worker --loglevel=info
+    restart: unless-stopped
+
+  # Shopify Celery Beat
+  shopify-beat:
+    build:
+      context: ./microservices/shopify-integration
+      dockerfile: Dockerfile
+    container_name: quenty-shopify-beat
+    environment:
+      - DATABASE_URL=postgresql://postgres:quenty123@db:5432/shopify_db
+      - REDIS_URL=redis://:quenty123@redis:6379/2
+      - PYTHONPATH=/app/src
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./microservices/shopify-integration/src:/app/src
+    networks:
+      - quenty-network
+    command: celery -A src.tasks.celery_app beat --loglevel=info
+    restart: unless-stopped
+
+  # RAG Service for AI-powered chat
+  rag-service:
+    build:
+      context: ./microservices/rag-service
+      dockerfile: Dockerfile
+    container_name: quenty-rag
+    ports:
+      - "8011:8010"
+    environment:
+      - DATABASE_URL=postgresql://postgres:quenty123@db:5432/rag_db
+      - VECTOR_DB_URL=postgresql://postgres:quenty123@db:5432/rag_db
+      - REDIS_URL=redis://:quenty123@redis:6379/3
+      - USE_LOCAL_MODELS=true
+      - AUTH_DB_URL=postgresql://postgres:quenty123@db:5432/auth_db
+      - CUSTOMER_DB_URL=postgresql://postgres:quenty123@db:5432/customer_db
+      - ORDER_DB_URL=postgresql://postgres:quenty123@db:5432/order_db
+      - CARRIER_DB_URL=postgresql://postgres:quenty123@db:5432/carrier_db
+      - ANALYTICS_DB_URL=postgresql://postgres:quenty123@db:5432/analytics_db
+      - FRANCHISE_DB_URL=postgresql://postgres:quenty123@db:5432/franchise_db
+      - INTERNATIONAL_DB_URL=postgresql://postgres:quenty123@db:5432/international_db
+      - MICROCREDIT_DB_URL=postgresql://postgres:quenty123@db:5432/microcredit_db
+      - PICKUP_DB_URL=postgresql://postgres:quenty123@db:5432/pickup_db
+      - REVERSE_LOGISTICS_DB_URL=postgresql://postgres:quenty123@db:5432/reverse_logistics_db
+      - SECRET_KEY=${RAG_SECRET_KEY:-change-this-in-production}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./microservices/rag-service/src:/app/src
+      - ./microservices/rag-service/chat-client:/app/chat-client
+    networks:
+      - quenty-network
+    restart: unless-stopped
+
+  # MercadoLibre Integration Service
+  mercadolibre-integration:
+    build:
+      context: ./microservices/mercadolibre-integration
+      dockerfile: Dockerfile
+    container_name: quenty-mercadolibre
+    ports:
+      - "8012:8012"
+    environment:
+      - DATABASE_URL=postgresql://postgres:quenty123@db:5432/mercadolibre_db
+      - REDIS_URL=redis://:quenty123@redis:6379/4
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672/
+      - CELERY_RESULT_BACKEND=redis://:quenty123@redis:6379/4
+      - MELI_CLIENT_ID=${MELI_CLIENT_ID:-}
+      - MELI_CLIENT_SECRET=${MELI_CLIENT_SECRET:-}
+      - MELI_SITE_ID=${MELI_SITE_ID:-MCO}
+      - SECRET_KEY=${MELI_SECRET_KEY:-change-this-in-production}
+      - ENCRYPTION_KEY=${MELI_ENCRYPTION_KEY:-sOTEK5wts0GGkd9t1Uk1PZGl8ke8dLJKq9pSTJ3VJXs=}
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+    volumes:
+      - ./microservices/mercadolibre-integration/src:/app/src
+    networks:
+      - quenty-network
+    restart: unless-stopped
+
+  # MercadoLibre Celery Worker
+  mercadolibre-worker:
+    build:
+      context: ./microservices/mercadolibre-integration
+      dockerfile: Dockerfile
+    container_name: quenty-mercadolibre-worker
+    environment:
+      - DATABASE_URL=postgresql://postgres:quenty123@db:5432/mercadolibre_db
+      - REDIS_URL=redis://:quenty123@redis:6379/4
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672/
+      - CELERY_RESULT_BACKEND=redis://:quenty123@redis:6379/4
+      - MELI_CLIENT_ID=${MELI_CLIENT_ID:-}
+      - MELI_CLIENT_SECRET=${MELI_CLIENT_SECRET:-}
+      - MELI_SITE_ID=${MELI_SITE_ID:-MCO}
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+      - mercadolibre-integration
+    volumes:
+      - ./microservices/mercadolibre-integration/src:/app/src
+    networks:
+      - quenty-network
+    command: celery -A src.tasks.celery_app worker --loglevel=info --queues=default,products,orders,questions,inventory
+    restart: unless-stopped
+
+  # MercadoLibre Celery Beat
+  mercadolibre-beat:
+    build:
+      context: ./microservices/mercadolibre-integration
+      dockerfile: Dockerfile
+    container_name: quenty-mercadolibre-beat
+    environment:
+      - DATABASE_URL=postgresql://postgres:quenty123@db:5432/mercadolibre_db
+      - REDIS_URL=redis://:quenty123@redis:6379/4
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672/
+      - CELERY_RESULT_BACKEND=redis://:quenty123@redis:6379/4
+      - MELI_CLIENT_ID=${MELI_CLIENT_ID:-}
+      - MELI_CLIENT_SECRET=${MELI_CLIENT_SECRET:-}
+      - MELI_SITE_ID=${MELI_SITE_ID:-MCO}
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+      - mercadolibre-integration
+    volumes:
+      - ./microservices/mercadolibre-integration/src:/app/src
+    networks:
+      - quenty-network
+    command: celery -A src.tasks.celery_app beat --loglevel=info
+    restart: unless-stopped
+
+
 volumes:
   postgres_data:
   redis_data:
   pgadmin_data:
   prometheus_data:
   grafana_data:
+  rabbitmq_data:
+  carrier_credentials:
 
 networks:
   quenty-network:

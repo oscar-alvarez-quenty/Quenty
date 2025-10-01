@@ -1,5 +1,66 @@
+# Environment files with sensitive credentials
 *.env
+.env
+.env.carriers
+.env.local
+.env.production
+.env.docker
+
+# Keep example files
+!.env.example
+!.env.carriers.example
+!.env.development
+
+# Virtual environments
 /venv
 /env
+/.venv
+venv/
+env/
+
+# Python cache
 *.pyc
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# IDE
 /.vscode
+/.idea
+*.swp
+*.swo
+*~
+
+# Logs
+logs/
+*.log
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+
+# Pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# MyPy
+.mypy_cache/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Alembic
+*.pyc
